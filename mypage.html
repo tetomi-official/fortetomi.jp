@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>マイページ | TETOMI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,700&family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .mypage-page { background: var(--bg-gray); min-height: 100vh; }
+
+    /* ── PROFILE EDIT FORM ── */
+    .profile-form .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    /* ── LISTING MANAGE ITEM ── */
+    .listing-manage-item {
+      display: flex; gap: 14px; align-items: flex-start;
+      padding: 16px; background: var(--white); border-radius: var(--r-lg);
+      border: 1px solid var(--border-light); margin-bottom: 12px;
+      transition: box-shadow 0.2s;
+    }
+    .listing-manage-item:hover { box-shadow: var(--shadow-sm); }
+    .lm-thumb {
+      width: 68px; height: 68px; flex-shrink: 0; border-radius: var(--r);
+      background: linear-gradient(135deg, #d8dfe5 0%, #e6e9ec 100%);
+      display: flex; align-items: center; justify-content: center; font-size: 2rem;
+      overflow: hidden; cursor: pointer;
+    }
+    .lm-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .lm-info { flex: 1; min-width: 0; }
+    .lm-title {
+      font-size: 14px; font-weight: 700; color: var(--navy);
+      margin-bottom: 4px; cursor: pointer;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .lm-title:hover { color: var(--navy-mid); }
+    .lm-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+    .lm-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .btn-xs {
+      padding: 5px 14px; border-radius: var(--r-sm); font-size: 11px; font-weight: 700;
+      transition: all 0.2s; font-family: var(--font-en); display: inline-flex; align-items: center; gap: 5px;
+    }
+    .btn-xs-outline { border: 1.5px solid var(--navy); color: var(--navy); background: transparent; }
+    .btn-xs-outline:hover { background: var(--navy); color: var(--white); }
+    .btn-xs-danger { border: 1.5px solid #ef4444; color: #ef4444; background: transparent; }
+    .btn-xs-danger:hover { background: #ef4444; color: var(--white); }
+    .btn-xs-navy { background: var(--navy); color: var(--white); border: none; }
+    .btn-xs-navy:hover { background: var(--navy-dark); }
+    .btn-xs-coral { background: var(--navy); color: var(--white); border: none; }
+    .btn-xs-coral:hover { background: var(--navy-dark); }
+    .btn-xs-green { background: #10b981; color: var(--white); border: none; }
+    .btn-xs-green:hover { background: #059669; }
+    .btn-xs-gray { background: var(--border); color: var(--text-muted); border: none; }
+    .lm-price {
+      font-family: var(--font-en); font-size: 1.1rem; font-weight: 900; color: var(--navy);
+      flex-shrink: 0; padding-top: 4px;
+    }
+
+    /* ── RESERVATION CARD ── */
+    .res-card {
+      background: var(--white); border-radius: var(--r-lg); padding: 18px 20px;
+      border: 1px solid var(--border-light); margin-bottom: 12px;
+      display: flex; gap: 14px; align-items: flex-start;
+      transition: box-shadow 0.2s;
+    }
+    .res-card:hover { box-shadow: var(--shadow-sm); }
+    .res-card-thumb {
+      width: 56px; height: 56px; flex-shrink: 0; border-radius: var(--r-sm);
+      background: var(--bg-gray); display: flex; align-items: center;
+      justify-content: center; font-size: 1.5rem;
+    }
+    .res-card-body { flex: 1; }
+    .res-card-title { font-size: 14px; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+    .res-card-meta { font-size: 12px; color: var(--text-muted); line-height: 1.7; }
+    .res-card-actions { flex-shrink: 0; display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+
+    /* ── MOBILE NAV ── */
+    @media (max-width: 1024px) {
+      .profile-form .form-row { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      .lm-actions { flex-direction: column; align-items: flex-start; }
+      .lm-price { font-size: 1rem; }
+    }
+  </style>
+</head>
+<body class="mypage-page">
+
+<!-- SIDE TABS -->
+<div class="side-tab" aria-hidden="true">
+  <a href="sell.html">出品する</a>
+  <a href="listings.html">教科書を探す</a>
+</div>
+
+<!-- NAVBAR -->
+<nav class="navbar scrolled" id="navbar">
+  <div class="nav-container">
+    <a href="index.html" class="nav-logo" aria-label="TETOMI Home">
+      <div class="nav-logo-badge">
+        <span class="logo-main">TETOMI</span>
+        <span class="logo-sub">手から手へ、教科書とつながりを</span>
+      </div>
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="index.html" class="nav-link-item">
+        <span class="link-en">Home</span>
+        <span class="link-ja">トップ</span>
+      </a>
+      <a href="listings.html" class="nav-link-item">
+        <span class="link-en">Books</span>
+        <span class="link-ja">教科書一覧</span>
+      </a>
+      <button class="btn-login-nav" id="navLoginBtn" onclick="openModal('loginModal')">ログイン</button>
+      <a href="chat.html" class="nav-link-item">
+        <span class="link-en">Chat</span>
+        <span class="link-ja">メッセージ</span>
+      </a>
+      <a href="sell.html" class="nav-cta">
+        <i class="fas fa-plus"></i> 出品する
+      </a>
+      <a href="mypage.html" class="nav-user-badge hidden" id="navAvatar">
+        <i class="fas fa-user-circle"></i>
+        <span id="navUserName"></span>
+      </a>
+    </div>
+    <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="メニュー">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="page-header-inner">
+    <div class="breadcrumb">
+      <a href="index.html">Home</a>
+      <i class="fas fa-chevron-right" style="font-size:9px;"></i>
+      <span>マイページ</span>
+    </div>
+    <h1>マイページ</h1>
+    <p id="mpHeaderSub">— ログインしてください —</p>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main class="page-main" style="background:var(--bg-gray);">
+  <div class="container">
+
+    <!-- NOT LOGGED IN -->
+    <div id="notLoggedIn" class="hidden">
+      <div class="panel-card">
+        <div class="panel-body" style="text-align:center;padding:56px 32px;">
+          <div style="font-size:3rem;margin-bottom:16px;">🔐</div>
+          <h3 style="font-size:1.3rem;font-weight:800;color:var(--navy);margin-bottom:12px;">ログインが必要です</h3>
+          <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">マイページを利用するにはログインしてください。</p>
+          <button onclick="openModal('loginModal')" class="btn-navy">
+            <i class="fas fa-sign-in-alt"></i> ログイン / 登録
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOGGED IN -->
+    <div id="mypageContent" class="hidden">
+      <div class="mypage-layout">
+
+        <!-- SIDEBAR -->
+        <aside class="mypage-sidebar">
+          <div class="sidebar-profile">
+            <div class="sidebar-avatar" id="sidebarAvatar">?</div>
+            <div class="sidebar-name" id="sidebarName">—</div>
+            <div class="sidebar-univ" id="sidebarUniv"></div>
+            <div class="sidebar-rating">
+              <i class="fas fa-star"></i>
+              <span id="sidebarRating">5.0</span>
+            </div>
+          </div>
+          <nav class="sidebar-nav">
+            <div class="sidebar-nav-item active" onclick="switchTab('dashboard')" id="tabDashboard">
+              <i class="fas fa-chart-bar"></i> ダッシュボード
+            </div>
+            <div class="sidebar-nav-item" onclick="switchTab('myListings')" id="tabMyListings">
+              <i class="fas fa-book"></i> 出品中の教科書
+              <span class="pending-dot hidden" id="listingsBadge">0</span>
+            </div>
+            <div class="sidebar-nav-item" onclick="switchTab('sentRes')" id="tabSentRes">
+              <i class="fas fa-paper-plane"></i> 送った購入希望
+              <span class="pending-dot hidden" id="sentResBadge">0</span>
+            </div>
+            <div class="sidebar-nav-item" onclick="switchTab('receivedRes')" id="tabReceivedRes">
+              <i class="fas fa-inbox"></i> 受け取った購入希望
+              <span class="pending-dot hidden" id="receivedResBadge">0</span>
+            </div>
+            <div class="sidebar-nav-item" onclick="location.href='chat.html'" id="tabChat">
+              <i class="fas fa-comment-dots"></i> メッセージ
+            </div>
+            <div class="sidebar-nav-item" onclick="location.href='chat.html?support=1'" id="tabSupport">
+              <i class="fas fa-headset"></i> 運営サポート
+            </div>
+            <div class="sidebar-nav-item" onclick="switchTab('profile')" id="tabProfile">
+              <i class="fas fa-user-cog"></i> プロフィール編集
+            </div>
+            <div class="sidebar-nav-item danger" onclick="handleLogout()">
+              <i class="fas fa-sign-out-alt"></i> ログアウト
+            </div>
+          </nav>
+        </aside>
+
+        <!-- MAIN PANEL -->
+        <div id="mainPanel">
+
+          <!-- ── DASHBOARD TAB ── -->
+          <div id="panelDashboard" class="tab-panel active">
+            <div class="panel-card">
+              <div class="panel-header">
+                <h3>Dashboard</h3>
+                <a href="sell.html" class="btn-xs btn-xs-coral">
+                  <i class="fas fa-plus"></i> 新規出品
+                </a>
+              </div>
+              <div class="panel-body">
+                <div class="stat-chips" id="statChips">
+                  <div class="stat-chip">
+                    <div class="stat-chip-num stat-active" id="statActive">—</div>
+                    <div class="stat-chip-label">出品中</div>
+                  </div>
+                  <div class="stat-chip">
+                    <div class="stat-chip-num stat-reserved" id="statReserved">—</div>
+                    <div class="stat-chip-label">予約済み</div>
+                  </div>
+                  <div class="stat-chip">
+                    <div class="stat-chip-num stat-done" id="statDone">—</div>
+                    <div class="stat-chip-label">取引完了</div>
+                  </div>
+                </div>
+
+                <div style="padding-top:16px;border-top:1px solid var(--border-light);display:flex;flex-direction:column;gap:14px;">
+                  <a href="sell.html" style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg-light);border-radius:var(--r);border:1px solid var(--border-light);transition:box-shadow 0.2s;" onmouseover="this.style.boxShadow='var(--shadow-sm)'" onmouseout="this.style.boxShadow=''">
+                    <div style="width:42px;height:42px;border-radius:var(--r-sm);background:var(--navy);display:flex;align-items:center;justify-content:center;color:white;font-size:1.1rem;flex-shrink:0;">
+                      <i class="fas fa-plus"></i>
+                    </div>
+                    <div>
+                      <div style="font-size:14px;font-weight:700;color:var(--navy);">新しく出品する</div>
+                      <div style="font-size:12px;color:var(--text-muted);">教科書を出品して後輩に繋げよう</div>
+                    </div>
+                    <i class="fas fa-chevron-right" style="margin-left:auto;color:var(--text-muted);font-size:12px;"></i>
+                  </a>
+                  <a href="listings.html" style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg-light);border-radius:var(--r);border:1px solid var(--border-light);transition:box-shadow 0.2s;" onmouseover="this.style.boxShadow='var(--shadow-sm)'" onmouseout="this.style.boxShadow=''">
+                    <div style="width:42px;height:42px;border-radius:var(--r-sm);background:var(--navy-mid);display:flex;align-items:center;justify-content:center;color:white;font-size:1.1rem;flex-shrink:0;">
+                      <i class="fas fa-search"></i>
+                    </div>
+                    <div>
+                      <div style="font-size:14px;font-weight:700;color:var(--navy);">教科書を探す</div>
+                      <div style="font-size:12px;color:var(--text-muted);">必要な教科書を検索しよう</div>
+                    </div>
+                    <i class="fas fa-chevron-right" style="margin-left:auto;color:var(--text-muted);font-size:12px;"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── MY LISTINGS TAB ── -->
+          <div id="panelMyListings" class="tab-panel">
+            <div class="panel-card">
+              <div class="panel-header">
+                <h3>出品中の教科書</h3>
+                <a href="sell.html" class="btn-xs btn-xs-coral">
+                  <i class="fas fa-plus"></i> 新規出品
+                </a>
+              </div>
+              <div class="panel-body" id="myListingsBody">
+                <div class="loading"><div class="spinner"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── SENT RESERVATIONS TAB ── -->
+          <div id="panelSentRes" class="tab-panel">
+            <div class="panel-card">
+              <div class="panel-header">
+                <h3>送った購入希望</h3>
+              </div>
+              <div class="panel-body" id="sentResBody">
+                <div class="loading"><div class="spinner"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── RECEIVED RESERVATIONS TAB ── -->
+          <div id="panelReceivedRes" class="tab-panel">
+            <div class="panel-card">
+              <div class="panel-header">
+                <h3>受け取った購入希望</h3>
+              </div>
+              <div class="panel-body" id="receivedResBody">
+                <div class="loading"><div class="spinner"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── PROFILE TAB ── -->
+          <div id="panelProfile" class="tab-panel">
+            <div class="panel-card">
+              <div class="panel-header">
+                <h3>プロフィール編集</h3>
+              </div>
+              <div class="panel-body">
+                <form class="profile-form" onsubmit="saveProfile(event)">
+                  <div class="form-row">
+                    <div class="form-group required">
+                      <label>お名前</label>
+                      <input type="text" id="profName" required />
+                    </div>
+                    <div class="form-group required">
+                      <label>メールアドレス</label>
+                      <input type="email" id="profEmail" required />
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label>大学名</label>
+                      <input type="text" id="profUniversity" />
+                    </div>
+                    <div class="form-group">
+                      <label>学部</label>
+                      <input type="text" id="profFaculty" />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label>学年</label>
+                    <select id="profGrade">
+                      <option value="1年">1年</option>
+                      <option value="2年">2年</option>
+                      <option value="3年" selected>3年</option>
+                      <option value="4年">4年</option>
+                      <option value="院生">院生</option>
+                    </select>
+                  </div>
+                  <div style="display:flex;gap:12px;margin-top:8px;">
+                    <button type="submit" class="btn-navy">
+                      <i class="fas fa-save"></i> 保存する
+                    </button>
+                    <button type="button" onclick="switchTab('dashboard')" class="btn-outline">
+                      キャンセル
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /mainPanel -->
+      </div><!-- /mypage-layout -->
+    </div><!-- /mypageContent -->
+
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-top">
+    <div>
+      <div class="footer-brand-name">TETOMI</div>
+      <p class="footer-brand-tagline">手から手へ、教科書とつながりを。<br />送料ゼロ・手数料ゼロ</p>
+    </div>
+    <div class="footer-col">
+      <h4>Service</h4>
+      <a href="listings.html">教科書を探す</a>
+      <a href="sell.html">出品する</a>
+      <a href="mypage.html">マイページ</a>
+    </div>
+    <div class="footer-col">
+      <h4>Info</h4>
+      <a href="index.html#about">TETOMIとは</a>
+      <a href="index.html#faq">よくある質問</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 TETOMI for GLOMAC.</p>
+    <div class="footer-policies">
+      <a href="#">利用規約</a>
+      <a href="#">プライバシーポリシー</a>
+    </div>
+  </div>
+</footer>
+
+<!-- LOGIN MODAL -->
+<div class="modal-overlay hidden" id="loginModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('loginModal')"><i class="fas fa-times"></i></button>
+    <div class="modal-logo">TETOMI</div>
+    <h2 class="modal-title">ログイン / 新規登録</h2>
+    <p class="modal-sub">大学メールアドレスでログインしてください</p>
+    <form onsubmit="handleLogin(event)">
+      <div class="form-group required"><label>お名前</label><input type="text" id="loginName" placeholder="山田 太郎" required /></div>
+      <div class="form-group required"><label>メールアドレス</label><input type="email" id="loginEmail" placeholder="example@glomac.ac.jp" required /></div>
+      <div class="form-group"><label>大学名</label><input type="text" id="loginUniversity" placeholder="GLOMAC大学" /></div>
+      <div class="form-group"><label>学部</label><input type="text" id="loginFaculty" placeholder="工学部" /></div>
+      <div class="form-group"><label>学年</label>
+        <select id="loginGrade">
+          <option value="1年">1年</option><option value="2年">2年</option>
+          <option value="3年" selected>3年</option><option value="4年">4年</option><option value="院生">院生</option>
+        </select>
+      </div>
+      <button type="submit" class="btn-navy btn-full" style="margin-top:10px;"><i class="fas fa-sign-in-alt"></i> ログイン / 登録</button>
+    </form>
+    <div class="modal-demo">
+      <p class="modal-demo-title">— デモユーザーで試す —</p>
+      <div class="demo-btns">
+        <button onclick="loginAsDemo('user_001')" class="demo-btn">田中 蓮（工学部 3年）</button>
+        <button onclick="loginAsDemo('user_002')" class="demo-btn">佐藤 葵（経済学部 2年）</button>
+        <button onclick="loginAsDemo('user_003')" class="demo-btn">山本 海斗（文学部 4年）</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+<script src="js/app.js"></script>
+<script>
+/* ===== mypage.html ===== */
+
+let mpUser = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  mpUser = getUser();
+  if (!mpUser) {
+    document.getElementById('notLoggedIn').classList.remove('hidden');
+    return;
+  }
+  document.getElementById('mypageContent').classList.remove('hidden');
+  renderSidebar(mpUser);
+  document.getElementById('mpHeaderSub').textContent = `${mpUser.name}さんのページ`;
+  loadDashboard();
+  loadMyListings();
+  loadSentReservations();
+  loadReceivedReservations();
+  fillProfileForm(mpUser);
+});
+
+// ── SIDEBAR ──
+function renderSidebar(user) {
+  document.getElementById('sidebarAvatar').textContent = (user.name || '?').charAt(0);
+  document.getElementById('sidebarName').textContent   = user.name || '—';
+  document.getElementById('sidebarUniv').textContent   = `${user.faculty || ''} ${user.grade || ''}`.trim() || 'GLOMAC学生';
+  document.getElementById('sidebarRating').textContent = user.rating || '5.0';
+}
+
+// ── TAB SWITCH ──
+function switchTab(name) {
+  const panels = ['Dashboard','MyListings','SentRes','ReceivedRes','Profile'];
+  panels.forEach(p => {
+    document.getElementById(`panel${p}`).classList.toggle('active', p.toLowerCase() === name.toLowerCase());
+  });
+  const tabs = ['Dashboard','MyListings','SentRes','ReceivedRes','Profile'];
+  tabs.forEach(t => {
+    const el = document.getElementById(`tab${t}`);
+    if (el) el.classList.toggle('active', t.toLowerCase() === name.toLowerCase());
+  });
+}
+
+// ── DASHBOARD ──
+async function loadDashboard() {
+  try {
+    const res  = await fetch(`tables/listings?limit=200`);
+    const data = await res.json();
+    const mine = (data.data || []).filter(l => l.seller_id === mpUser.id);
+    document.getElementById('statActive').textContent   = mine.filter(l => l.status === '出品中').length;
+    document.getElementById('statReserved').textContent = mine.filter(l => l.status === '予約済み').length;
+    document.getElementById('statDone').textContent     = mine.filter(l => l.status === '完了').length;
+  } catch {}
+}
+
+// ── MY LISTINGS ──
+async function loadMyListings() {
+  const body = document.getElementById('myListingsBody');
+  try {
+    const res  = await fetch('tables/listings?limit=200');
+    const data = await res.json();
+    const mine = (data.data || []).filter(l => l.seller_id === mpUser.id);
+
+    if (mine.length === 0) {
+      body.innerHTML = `<div class="empty-state"><div class="empty-icon"><i class="fas fa-book-open" style="font-size:3rem;color:var(--navy);opacity:0.25;"></i></div><h3>出品中の教科書はありません</h3><p style="margin-bottom:20px;">最初の教科書を出品してみましょう。</p><a href="sell.html" class="btn-navy"><i class="fas fa-plus"></i> 出品する</a></div>`;
+
+      // Badge
+      document.getElementById('listingsBadge').classList.add('hidden');
+      return;
+    }
+
+    // Badge
+    const pendingCount = mine.filter(l => l.status === '出品中').length;
+    if (pendingCount > 0) {
+      const badge = document.getElementById('listingsBadge');
+      badge.textContent = pendingCount;
+      badge.classList.remove('hidden');
+    }
+
+    body.innerHTML = '';
+    mine.sort((a,b) => Number(b.created_at) - Number(a.created_at)).forEach(item => {
+      const c = conditionLabel(item.condition);
+      const div = document.createElement('div');
+      div.className = 'listing-manage-item';
+      const statusBadge = item.status === '出品中' ? 'badge-confirmed' : item.status === '予約済み' ? 'badge-pending' : 'badge-done';
+      div.innerHTML = `
+        <div class="lm-thumb" onclick="location.href='detail.html?id=${item.id}'">${item.image_url ? `<img src="${item.image_url}" alt="" />` : getBookEmoji(item.title)}</div>
+        <div class="lm-info">
+          <div class="lm-title" onclick="location.href='detail.html?id=${item.id}'">${escHtml(item.title)}</div>
+          <div class="lm-sub">
+            ${escHtml(item.subject || '')} ・ <span class="badge ${statusBadge}">${item.status}</span>
+          </div>
+          <div class="lm-actions">
+            <a href="sell.html?edit=${item.id}" class="btn-xs btn-xs-outline"><i class="fas fa-edit"></i> 編集</a>
+            ${item.status === '出品中'
+              ? `<button onclick="setListingStatus('${item.id}','完了')" class="btn-xs btn-xs-green"><i class="fas fa-check"></i> 完了にする</button>`
+              : ''}
+            <button onclick="deleteListing('${item.id}')" class="btn-xs btn-xs-danger"><i class="fas fa-trash"></i> 削除</button>
+          </div>
+        </div>
+        <div class="lm-price">¥${Number(item.price).toLocaleString()}</div>
+      `;
+      body.appendChild(div);
+    });
+  } catch(e) {
+    body.innerHTML = '<p class="empty-text">データの読み込みに失敗しました。</p>';
+  }
+}
+
+async function setListingStatus(id, status) {
+  try {
+    await fetch(`tables/listings/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    });
+    showToast(`ステータスを「${status}」に変更しました`, 'success');
+    loadMyListings();
+    loadDashboard();
+  } catch { showToast('更新に失敗しました', 'error'); }
+}
+
+async function deleteListing(id) {
+  if (!confirm('この出品を削除しますか？')) return;
+  try {
+    await fetch(`tables/listings/${id}`, { method: 'DELETE' });
+    showToast('出品を削除しました');
+    loadMyListings();
+    loadDashboard();
+  } catch { showToast('削除に失敗しました', 'error'); }
+}
+
+// ── SENT RESERVATIONS ──
+async function loadSentReservations() {
+  const body = document.getElementById('sentResBody');
+  try {
+    const res  = await fetch('tables/reservations?limit=200');
+    const data = await res.json();
+    const sent = (data.data || []).filter(r => r.buyer_id === mpUser.id);
+
+    const pending = sent.filter(r => r.status === '申請中').length;
+    if (pending > 0) {
+      const badge = document.getElementById('sentResBadge');
+      badge.textContent = pending;
+      badge.classList.remove('hidden');
+    }
+
+    if (sent.length === 0) {
+      body.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><h3>購入希望を送った教科書はありません</h3><p style="margin-bottom:20px;">気になる教科書を見つけて購入希望を送りましょう。</p><a href="listings.html" class="btn-navy"><i class="fas fa-search"></i> 教科書を探す</a></div>`;
+      return;
+    }
+
+    body.innerHTML = '';
+    sent.sort((a,b) => Number(b.created_at) - Number(a.created_at)).forEach(r => {
+      const statusMap = {
+        '申請中': 'badge-pending',
+        '承認済み': 'badge-confirmed',
+        '完了': 'badge-done',
+        'キャンセル': 'badge-cancelled',
+      };
+      const sc = statusMap[r.status] || 'badge-pending';
+      const card = document.createElement('div');
+      card.className = 'res-card';
+      card.innerHTML = `
+        <div class="res-card-thumb">${getBookEmoji(r.listing_title)}</div>
+        <div class="res-card-body">
+          <div class="res-card-title">${escHtml(r.listing_title || '—')}</div>
+          <div class="res-card-meta">
+            出品者：${escHtml(r.seller_name || '—')}<br />
+            希望日：${escHtml(r.preferred_date || '—')} ${escHtml(r.preferred_time || '')}<br />
+            場所：${escHtml(r.preferred_location || '—')}
+            ${r.message ? `<br />メッセージ：${escHtml(r.message)}` : ''}
+          </div>
+        </div>
+        <div class="res-card-actions">
+          <span class="badge ${sc}">${r.status}</span>
+          <div style="font-size:1rem;font-weight:900;color:var(--navy);font-family:var(--font-en);">¥${Number(r.price).toLocaleString()}</div>
+          ${r.status === '申請中'
+            ? `<button onclick="cancelReservation('${r.id}')" class="btn-xs btn-xs-danger">キャンセル</button>`
+            : ''}
+        </div>
+      `;
+      body.appendChild(card);
+    });
+  } catch {
+    body.innerHTML = '<p class="empty-text">データの読み込みに失敗しました。</p>';
+  }
+}
+
+// ── RECEIVED RESERVATIONS ──
+async function loadReceivedReservations() {
+  const body = document.getElementById('receivedResBody');
+  try {
+    const res  = await fetch('tables/reservations?limit=200');
+    const data = await res.json();
+    const recv = (data.data || []).filter(r => r.seller_id === mpUser.id);
+
+    const pending = recv.filter(r => r.status === '申請中').length;
+    if (pending > 0) {
+      const badge = document.getElementById('receivedResBadge');
+      badge.textContent = pending;
+      badge.classList.remove('hidden');
+    }
+
+    if (recv.length === 0) {
+      body.innerHTML = `<div class="empty-state"><div class="empty-icon">📬</div><h3>受け取った購入希望はありません</h3><p>出品中の教科書に購入希望が届くとここに表示されます。</p></div>`;
+      return;
+    }
+
+    body.innerHTML = '';
+    recv.sort((a,b) => Number(b.created_at) - Number(a.created_at)).forEach(r => {
+      const statusMap = {
+        '申請中': 'badge-pending',
+        '承認済み': 'badge-confirmed',
+        '完了': 'badge-done',
+        'キャンセル': 'badge-cancelled',
+      };
+      const sc = statusMap[r.status] || 'badge-pending';
+      const card = document.createElement('div');
+      card.className = 'res-card';
+      card.innerHTML = `
+        <div class="res-card-thumb">${getBookEmoji(r.listing_title)}</div>
+        <div class="res-card-body">
+          <div class="res-card-title">${escHtml(r.listing_title || '—')}</div>
+          <div class="res-card-meta">
+            購入希望者：${escHtml(r.buyer_name || '—')}<br />
+            希望日：${escHtml(r.preferred_date || '—')} ${escHtml(r.preferred_time || '')}<br />
+            場所：${escHtml(r.preferred_location || '—')}
+            ${r.message ? `<br />メッセージ：${escHtml(r.message)}` : ''}
+          </div>
+        </div>
+        <div class="res-card-actions">
+          <span class="badge ${sc}">${r.status}</span>
+          <div style="font-size:1rem;font-weight:900;color:var(--navy);font-family:var(--font-en);">¥${Number(r.price).toLocaleString()}</div>
+          ${r.status === '申請中' ? `
+            <button onclick="approveReservation('${r.id}','${r.listing_id}')" class="btn-xs btn-xs-navy">
+              <i class="fas fa-check"></i> 承認
+            </button>
+            <button onclick="rejectReservation('${r.id}')" class="btn-xs btn-xs-danger">
+              <i class="fas fa-times"></i> 断る
+            </button>` : ''}
+          ${r.status === '承認済み' ? `
+            <button onclick="completeReservation('${r.id}','${r.listing_id}')" class="btn-xs btn-xs-green">
+              <i class="fas fa-handshake"></i> 取引完了
+            </button>` : ''}
+        </div>
+      `;
+      body.appendChild(card);
+    });
+  } catch {
+    body.innerHTML = '<p class="empty-text">データの読み込みに失敗しました。</p>';
+  }
+}
+
+async function approveReservation(resId, listingId) {
+  try {
+    await fetch(`tables/reservations/${resId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: '承認済み' }),
+    });
+    await fetch(`tables/listings/${listingId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: '予約済み' }),
+    });
+    showToast('購入希望を承認しました', 'success');
+    loadReceivedReservations();
+  } catch { showToast('更新に失敗しました', 'error'); }
+}
+
+async function rejectReservation(resId) {
+  if (!confirm('この購入希望を断りますか？')) return;
+  try {
+    await fetch(`tables/reservations/${resId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'キャンセル' }),
+    });
+    showToast('購入希望を断りました');
+    loadReceivedReservations();
+  } catch { showToast('更新に失敗しました', 'error'); }
+}
+
+async function completeReservation(resId, listingId) {
+  if (!confirm('取引を完了としてマークしますか？')) return;
+  try {
+    await fetch(`tables/reservations/${resId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: '完了' }),
+    });
+    await fetch(`tables/listings/${listingId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: '完了' }),
+    });
+    showToast('取引を完了しました！', 'success');
+    loadReceivedReservations();
+    loadDashboard();
+    loadMyListings();
+  } catch { showToast('更新に失敗しました', 'error'); }
+}
+
+async function cancelReservation(resId) {
+  if (!confirm('この購入希望をキャンセルしますか？')) return;
+  try {
+    await fetch(`tables/reservations/${resId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'キャンセル' }),
+    });
+    showToast('購入希望をキャンセルしました');
+    loadSentReservations();
+  } catch { showToast('更新に失敗しました', 'error'); }
+}
+
+// ── PROFILE ──
+function fillProfileForm(user) {
+  document.getElementById('profName').value       = user.name || '';
+  document.getElementById('profEmail').value      = user.email || '';
+  document.getElementById('profUniversity').value = user.university || '';
+  document.getElementById('profFaculty').value    = user.faculty || '';
+  document.getElementById('profGrade').value      = user.grade || '3年';
+}
+
+async function saveProfile(e) {
+  e.preventDefault();
+  const payload = {
+    name:       document.getElementById('profName').value.trim(),
+    email:      document.getElementById('profEmail').value.trim(),
+    university: document.getElementById('profUniversity').value.trim(),
+    faculty:    document.getElementById('profFaculty').value.trim(),
+    grade:      document.getElementById('profGrade').value,
+  };
+  try {
+    const res  = await fetch(`tables/users/${mpUser.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...mpUser, ...payload }),
+    });
+    const updated = await res.json();
+    setUser(updated);
+    mpUser = updated;
+    renderSidebar(updated);
+    updateNavUI();
+    showToast('プロフィールを更新しました', 'success');
+    switchTab('dashboard');
+  } catch { showToast('更新に失敗しました', 'error'); }
+}
+</script>
+</body>
+</html>

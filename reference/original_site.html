@@ -1,0 +1,2039 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TETOMI【教科書取引サービス】</title>
+<meta name="description" content="GLOMAC専用の教科書を手渡しで取引するサービス。送料・手数料ゼロ。TETOMIから学部内に新たなつながりを。">
+<link rel="icon" type="image/png" href="https://storage.googleapis.com/production-os-assets/assets/3f342a7c-caee-411e-ab2b-ded275315ad4">
+<link rel="canonical" href="https://tetomi-for-glomac.studio.site/">
+<link rel="apple-touch-icon" type="image/png" href="https://storage.googleapis.com/production-os-assets/assets/3f342a7c-caee-411e-ab2b-ded275315ad4">
+<meta name="robots" content="all">
+<meta property="og:site_name" content="TETOMI【教科書取引サービス】">
+<meta property="og:title" content="TETOMI【教科書取引サービス】">
+<meta property="og:image" content="https://storage.googleapis.com/production-os-assets/assets/1c78eb65-9908-4257-bace-85a9961ebbd7">
+<meta property="og:description" content="GLOMAC専用の教科書を手渡しで取引するサービス。送料・手数料ゼロ。TETOMIから学部内に新たなつながりを。">
+<meta property="og:type" content="website">
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:image" content="https://storage.googleapis.com/production-os-assets/assets/1c78eb65-9908-4257-bace-85a9961ebbd7">
+<meta name="apple-mobile-web-app-title" content="TETOMI【教科書取引サービス】">
+<meta name="format-detection" content="telephone=no,email=no,address=no">
+<meta name="chrome" content="nointentdetection">
+<meta property="og:url" content="https://tetomi-for-glomac.studio.site/">
+
+
+<meta name="date" content="2026-03-26T11:25:29+00:00">
+<meta name="generator" content="Studio.Design.HRC">
+<link rel="preconnect" href="https://storage.googleapis.com" crossorigin />
+<style>
+/* material icons */
+/* Reference: https://developers.google.com/fonts/docs/material_icons#setup_method_2_self_hosting */
+@font-face {
+font-family: 'Material Icons';
+font-style: normal;
+font-weight: 400;
+src: url('https://storage.googleapis.com/production-os-assets/assets/material-icons/1629704621943/MaterialIcons-Regular.eot'); /* For IE6-8 */
+src: local('Material Icons'), local('MaterialIcons-Regular'),
+url('https://storage.googleapis.com/production-os-assets/assets/material-icons/1629704621943/MaterialIcons-Regular.woff2')
+  format('woff2');
+}
+.material-icons {
+display: flex;
+font-family: Material Icons;
+font-size: 24px;
+font-style: normal;
+font-weight: 400;
+letter-spacing: normal;
+line-height: 1;
+text-transform: none;
+white-space: nowrap;
+word-wrap: normal;
+direction: ltr;
+text-rendering: optimizeLegibility;
+-webkit-font-smoothing: antialiased
+}
+</style>
+
+<style>
+  /* Material Symbols - 基本スタイル */
+  [class*="material-symbols-"] {
+    font-style: normal;
+    font-variation-settings: "FILL" var(--material-symbol-fill, 0), "wght" var(--material-symbol-weight, 400);
+    visibility: hidden;
+  }
+  
+  /* Material Symbolsフォント読み込み完了後 */
+  body[data-material-symbols-loaded="true"] [class*="material-symbols-"] {
+    visibility: visible;
+  }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link 
+  rel="stylesheet" 
+  media="print" 
+  onload="this.media='all'" 
+  href="https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&family=Noto+Sans+JP:wght@400;500;700;900&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0&display=swap" />
+<style> :root { --s-font-f1a2f042:Raleway,'Noto Sans JP';--s-font-6fafbe69:'Noto Sans JP'; } </style>
+
+<style>
+html {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  display: block;
+  min-height: 100vh;
+  background: #fff;
+  font-family: sans-serif;
+  transition: background 0.5s cubic-bezier(0.4, 0.4, 0, 1);
+  padding: 0;
+  margin: 0;
+}
+
+a {
+  background: transparent;
+  color: rgb(51, 51, 51);
+  font-size: 100%;
+  margin: 0;
+  padding: 0;
+  vertical-align: baseline;
+  border: none;
+  text-decoration: none;
+}
+
+button,
+summary {
+  background: transparent;
+  color: inherit;
+  font-size: 100%;
+  margin: 0;
+  padding: 0;
+  vertical-align: baseline;
+  border: none;
+}
+
+button,
+summary {
+  pointer-events: all;
+  cursor: pointer;
+  user-select: none;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid #ccc;
+  display: block;
+  height: 1px;
+  margin: 1em 0;
+  padding: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: rgb(51, 51, 51);
+  line-height: 1;
+}
+
+/* --- Common Base Styles --- */
+.img,
+.box,
+.text,
+.frame,
+.section,
+.section-inner,
+.input,
+.toggle,
+.icon,
+.video-container {
+  border: 0;
+  box-sizing: border-box;
+  max-width: 100%;
+  z-index: 0;
+  position: relative;
+  margin: 0;
+  padding: 0;
+  flex: none;
+  min-width: 0;
+}
+
+.img,
+.box,
+.text,
+.frame,
+.section,
+.section-inner,
+.toggle,
+.icon,
+.video-container {
+  transition: all 0.3s cubic-bezier(0.4, 0.4, 0, 1);
+  transition-property: all;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  text-decoration: none;
+  align-content: center;
+}
+
+.input,
+.richText * {
+  transition: all 0.3s cubic-bezier(0.4, 0.4, 0, 1);
+  transition-property: all;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  text-decoration: none;
+  align-content: normal;
+  z-index: 0;
+}
+
+/* Restore text decoration for semantic HTML elements */
+.richText s,
+.richText del,
+.richText u {
+  text-decoration: revert;
+}
+
+.box,
+.frame,
+.section,
+.video-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.img,
+.text,
+.icon {
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  z-index: 0;
+}
+
+.box::-webkit-scrollbar {
+  display: none;
+}
+
+/* --- Rich Text --- */
+.richText {
+  display: block;
+  /* Workaround: レスポンシブCSSで display:flex に切り替わった際に
+     flex-direction がデフォルト row になるのを防止する。
+     display:block 時は無視され、display:flex 時のみ有効。
+     HRC ではノードCSS生成時に flex-direction を補完すると
+     ユーザー設定の flex-direction を上書きするリスクがあるため、
+     低優先度のデフォルト値としてここで設定する。 */
+  flex-direction: column;
+  flex: none;
+  word-break: break-word;
+  -webkit-font-smoothing: antialiased;
+  box-sizing: border-box;
+  line-height: 1;
+
+* {
+    border: 0;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    text-decoration: none;
+    -webkit-font-smoothing: antialiased;
+    -webkit-backface-visibility: hidden;
+    box-sizing: border-box;
+    word-spacing: 1px;
+
+    backface-visibility: visible;
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit;
+    font-style: inherit;
+    font-weight: inherit;
+    letter-spacing: inherit;
+    line-height: inherit;
+    text-align: inherit;
+  }
+  h1 {
+    font-size: 3em;
+    font-weight: 700;
+    margin: 20px 0;
+  }
+
+  h2,
+    h3 {
+    font-weight: 700;
+    margin: 10px 0;
+  }
+  h2 {
+    font-size: 2em;
+  }
+  h3 {
+    font-size: 1em;
+  }
+  h4,
+    h5,
+    h6 {
+    display: block;
+    font-size: 1em;
+    margin: 10px 0;
+  }
+  h4,
+    h5 {
+    font-weight: 600;
+  }
+  h6 {
+    font-weight: 500;
+  }
+p {
+    margin: 10px 0;
+  }
+> p {
+    min-height: 1em;
+  }
+
+  hr {
+    border-top: 1px solid #ccc;
+    margin: 10px 0;
+  }
+
+  em {
+    font-style: italic;
+  }
+
+> blockquote {
+    border-left: 3px solid rgba(0, 0, 0, 0.15);
+    font-style: italic;
+    margin: 10px 0;
+    padding: 10px 15px;
+  }
+
+  strong {
+    color: inherit;
+    display: inline;
+    font-family: inherit;
+    font-weight: 900;
+  }
+  /* Table of Contents */
+> [data-type="table_of_contents"] {
+    list-style: none;
+    padding: 24px 24px 8px;
+    margin: 0;
+    border-radius: 2px;
+    font-size: 16px;
+    background-color: #f5f5f5;
+    text-decoration: underline;
+    color: #616161;
+
+  .toc_list {
+      margin: 0;
+      padding: 0;
+    }
+
+  .toc_item {
+      font-size: inherit;
+      font-weight: inherit;
+      color: currentColor;
+      list-style: none;
+      margin: 0 0 16px 0;
+
+      /* Default padding */
+      padding-left: 2rem;
+
+    &.toc_item--1 {
+        margin: 0 0 16px 0;
+        /* Level 1 items might not need extra padding beyond the default */
+        padding-left: 0; /* Reset or adjust as needed */
+      }
+    &.toc_item--2 {
+        margin: 0 0 16px 0;
+        padding-left: 2rem; /* Already default, explicit for clarity */
+      }
+    &.toc_item--3 {
+        margin: 0 0 16px 0;
+        padding-left: 4rem;
+      }
+
+    > a {
+        font-size: inherit;
+        font-weight: inherit;
+        color: currentColor;
+        border: none;
+        text-decoration: none;
+      }
+    }
+  }
+
+> [data-type="table"] {
+    overflow-x: auto;
+    p {
+      white-space: pre-line;
+      word-break: break-all;
+    }
+  }
+  table {
+    table-layout: auto;
+    border-collapse: collapse;
+    border-spacing: unset;
+    margin: 10px 0 10px 0;
+    font-size: 14px;
+    border: 1px solid #f2f2f2;
+    color: #1a1a1a;
+    line-height: 1.4;
+  }
+  th {
+    background: rgba(245, 245, 245, 0.5);
+  }
+  th,
+    td {
+    min-width: 100px;
+    max-width: 240px;
+    border: 1px solid #f2f2f2;
+    padding: 12px;
+
+    p {
+      margin: 0;
+    }
+  }
+
+p > code {
+    background: #eee;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    display: inline;
+    margin: 2px;
+    padding: 0 5px;
+  }
+  ol {
+    margin: 0 0 0 20px;
+    padding: 0;
+    list-style: none;
+    li {
+      list-style: decimal;
+      margin: 10px 0;
+    }
+  }
+
+  ul {
+    margin: 0 0 0 20px;
+    padding: 0;
+    list-style: none;
+    li {
+      list-style: disc;
+      margin: 10px 0;
+    }
+  }
+  li > p {
+    margin: 0;
+  }
+  pre {
+    margin: 20px 0 20px 0;
+    padding: 25px 35px 25px 35px;
+    background: #eeeeee;
+    border-radius: 6px;
+    white-space: pre-wrap;
+    font-family: Menlo, Monaco, "Courier New", monospace;
+
+    code {
+      padding: 0;
+      border: none;
+    }
+  }
+  /* Images & Videos */
+  img,
+    video {
+    height: auto;
+    max-width: 100%;
+    vertical-align: bottom;
+  }
+
+  /* Links */
+  a {
+    color: #007cff;
+    display: inline;
+    text-decoration: underline;
+  }
+
+  /* Embedded Code */
+  [data-type="embed_code"] {
+    position: relative;
+    margin: 20px 0;
+    .height-adjuster {
+      max-width: 1280px;
+      position: relative;
+
+      .wrapper {
+        position: relative;
+      }
+
+      .wrapper[style*='padding-top'] {
+        iframe {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+        }
+      }
+    }
+  }
+}
+
+/* --- Section --- */
+.section {
+  width: 100%;
+}
+
+/* section-inner のスタイル
+ * position: static は studio-preview との表示互換性のために維持している。
+ * 元々は考慮漏れで設定されたものだが、既に使用されているため互換性維持のために必要。
+ * .box クラスも同時に付与されるため、display: flex 等の基本レイアウトは継承される。
+ */
+.section-inner {
+  position: static;
+}
+
+/* --- Dialog --- */
+dialog {
+  border: none;
+  background-color: transparent;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  max-width: none;
+  max-height: none;
+  box-sizing: border-box;
+
+&[open] {
+    display: flex;
+  }
+
+&::backdrop {
+    background: transparent;
+  }
+}
+
+.modal-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;  /* backdropクリックをdialogに透過 */
+}
+
+.modal-container > * {
+  pointer-events: auto;  /* コンテンツ内のクリックを有効化 */
+}
+
+/* --- Modal Transition --- */
+/* モーダルトランジション中の子要素transition無効化（ちらつき防止） */
+/* modal-readyが付くまで子要素のtransitionを無効化し、 */
+/* dialogのopacityトランジションとappearアニメーションの競合を防ぐ */
+/* NOTE: modal-closing時も:not(.modal-ready)に該当するため、閉じるアニメーション中も適用される */
+dialog[open][data-modal-transition-base]:not(.modal-ready) .modal-container * {
+  transition: none !important;
+}
+
+/* 開いた直後の初期状態: dialogとmodal-containerをopacity 0に */
+dialog[open][data-modal-transition-base] {
+  opacity: 0;
+}
+
+dialog[open][data-modal-transition-base] > .modal-container {
+  opacity: 0;
+  /* transformはdata-modal-transition-baseのJSON値を使用するためJSで設定 */
+}
+
+/* 準備完了: トランジションでopacity 1, transform noneへ */
+dialog[open][data-modal-transition-base].modal-ready {
+  opacity: 1;
+  transition: opacity 400ms cubic-bezier(.4,.4,0,1);
+}
+
+dialog[open][data-modal-transition-base].modal-ready > .modal-container {
+  opacity: 1;
+  transform: none;
+  transition: opacity 400ms cubic-bezier(.4,.4,0,1), transform 400ms cubic-bezier(.4,.4,0,1);
+}
+
+/* 閉じるアニメーション */
+dialog[data-modal-transition-base].modal-closing {
+  opacity: 0;
+  transition: opacity 400ms cubic-bezier(.4,.4,0,1);
+}
+
+dialog[data-modal-transition-base].modal-closing > .modal-container {
+  opacity: 0;
+  transition: opacity 400ms cubic-bezier(.4,.4,0,1), transform 400ms cubic-bezier(.4,.4,0,1);
+}
+
+/* アクセシビリティ: モーション軽減 */
+@media (prefers-reduced-motion: reduce) {
+  dialog[open][data-modal-transition-base],
+  dialog[open][data-modal-transition-base].modal-ready,
+  dialog[data-modal-transition-base].modal-closing {
+    transition: none;
+    opacity: 1;
+  }
+
+  dialog[open][data-modal-transition-base] > .modal-container,
+  dialog[open][data-modal-transition-base].modal-ready > .modal-container,
+  dialog[data-modal-transition-base].modal-closing > .modal-container {
+    transition: none;
+    opacity: 1;
+    transform: none !important;
+  }
+}
+
+/* --- Image Background Element --- */
+/* .image__bg-container 単体構造で::before疑似要素を使用 */
+.image__bg-container {
+  container-type: size;  /* 幅と高さを監視（aspect-ratioクエリに必要） */
+  container-name: image-container;
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -2;
+  border-radius: inherit;
+}
+
+.image__bg-container::before {
+  content: '';
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: var(--img-current);
+  background-position: 50%;
+  background-size: cover;
+  border-radius: inherit;
+  transition: inherit;
+}
+
+/* DPR 1x: 背景画像用 - 閾値（600px/1000px/1801px） */
+@media (max-resolution: 1.99dppx) {
+  /* --- horizontal (横長/正方形) - DPR 1x --- */
+  /* デフォルト: < 600px → small */
+  .image--horizontal .image__bg-container::before {
+    --img-current: var(--img-small);
+  }
+
+  /* aspect-ratio < 1 補正: small → middle (600px未満) */
+  @container (aspect-ratio < 1) and (max-width: 599px) {
+    .image--horizontal .image__bg-container::before {
+      --img-current: var(--img-middle);
+    }
+  }
+
+  /* aspect-ratio < 0.5 補正: small → regular (600px未満、2段階アップ) */
+  @container (aspect-ratio < 0.5) and (max-width: 599px) {
+    .image--horizontal .image__bg-container::before {
+      --img-current: var(--img-regular);
+    }
+  }
+
+  /* 600px以上 + aspect-ratio >= 1 → middle */
+  @container (min-width: 600px) and (aspect-ratio >= 1) {
+    .image--horizontal .image__bg-container::before {
+      --img-current: var(--img-middle);
+    }
+  }
+
+  /* 600px以上 + aspect-ratio < 1 補正: middle → regular */
+  @container (min-width: 600px) and (max-width: 999px) and (aspect-ratio < 1) {
+    .image--horizontal .image__bg-container::before {
+      --img-current: var(--img-regular);
+    }
+  }
+
+  /* 600px以上 + aspect-ratio < 0.5 補正: middle → origin (2段階アップ) */
+  @container (aspect-ratio < 0.5) and (min-width: 600px) and (max-width: 999px) {
+    .image--horizontal .image__bg-container::before {
+      --img-current: var(--img-origin);
+    }
+  }
+
+  /* 1000px以上 + aspect-ratio >= 1 → regular */
+  @container (min-width: 1000px) and (aspect-ratio >= 1) {
+    .image--horizontal .image__bg-container::before {
+      --img-current: var(--img-regular);
+    }
+  }
+
+  /* 1000px以上 + aspect-ratio < 1 補正: regular → origin */
+  @container (min-width: 1000px) and (max-width: 1800px) and (aspect-ratio < 1) {
+    .image--horizontal .image__bg-container::before {
+      --img-current: var(--img-origin);
+    }
+  }
+
+  /* 1000px以上 + aspect-ratio < 0.5: origin で上限キャップ（aspect-ratio < 1 と同じ結果） */
+
+  /* 1801px以上 → origin */
+  @container (min-width: 1801px) {
+    .image--horizontal .image__bg-container::before {
+      --img-current: var(--img-origin);
+    }
+  }
+
+  /* --- vertical (縦長) - DPR 1x --- */
+  /* デフォルト: < 600px → small */
+  .image--vertical .image__bg-container::before {
+    --img-current: var(--img-small);
+  }
+
+  /* 600-999px → middle */
+  @container (min-width: 600px) and (max-width: 999px) {
+    .image--vertical .image__bg-container::before {
+      --img-current: var(--img-middle);
+    }
+  }
+
+  /* 1000-1800px → regular */
+  @container (min-width: 1000px) and (max-width: 1800px) {
+    .image--vertical .image__bg-container::before {
+      --img-current: var(--img-regular);
+    }
+  }
+
+  /* 1801px以上 → origin */
+  @container (min-width: 1801px) {
+    .image--vertical .image__bg-container::before {
+      --img-current: var(--img-origin);
+    }
+  }
+}
+
+/* --- Shift Classes for Background Images --- */
+/* 注意: shift classesはDPR非依存で、常にDPR 1x相当の閾値（600px/1000px）を使用 */
+/* shift-1: 1段階上のバリエーション */
+.image--shift-1 .image__bg-container::before {
+  --img-current: var(--img-middle);
+}
+
+@container (min-width: 600px) {
+  .image--shift-1 .image__bg-container::before {
+    --img-current: var(--img-regular);
+  }
+}
+
+@container (min-width: 1000px) {
+  .image--shift-1 .image__bg-container::before {
+    --img-current: var(--img-origin);
+  }
+}
+
+/* shift-2: 2段階上のバリエーション */
+.image--shift-2 .image__bg-container::before {
+  --img-current: var(--img-regular);
+}
+
+@container (min-width: 600px) {
+  .image--shift-2 .image__bg-container::before {
+    --img-current: var(--img-origin);
+  }
+}
+
+/* DPR 2x: 背景画像用 - 閾値（300px/500px/900px） */
+@media (min-resolution: 2dppx) {
+  /* --- horizontal (横長/正方形) - DPR 2x --- */
+  /* デフォルト: < 300px → small */
+  .image--horizontal .image__bg-container::before {
+    --img-current: var(--img-small);
+  }
+
+  /* aspect-ratio < 1 補正: small → middle (300px未満) */
+  @container (aspect-ratio < 1) and (max-width: 299px) {
+    .image--horizontal .image__bg-container::before {
+      --img-current: var(--img-middle);
+    }
+  }
+
+  /* aspect-ratio < 0.5 補正: small → regular (300px未満、2段階アップ) */
+  @container (aspect-ratio < 0.5) and (max-width: 299px) {
+    .image--horizontal .image__bg-container::before {
+      --img-current: var(--img-regular);
+    }
+  }
+
+  /* 300px以上 + aspect-ratio >= 1 → middle */
+  @container (min-width: 300px) and (aspect-ratio >= 1) {
+    .image--horizontal .image__bg-container::before {
+      --img-current: var(--img-middle);
+    }
+  }
+
+  /* 300px以上 + aspect-ratio < 1 補正: middle → regular */
+  @container (min-width: 300px) and (max-width: 499px) and (aspect-ratio < 1) {
+    .image--horizontal .image__bg-container::before {
+      --img-current: var(--img-regular);
+    }
+  }
+
+  /* 300px以上 + aspect-ratio < 0.5 補正: middle → origin (2段階アップ) */
+  @container (aspect-ratio < 0.5) and (min-width: 300px) and (max-width: 499px) {
+    .image--horizontal .image__bg-container::before {
+      --img-current: var(--img-origin);
+    }
+  }
+
+  /* 500px以上 + aspect-ratio >= 1 → regular */
+  @container (min-width: 500px) and (aspect-ratio >= 1) {
+    .image--horizontal .image__bg-container::before {
+      --img-current: var(--img-regular);
+    }
+  }
+
+  /* 500px以上 + aspect-ratio < 1 補正: regular → origin */
+  @container (min-width: 500px) and (max-width: 900px) and (aspect-ratio < 1) {
+    .image--horizontal .image__bg-container::before {
+      --img-current: var(--img-origin);
+    }
+  }
+
+  /* 500px以上 + aspect-ratio < 0.5: origin で上限キャップ（aspect-ratio < 1 と同じ結果） */
+
+  /* 901px以上 → origin */
+  @container (min-width: 901px) {
+    .image--horizontal .image__bg-container::before {
+      --img-current: var(--img-origin);
+    }
+  }
+
+  /* --- vertical (縦長) - DPR 2x --- */
+  /* デフォルト: ≤ 300px → small */
+  .image--vertical .image__bg-container::before {
+    --img-current: var(--img-small);
+  }
+
+  /* 301px以上 → middle */
+  @container (min-width: 301px) {
+    .image--vertical .image__bg-container::before {
+      --img-current: var(--img-middle);
+    }
+  }
+
+  /* 601px以上 → regular */
+  @container (min-width: 601px) {
+    .image--vertical .image__bg-container::before {
+      --img-current: var(--img-regular);
+    }
+  }
+
+  /* 901px以上 → origin */
+  @container (min-width: 901px) {
+    .image--vertical .image__bg-container::before {
+      --img-current: var(--img-origin);
+    }
+  }
+}
+
+/* --- Text Specific --- */
+.text {
+  /* Note: Base styles are defined above in common group */
+  /* Specific styles for .text */
+  -webkit-font-smoothing: antialiased;
+  position: relative; /* Already defined in base, maybe redundant */
+  line-height: 1;
+  word-spacing: 1px;
+  /* margin: 0; is already defined in base */
+}
+
+/* --- Frame --- */
+.frame {
+  display: block;
+  overflow: hidden;
+  /* Note: Base styles are defined above in common group */
+}
+/* biome-ignore lint/style/noDescendingSpecificity: 異なるコンテキストでのiframeスタイル */
+.frame > iframe {
+  border: none;
+  width: 100%;
+}
+
+/* --- Studio Specific --- */
+
+/* --- Toggle --- */
+.toggle {
+  display: flex;
+  /* Note: Base styles are defined above in common group */
+> summary {
+  align-self: stretch;
+  &::marker,
+  &::-webkit-details-marker {
+      display: none;
+    }
+  }
+.toggle-content {
+    /* Assuming .toggle-content is a child of .toggle */
+    overflow: hidden;
+  }
+
+&::details-content {
+    display: contents;
+  }
+}
+
+/* --- Input File --- */
+.file {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  outline: 2px solid transparent;
+  outline-offset: -1px;
+  position: relative;
+}
+
+.file:focus-within {
+  outline-color: rgba(56, 110, 220, 0.5);
+}
+
+.file > input[type='file'] {
+  opacity: 0;
+  position: absolute;
+  pointer-events: none;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.toggle[data-toggle-closing] [data-show-toggle="open"],
+.toggle[open]:not([data-toggle-closing]) [data-show-toggle="close"],
+.toggle:not([open]):not([data-toggle-closing]) [data-show-toggle="open"] {
+  display: none;
+}
+
+/* --- Video Container --- */
+/* Video inside video-container - disable text selection */
+.video-container {
+  user-select: none;
+}
+
+/* Video label toggle based on container state */
+.video-container[data-video-state="paused"] [data-video-label="pause"],
+.video-container[data-video-state="playing"] [data-video-label="play"] {
+  display: none;
+}
+
+.video-container[data-video-state="paused"] [data-video-label="play"],
+.video-container[data-video-state="playing"] [data-video-label="pause"] {
+  display: inline;
+}
+
+/* --- Carousel Slot Controls --- */
+/* is-playing属性に基づくslot表示制御 */
+.sd-carousel:not([is-playing]) [slot="pause"],
+.sd-carousel[is-playing] [slot="play"] {
+  display: none !important;
+}
+
+/** root-element */
+.sd-1 {
+  min-height: 100vh;
+  overflow: clip;
+}
+
+/* --- CSS Custom Properties for Gradient Animation --- */
+@property --g-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 180deg;
+}
+@property --g-color-0 {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: transparent;
+}
+@property --g-position-0 {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0.01%;
+}
+@property --g-color-1 {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: transparent;
+}
+@property --g-position-1 {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+@property --g-color-2 {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: transparent;
+}
+@property --g-position-2 {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+@property --g-color-3 {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: transparent;
+}
+@property --g-position-3 {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+@property --g-color-4 {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: transparent;
+}
+@property --g-position-4 {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+@property --g-color-5 {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: transparent;
+}
+@property --g-position-5 {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+@property --g-color-6 {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: transparent;
+}
+@property --g-position-6 {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+@property --g-color-7 {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: transparent;
+}
+@property --g-position-7 {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+@property --g-color-8 {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: transparent;
+}
+@property --g-position-8 {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+@property --g-color-9 {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: transparent;
+}
+@property --g-position-9 {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+@property --g-color-10 {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: transparent;
+}
+@property --g-position-10 {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+@property --g-color-11 {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: transparent;
+}
+@property --g-position-11 {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+/* --- Container Query Responsive Images --- */
+/* 構造: div.sd-img-horizontal/vertical > div.sd-img__inner > (img.sd-img__sizer + figure.sd-img__figure) */
+.sd-img-horizontal,
+.sd-img-vertical {
+  box-sizing: border-box;
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  overflow: hidden;
+  flex: none;
+  max-width: 100%;
+  min-width: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0.4, 0, 1);
+  transition-property: all;
+}
+
+.sd-img__inner {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.sd-img__sizer {
+  display: block;
+  /* デフォルトは固有サイズ（SVG viewBox）を使用 */
+  /* width/heightはブレークポイントごとにオーバーライドで制御 */
+  max-width: 100%;
+}
+
+.sd-img__figure {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  container-type: size;
+}
+
+.sd-img__actual {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.sd-img__actual--small,
+.sd-img__actual--middle,
+.sd-img__actual--regular,
+.sd-img__actual--origin {
+  display: none;
+}
+
+/* DPR 1x: sd-img要素用 - 閾値（600px/1000px/1801px） */
+@media (max-resolution: 1.99dppx) {
+  /* --- horizontal (DPR 1x) --- */
+  /* < 600px: small, 600-999px: middle, 1000-1800px: regular, >= 1801px: origin */
+  .sd-img-horizontal .sd-img__actual--small {
+    display: block;
+  }
+
+  @container (min-width: 600px) and (aspect-ratio >= 1) {
+    .sd-img-horizontal .sd-img__actual--small {
+      display: none;
+    }
+    .sd-img-horizontal .sd-img__actual--middle {
+      display: block;
+    }
+  }
+
+  @container (min-width: 1000px) and (aspect-ratio >= 1) {
+    .sd-img-horizontal .sd-img__actual--middle {
+      display: none;
+    }
+    .sd-img-horizontal .sd-img__actual--regular {
+      display: block;
+    }
+  }
+
+  @container (min-width: 1801px) {
+    .sd-img-horizontal .sd-img__actual--regular {
+      display: none;
+    }
+    .sd-img-horizontal .sd-img__actual--origin {
+      display: block;
+    }
+  }
+
+  /* --- vertical (DPR 1x) --- */
+  /* < 600px: small, 600-999px: middle, 1000-1800px: regular, >= 1801px: origin */
+  .sd-img-vertical .sd-img__actual--small {
+    display: block;
+  }
+
+  @container (min-width: 600px) {
+    .sd-img-vertical .sd-img__actual--small {
+      display: none;
+    }
+    .sd-img-vertical .sd-img__actual--middle {
+      display: block;
+    }
+  }
+
+  @container (min-width: 1000px) {
+    .sd-img-vertical .sd-img__actual--middle {
+      display: none;
+    }
+    .sd-img-vertical .sd-img__actual--regular {
+      display: block;
+    }
+  }
+
+  @container (min-width: 1801px) {
+    .sd-img-vertical .sd-img__actual--regular {
+      display: none;
+    }
+    .sd-img-vertical .sd-img__actual--origin {
+      display: block;
+    }
+  }
+
+  /* --- Shift Classes (DPR 1x) --- */
+  /* shift-1: 1段階上のバリエーション（regularが最大） */
+  .sd-img--shift-1 .sd-img__actual--small {
+    display: none;
+  }
+  .sd-img--shift-1 .sd-img__actual--middle {
+    display: block;
+  }
+
+  @container (min-width: 600px) {
+    .sd-img--shift-1 .sd-img__actual--middle {
+      display: none;
+    }
+    .sd-img--shift-1 .sd-img__actual--regular {
+      display: block;
+    }
+  }
+
+  /* shift-2: 2段階上のバリエーション（regularが最大） */
+  .sd-img--shift-2 .sd-img__actual--small {
+    display: none;
+  }
+  .sd-img--shift-2 .sd-img__actual--regular {
+    display: block;
+  }
+
+  /* --- Aspect Ratio Based Variation Selection for sd-img --- */
+  /* 横長画像(horizontal) + 縦長コンテナ → より大きいバリエーション */
+  @container (aspect-ratio < 1) and (max-width: 599px) {
+    .sd-img-horizontal .sd-img__actual--small {
+      display: none;
+    }
+    .sd-img-horizontal .sd-img__actual--middle {
+      display: block;
+    }
+  }
+
+  @container (aspect-ratio < 0.5) {
+    .sd-img-horizontal .sd-img__actual--middle {
+      display: none;
+    }
+    .sd-img-horizontal .sd-img__actual--regular {
+      display: block;
+    }
+  }
+
+}
+
+/* DPR 2x: sd-img要素用 - 閾値（300px/500px/901px） */
+@media (min-resolution: 2dppx) {
+  /* horizontal: < 300px: small, 300-499px: middle, 500-900px: regular, >= 901px: origin */
+  .sd-img-horizontal .sd-img__actual--small {
+    display: block;
+  }
+
+  @container (min-width: 300px) and (aspect-ratio >= 1) {
+    .sd-img-horizontal .sd-img__actual--small {
+      display: none;
+    }
+    .sd-img-horizontal .sd-img__actual--middle {
+      display: block;
+    }
+  }
+
+  @container (min-width: 500px) and (aspect-ratio >= 1) {
+    .sd-img-horizontal .sd-img__actual--middle {
+      display: none;
+    }
+    .sd-img-horizontal .sd-img__actual--regular {
+      display: block;
+    }
+  }
+
+  @container (min-width: 901px) {
+    .sd-img-horizontal .sd-img__actual--regular {
+      display: none;
+    }
+    .sd-img-horizontal .sd-img__actual--origin {
+      display: block;
+    }
+  }
+
+  /* vertical: ≤ 300px: small, 301-600px: middle, 601-900px: regular, >= 901px: origin */
+  .sd-img-vertical .sd-img__actual--small {
+    display: block;
+  }
+
+  @container (min-width: 301px) {
+    .sd-img-vertical .sd-img__actual--small {
+      display: none;
+    }
+    .sd-img-vertical .sd-img__actual--middle {
+      display: block;
+    }
+  }
+
+  @container (min-width: 601px) {
+    .sd-img-vertical .sd-img__actual--middle {
+      display: none;
+    }
+    .sd-img-vertical .sd-img__actual--regular {
+      display: block;
+    }
+  }
+
+  @container (min-width: 901px) {
+    .sd-img-vertical .sd-img__actual--regular {
+      display: none;
+    }
+    .sd-img-vertical .sd-img__actual--origin {
+      display: block;
+    }
+  }
+
+  /* --- Aspect Ratio Based Variation Selection for sd-img (DPR 2x) --- */
+  /* 横長画像(horizontal) + 縦長コンテナ → より大きいバリエーション */
+  @container (aspect-ratio < 1) and (max-width: 299px) {
+    .sd-img-horizontal .sd-img__actual--small {
+      display: none;
+    }
+    .sd-img-horizontal .sd-img__actual--middle {
+      display: block;
+    }
+  }
+
+  @container (aspect-ratio < 0.5) {
+    .sd-img-horizontal .sd-img__actual--middle {
+      display: none;
+    }
+    .sd-img-horizontal .sd-img__actual--regular {
+      display: block;
+    }
+  }
+}
+
+/* RichText内のContainer Query画像 */
+.sd-img--richtext {
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: bottom;
+}
+
+.richText .sd-img--richtext {
+  margin: 0.5em 0;
+}
+
+</style>
+<style>:root { --s-color-d4aa9aee: #fafafaff; }</style>
+<style>.text.theme-48a70f87 { font-family:var(--s-font-f1a2f042); font-feature-settings:normal; font-size:24px; font-style:normal; font-weight:700; letter-spacing:normal; line-height:1.75; }</style>
+<style media="(max-width: 540px)">.text.theme-48a70f87 { font-size:16px; }</style>
+<style>.sd-1 { align-content:center; align-items:center; background:#ffffff; flex-direction:column; flex-wrap:nowrap; height:100%; justify-content:flex-start; width:100%; max-width:100%; }
+.sd-1 > * { --gap-h:0px; --gap-v:0px; }
+.sd-2 { align-content:center; align-items:center; bottom:auto; display:none; flex:none; flex-direction:column; flex-wrap:nowrap; height:100vh; justify-content:center; left:auto; margin:0; padding:0px 0px; position:fixed; right:0px; top:82px; transition-delay:600ms; transition-duration:800ms; width:69px; z-index:5; max-width:69px; }
+.sd-3 { align-content:center; align-items:center; background:#14314a; box-shadow:0px 20px 30px rgba(0,0,0,0.2); flex-direction:column; flex-wrap:nowrap; justify-content:center; left:0; margin:0; padding:24px; position:absolute; top:0; }
+.sd-4 { color:#ffffff; font-family:var(--s-font-f1a2f042); font-size:16px; font-weight:700; height:auto; letter-spacing:0.05em; line-height:1.4; margin:0px 0px 6px; text-align:center; width:auto; writing-mode:vertical-rl; justify-content:center; max-width:100%; min-width:auto; }
+.sd-5 { align-content:center; align-items:center; bottom:auto; display:none; flex:none; flex-direction:column; flex-wrap:nowrap; height:100vh; justify-content:center; left:auto; margin:0; padding:0px 0px; position:fixed; right:0px; top:82px; transition-delay:600ms; transition-duration:800ms; width:69px; z-index:5; max-width:69px; }
+.sd-6 { align-content:center; align-items:center; background:#14314a; box-shadow:0px 20px 30px rgba(0,0,0,0.2); flex-direction:column; flex-wrap:nowrap; justify-content:center; left:0; margin:0; padding:24px; position:absolute; top:0; }
+.sd-7 { color:#ffffff; font-family:var(--s-font-f1a2f042); font-size:16px; font-weight:700; height:auto; letter-spacing:0.05em; line-height:1.4; margin:0px 0px 6px; text-align:center; width:auto; writing-mode:vertical-rl; justify-content:center; max-width:100%; min-width:auto; }
+.symbol-1 { align-content:center; align-items:center; background:#14314aff; border-bottom:1px solid transparent; border-left:0px solid transparent; border-right:0px solid transparent; border-top:0px solid transparent; flex:none; flex-direction:column; flex-wrap:nowrap; height:auto; justify-content:center; left:0px; opacity:0.75; padding:5px 40px; position:fixed; top:0px; width:100%; z-index:2; max-width:100%; }
+.symbol-1.appear { opacity:1; transform:translate(0px, -8px); transition-delay:800ms; transition-duration:500ms; transition-timing-function:ease; }
+.symbol-1:hover { opacity:1; --ha:1; }
+.symbol-1__sd-1 { align-content:center; align-items:center; background:transparent; flex:none; flex-direction:row; flex-wrap:nowrap; gap:40px; height:auto; justify-content:space-between; margin:0px; padding:0px; width:1280px; max-width:100%; }
+.symbol-1__sd-1 > * { --gap-h:40px; --gap-v:0px; }
+.symbol-1__sd-2 { align-content:center; align-items:center; flex-direction:row; flex-wrap:nowrap; justify-content:center; padding:0px; min-width:auto; }
+.symbol-1__sd-3 { flex:none; height:51px; width:auto; max-width:100%; min-width:auto; }
+.symbol-1__sd-3 { aspect-ratio:unset; }
+.symbol-1__sd-3 > .sd-img__inner > .sd-img__figure { width:auto; height:100%; }
+.symbol-1__sd-3 > .sd-img__inner > .sd-img__sizer { height:100%; }
+.symbol-1__sd-4 { align-content:center; align-items:center; flex-direction:row; flex-wrap:wrap; gap:40px; justify-content:flex-end; padding:0px; min-width:auto; }
+.symbol-1__sd-4 > * { --gap-h:40px; --gap-v:40px; }
+.symbol-1__sd-5 { align-content:center; align-items:center; display:flex; flex-direction:row; flex-wrap:nowrap; gap:24px; justify-content:space-between; padding:0px; min-width:auto; }
+.symbol-1__sd-5 > * { --gap-h:24px; --gap-v:0px; }
+.list-1 { align-content:center; align-items:center; flex-direction:row; flex-wrap:wrap; gap:0px; justify-content:center; padding:0px; min-width:auto; }
+.list-1 > * { --gap-h:0px; --gap-v:0px; }
+.list-1__item { align-content:center; align-items:center; flex-direction:column; flex-wrap:nowrap; justify-content:center; padding:0px; min-width:auto; }
+.list-1__item__sd-1 { align-content:center; align-items:center; flex-direction:column; flex-wrap:nowrap; justify-content:center; padding:4px 12px; min-width:auto; }
+.list-1__item__sd-1:hover { opacity:1; --ha:1; }
+.list-1__item__sd-2 { color:#ffffffff; flex:none; font-family:var(--s-font-f1a2f042); font-feature-settings:'palt' 1; font-size:15px; font-style:normal; font-weight:500; height:auto; letter-spacing:normal; line-height:1.75; text-align:left; text-decoration:none; width:auto; justify-content:flex-start; max-width:100%; min-width:auto; }
+.list-1__item__sd-3 { background:#ffffffff; flex:none; height:1px; width:0%; max-width:0%; }
+.list-1__item__sd-1:hover .list-1__item__sd-3 { flex:none; width:100%; max-width:100%; }
+.symbol-1__sd-6 { align-content:center; align-items:center; flex-direction:row; flex-wrap:nowrap; gap:12px; height:auto; justify-content:flex-start; padding:0px; width:auto; max-width:100%; min-width:auto; }
+.symbol-1__sd-6 > * { --gap-h:12px; --gap-v:0px; }
+.symbol-1__sd-7 { align-content:center; align-items:center; background:#ffffffff; border-radius:999px; display:flex; flex:none; flex-direction:row; flex-wrap:nowrap; gap:16px; height:auto; justify-content:space-between; padding:12px 32px; width:auto; max-width:100%; min-width:auto; }
+.symbol-1__sd-7:hover { background:#ffffffff; opacity:1; --ha:1; }
+.symbol-1__sd-7 > * { --gap-h:16px; --gap-v:0px; }
+.symbol-1__sd-7:hover > * { --gap-h:16px; --gap-v:0px; }
+.symbol-1__sd-8 { color:#14314aff; flex:1; font-family:var(--s-font-f1a2f042); font-feature-settings:'palt' 1; font-size:15px; font-weight:700; height:auto; letter-spacing:-0.02em; line-height:1.75; margin:0px; text-align:center; width:auto; justify-content:center; max-width:100%; min-width:auto; }
+.symbol-1__sd-7:hover .symbol-1__sd-8 { color:#ff5035ff; }
+.symbol-1__sd-9 { color:#14314aff; font-size:20px; --material-symbol-weight:400; min-width:auto; }
+.symbol-1__sd-7:hover .symbol-1__sd-9 { color:#ff5035ff; transform:translate(2px, 0px); }
+.symbol-1__sd-10 { align-content:center; align-items:center; background:#ff5035ff; border-radius:50%; display:none; flex:none; flex-direction:column; flex-wrap:nowrap; height:48px; justify-content:center; width:48px; max-width:100%; }
+.symbol-1__sd-11 { color:#ffffffff; font-size:24px; min-width:auto; }
+.modal-7 { background:rgba(0,0,0,0.16); min-width:auto; }
+.modal-7__container { height:100%; justify-content:center; width:100%; }
+.list-2 { align-content:flex-start; align-items:flex-start; display:none; flex:none; gap:24px; justify-content:flex-start; padding:0px; width:277px; max-width:100%; }
+.list-2 > * { --gap-h:0px; --gap-v:24px; }
+.list-2__item { align-content:flex-start; align-items:flex-start; display:none; flex-direction:column; flex-wrap:nowrap; gap:4px; justify-content:flex-start; padding:0px; min-width:auto; }
+.list-2__item:hover { opacity:1; --ha:1; }
+.list-2__item > * { --gap-h:0px; --gap-v:4px; }
+.list-2__item:hover > * { --gap-h:0px; --gap-v:4px; }
+.list-2__item__sd-1 { color:#222222; font-family:var(--s-font-f1a2f042); font-feature-settings:normal; font-size:20px; font-weight:700; height:auto; line-height:1.5; text-align:left; width:auto; justify-content:flex-start; max-width:100%; min-width:auto; }
+.list-2__item:hover .list-2__item__sd-1 { color:#ff5035ff; }
+.list-2__item__sd-2 { color:#222222; font-family:var(--s-font-f1a2f042); font-feature-settings:'palt' 1; font-size:12px; font-style:normal; font-weight:400; height:auto; letter-spacing:normal; line-height:1.4; text-align:left; width:auto; justify-content:flex-start; max-width:100%; min-width:auto; }
+.list-2__item:hover .list-2__item__sd-2 { color:#ff5035ff; }
+.sd-8 { align-content:center; align-items:center; background:#e6e7e9; flex:none; flex-direction:column; flex-wrap:nowrap; height:auto; justify-content:flex-start; padding:0px; right:0px; top:0px; width:auto; max-width:100%; min-width:auto; }
+.sd-8 > * { --gap-h:0px; --gap-v:0px; }
+.sd-9 { align-content:center; align-items:center; flex:none; flex-direction:column; flex-wrap:nowrap; height:auto; justify-content:center; padding:120px 40px 168px; width:100%; max-width:100%; }
+.sd-10 { align-content:center; align-items:center; background:transparent; flex:none; flex-direction:row; flex-wrap:nowrap; gap:40px; height:auto; justify-content:flex-start; margin:0px; padding:0px; width:1280px; max-width:100%; }
+.sd-10 > * { --gap-h:40px; --gap-v:0px; }
+.sd-11 { align-content:flex-start; align-items:flex-start; background:transparent; flex:none; gap:32px; height:auto; justify-content:flex-start; padding:0px; width:auto; max-width:100%; min-width:auto; }
+.sd-11.appear { opacity:0; transform:translate(0px, 20px); transition-delay:500ms; transition-duration:500ms; transition-timing-function:cubic-bezier(0.39, 0.575, 0.565, 1); }
+.sd-11 > * { --gap-h:0px; --gap-v:32px; }
+.sd-12 { align-content:flex-start; align-items:flex-start; flex-wrap:nowrap; gap:8px; justify-content:flex-start; padding:0px; width:100%; max-width:100%; }
+.sd-12 > * { --gap-h:0px; --gap-v:8px; }
+.sd-13 { color:#fafafaff; flex:none; font-family:var(--s-font-f1a2f042); font-feature-settings:'palt' 1; font-size:54px; font-style:normal; font-weight:700; height:auto; letter-spacing:0em; line-height:1.4; text-align:left; text-shadow:0px 0px 10px rgb(0, 0, 0); width:100%; justify-content:flex-start; max-width:100%; }
+.sd-14 { color:#fafafaff; height:auto; margin:0px; text-align:left; text-shadow:0px 0px 10px rgb(0, 0, 0); width:100%; justify-content:flex-start; max-width:100%; }
+.sd-15 { align-content:flex-start; align-items:flex-start; flex:none; flex-direction:row; flex-wrap:wrap; gap:8px 16px; justify-content:flex-start; padding:0px; width:100%; max-width:100%; }
+.sd-15 > * { --gap-h:16px; --gap-v:8px; }
+.sd-16 { align-content:center; align-items:center; background:#ffffffff; border-bottom:0px solid var(--s-color-d4aa9aee); border-left:0px solid var(--s-color-d4aa9aee); border-radius:6px; border-right:0px solid var(--s-color-d4aa9aee); border-top:0px solid var(--s-color-d4aa9aee); flex:none; flex-direction:row; flex-wrap:nowrap; gap:8px; justify-content:center; padding:12px 24px; width:auto; max-width:100%; min-width:auto; }
+.sd-16:hover { background:#212121; transition-duration:300ms; transition-timing-function:ease-in-out; --ha:1; }
+.sd-16 > * { --gap-h:8px; --gap-v:0px; }
+.sd-16:hover > * { --gap-h:8px; --gap-v:0px; }
+.sd-17 { color:#14314a; flex:1; font-family:var(--s-font-f1a2f042); font-feature-settings:'palt' 1; font-size:15px; font-weight:700; height:auto; line-height:1.75; text-align:left; width:auto; justify-content:flex-start; max-width:100%; min-width:auto; }
+.sd-16:hover .sd-17 { color:#ffffffff; }
+.sd-18 { color:#14314a; font-size:20px; --material-symbol-weight:400; min-width:auto; }
+.sd-16:hover .sd-18 { color:#ffffffff; transform:translate(2px, 0px); }
+.sd-19 { align-content:center; align-items:center; background:#14314a; border-radius:6px; flex:none; flex-direction:row; flex-wrap:nowrap; gap:8px; justify-content:center; padding:12px 24px; width:auto; max-width:100%; min-width:auto; }
+.sd-19:hover { background:#212121; opacity:1; --ha:1; }
+.sd-19 > * { --gap-h:8px; --gap-v:0px; }
+.sd-19:hover > * { --gap-h:8px; --gap-v:0px; }
+.sd-20 { color:#ffffffff; flex:1; font-family:var(--s-font-f1a2f042); font-feature-settings:'palt' 1; font-size:15px; font-weight:700; height:auto; line-height:1.75; text-align:left; width:auto; justify-content:flex-start; max-width:100%; min-width:auto; }
+.sd-19:hover .sd-20 { color:#ffffffff; }
+.sd-21 { color:#ffffffff; font-size:20px; --material-symbol-weight:400; min-width:auto; }
+.sd-19:hover .sd-21 { color:#ffffffff; transform:translate(2px, 0px); }
+.sd-22 { align-content:center; align-items:center; background:transparent; flex:none; flex-wrap:nowrap; gap:50px; justify-content:center; padding:100px 40px; width:100%; max-width:100%; }
+.sd-22 > * { --gap-h:0px; --gap-v:50px; }
+.sd-23 { align-content:center; align-items:center; background:transparent; flex:none; flex-direction:column; flex-wrap:nowrap; gap:64px; height:auto; justify-content:flex-start; margin:0px; padding:0px; width:1280px; max-width:100%; }
+.sd-23 > * { --gap-h:0px; --gap-v:64px; }
+.sd-24 { align-content:center; align-items:center; background:transparent; flex:none; gap:0px; height:auto; justify-content:flex-start; padding:0px; width:997px; max-width:100%; }
+.sd-24.appear { opacity:0; transform:translate(0px, 20px); transition-delay:500ms; transition-duration:500ms; transition-timing-function:cubic-bezier(0.39, 0.575, 0.565, 1); }
+.sd-24 > * { --gap-h:0px; --gap-v:0px; }
+.sd-25 { align-content:center; align-items:center; flex-wrap:nowrap; gap:8px; justify-content:flex-start; padding:0px; width:100%; max-width:100%; }
+.sd-25 > * { --gap-h:0px; --gap-v:8px; }
+.sd-26 { color:#14314aff; flex:none; font-family:var(--s-font-f1a2f042); font-feature-settings:'palt' 1; font-size:54px; font-style:normal; font-weight:700; height:auto; letter-spacing:0em; line-height:1.4; text-align:center; width:100%; justify-content:center; max-width:100%; }
+.sd-27 { color:#333333; flex:none; font-family:var(--s-font-f1a2f042); font-size:150px; font-weight:800; height:197px; line-height:1.4; padding:64px 0px 0px; text-align:center; width:100%; justify-content:center; max-width:100%; }
+.sd-28 { background:transparent; color:#14314a; flex:none; font-family:var(--s-font-f1a2f042); font-size:32px; font-style:italic; font-weight:700; height:auto; letter-spacing:0.1em; line-height:1.4; margin:0px 0px 16px; padding:0px; text-align:center; transition-delay:500ms; transition-duration:800ms; width:100%; justify-content:center; max-width:100%; }
+.sd-28.appear { opacity:0; }
+.sd-29 { align-content:center; align-items:center; background:#14314a; flex:none; flex-direction:column; flex-wrap:nowrap; gap:24px; justify-content:center; padding:0px; right:0px; top:0px; width:100%; max-width:100%; }
+.sd-29 > * { --gap-h:0px; --gap-v:24px; }
+.sd-30 { align-content:center; align-items:center; flex:none; flex-direction:column; flex-wrap:nowrap; height:auto; justify-content:center; padding:72px; width:100%; max-width:100%; }
+.sd-30 > .image__bg-container::before { background-position:right center; background-size:100%; filter:brightness(60%); }
+.sd-31 { align-content:flex-start; align-items:flex-start; flex:none; flex-direction:column; flex-wrap:nowrap; gap:0px; height:auto; justify-content:center; padding:0px; width:auto; max-width:100%; min-width:auto; }
+.sd-31 > * { --gap-h:0px; --gap-v:0px; }
+.sd-32 { color:#ffffffff; flex:none; font-family:var(--s-font-f1a2f042); font-size:36px; font-weight:900; height:auto; letter-spacing:0.1em; line-height:1.4; margin:0px 0px 24px; text-align:left; text-shadow:0px 0px 20px rgb(0, 0, 0); transition-delay:300ms; transition-duration:400ms; transition-timing-function:ease-in-out; width:100%; justify-content:flex-start; max-width:100%; }
+.sd-32.appear { opacity:0; transform:translate(0px, 24px); }
+.sd-33 { color:#ffffff; flex:none; font-family:var(--s-font-f1a2f042); font-size:36px; font-weight:900; height:auto; letter-spacing:0.1em; line-height:1.4; margin:0px 0px 24px; text-align:left; text-shadow:0px 0px 10px rgb(0, 0, 0); transition-delay:300ms; transition-duration:400ms; transition-timing-function:ease-in-out; width:100%; justify-content:flex-start; max-width:100%; }
+.sd-33.appear { opacity:0; transform:translate(0px, 24px); }
+.sd-34 { color:#ffffff; font-family:var(--s-font-f1a2f042); font-size:24px; font-weight:700; height:auto; letter-spacing:0.1em; line-height:1.6; margin:0px; text-align:left; text-shadow:0px 0px 10px rgba(0,0,0,0.5); transition-delay:400ms; transition-duration:800ms; width:auto; justify-content:flex-start; max-width:100%; min-width:auto; }
+.sd-34.appear { opacity:0; }
+.sd-35 { color:#ffffff; font-family:var(--s-font-f1a2f042); font-size:16px; font-weight:700; height:auto; letter-spacing:0.1em; line-height:1.6; text-align:left; transition-delay:400ms; transition-duration:800ms; width:auto; justify-content:flex-start; max-width:100%; min-width:auto; }
+.sd-35.appear { opacity:0; }
+.sd-36 { color:#ffffff; font-family:var(--s-font-f1a2f042); font-size:14px; font-weight:700; height:auto; left:24px; letter-spacing:0.2em; line-height:1.4; margin:0; position:absolute; text-align:center; top:24px; width:auto; writing-mode:vertical-rl; justify-content:center; max-width:100%; min-width:auto; }
+.sd-37 { background:rgb(255, 255, 255); color:#14314aff; flex:none; font-family:var(--s-font-f1a2f042); font-feature-settings:'palt' 1; font-size:48px; font-style:normal; font-weight:900; height:60px; line-height:1.5; margin:50px 0px 0px; padding:0px; text-align:center; width:100%; justify-content:center; max-width:100%; }
+.sd-37.appear { opacity:0; transform:translate(50px, 0px); transition-duration:1000ms; transition-timing-function:ease-in-out; }
+.sd-38 { align-content:center; align-items:center; background:rgb(255, 255, 255); flex:none; flex-direction:column; flex-wrap:nowrap; gap:50px; justify-content:center; padding:72px; width:100%; max-width:100%; }
+.sd-38 > * { --gap-h:0px; --gap-v:50px; }
+.sd-39 { align-content:center; align-items:center; background:transparent; flex:none; flex-direction:row; flex-wrap:nowrap; gap:0px; height:auto; justify-content:flex-start; margin:0px; padding:0px; width:auto; max-width:100%; min-width:auto; }
+.sd-39 > * { --gap-h:0px; --gap-v:0px; }
+.sd-40 { align-content:flex-start; align-items:flex-start; background:transparent; flex:none; gap:32px; height:auto; justify-content:center; margin:0px; padding:0px 48px; width:auto; max-width:100%; min-width:auto; }
+.sd-40.appear { opacity:0; transform:translate(0px, 20px); transition-delay:500ms; transition-duration:500ms; transition-timing-function:cubic-bezier(0.39, 0.575, 0.565, 1); }
+.sd-40 > * { --gap-h:0px; --gap-v:32px; }
+.sd-41 { align-content:flex-start; align-items:flex-start; flex:1; flex-wrap:nowrap; gap:8px; justify-content:flex-start; padding:0px; width:auto; max-width:100%; min-width:auto; }
+.sd-41 > * { --gap-h:0px; --gap-v:8px; }
+.sd-42 { color:#14314aff; font-family:var(--s-font-f1a2f042); font-feature-settings:'palt' 1; font-size:36px; font-style:normal; font-weight:900; height:auto; letter-spacing:0.10em; line-height:1.4; text-align:left; width:auto; justify-content:flex-start; max-width:100%; min-width:auto; }
+.sd-43 { color:#14314aff; font-family:var(--s-font-f1a2f042); font-feature-settings:'palt' 1; font-size:20px; font-style:normal; font-weight:700; height:auto; letter-spacing:0.10em; line-height:1.75; margin:0px; text-align:left; width:auto; justify-content:flex-start; max-width:100%; min-width:auto; }
+.sd-44 { border-radius:8px; flex:none; height:370px; margin:0px; width:568px; max-width:100%; }
+.sd-44.appear { opacity:0; transform:translate(0px, 20px); transition-delay:500ms; transition-duration:500ms; transition-timing-function:cubic-bezier(0.39, 0.575, 0.565, 1); }
+.sd-45 { color:#14314a; font-family:var(--s-font-f1a2f042); font-size:24px; font-weight:700; height:auto; left:24px; letter-spacing:0.2em; line-height:1.4; margin:0; position:absolute; text-align:center; top:24px; width:auto; writing-mode:vertical-rl; justify-content:center; max-width:100%; min-width:auto; }
+.sd-46 { align-content:center; align-items:center; background:rgb(255, 255, 255); flex:none; flex-direction:column; flex-wrap:nowrap; gap:50px; justify-content:center; padding:72px; width:100%; max-width:100%; }
+.sd-46 > * { --gap-h:0px; --gap-v:50px; }
+.sd-47 { align-content:center; align-items:center; background:transparent; flex:none; flex-direction:row; flex-wrap:nowrap; gap:0px; height:auto; justify-content:flex-start; margin:0px; padding:0px; width:auto; max-width:100%; min-width:auto; }
+.sd-47 > * { --gap-h:0px; --gap-v:0px; }
+.sd-48 { border-radius:8px; flex:none; height:370px; margin:0px; padding:0px; width:568px; max-width:100%; }
+.sd-48.appear { opacity:0; transform:translate(0px, 20px); transition-delay:500ms; transition-duration:500ms; transition-timing-function:cubic-bezier(0.39, 0.575, 0.565, 1); }
+.sd-49 { align-content:flex-start; align-items:flex-start; background:transparent; flex:none; gap:32px; height:auto; justify-content:center; margin:0px; padding:0px 48px; width:auto; max-width:100%; min-width:auto; }
+.sd-49.appear { opacity:0; transform:translate(0px, 20px); transition-delay:500ms; transition-duration:500ms; transition-timing-function:cubic-bezier(0.39, 0.575, 0.565, 1); }
+.sd-49 > * { --gap-h:0px; --gap-v:32px; }
+.sd-50 { align-content:flex-start; align-items:flex-start; flex:1; flex-wrap:nowrap; gap:8px; justify-content:flex-start; padding:0px; width:auto; max-width:100%; min-width:auto; }
+.sd-50 > * { --gap-h:0px; --gap-v:8px; }
+.sd-51 { color:#14314aff; font-family:var(--s-font-f1a2f042); font-feature-settings:'palt' 1; font-size:36px; font-style:normal; font-weight:900; height:auto; letter-spacing:0.10em; line-height:1.4; text-align:left; width:auto; justify-content:flex-start; max-width:100%; min-width:auto; }
+.sd-52 { color:#14314aff; font-family:var(--s-font-f1a2f042); font-feature-settings:'palt' 1; font-size:20px; font-style:normal; font-weight:700; height:auto; letter-spacing:0.10em; line-height:1.75; margin:0px; text-align:left; width:auto; justify-content:flex-start; max-width:100%; min-width:auto; }
+.sd-53 { color:#14314a; font-family:var(--s-font-f1a2f042); font-size:24px; font-weight:700; height:auto; left:24px; letter-spacing:0.2em; line-height:1.4; margin:0; position:absolute; text-align:center; top:24px; width:auto; writing-mode:vertical-rl; justify-content:center; max-width:100%; min-width:auto; }
+.sd-54 { align-content:center; align-items:center; background:rgb(255, 255, 255); flex:none; flex-direction:column; flex-wrap:nowrap; gap:50px; justify-content:center; padding:72px; width:100%; max-width:100%; }
+.sd-54 > * { --gap-h:0px; --gap-v:50px; }
+.sd-55 { align-content:center; align-items:center; background:transparent; flex:none; flex-direction:row; flex-wrap:nowrap; gap:0px; height:auto; justify-content:flex-start; margin:0px; padding:0px; width:auto; max-width:100%; min-width:auto; }
+.sd-55 > * { --gap-h:0px; --gap-v:0px; }
+.sd-56 { align-content:flex-start; align-items:flex-start; background:transparent; flex:none; gap:32px; height:auto; justify-content:center; margin:0px; padding:0px 48px; width:auto; max-width:100%; min-width:auto; }
+.sd-56.appear { opacity:0; transform:translate(0px, 20px); transition-delay:500ms; transition-duration:500ms; transition-timing-function:cubic-bezier(0.39, 0.575, 0.565, 1); }
+.sd-56 > * { --gap-h:0px; --gap-v:32px; }
+.sd-57 { align-content:flex-start; align-items:flex-start; flex:1; flex-wrap:nowrap; gap:8px; justify-content:flex-start; padding:0px; width:auto; max-width:100%; min-width:auto; }
+.sd-57 > * { --gap-h:0px; --gap-v:8px; }
+.sd-58 { color:#14314aff; font-family:var(--s-font-f1a2f042); font-feature-settings:'palt' 1; font-size:36px; font-style:normal; font-weight:900; height:auto; letter-spacing:0.10em; line-height:1.4; text-align:left; width:auto; justify-content:flex-start; max-width:100%; min-width:auto; }
+.sd-59 { color:#14314aff; font-family:var(--s-font-f1a2f042); font-feature-settings:'palt' 1; font-size:20px; font-style:normal; font-weight:700; height:auto; letter-spacing:0.10em; line-height:1.75; margin:0px; text-align:left; width:auto; justify-content:flex-start; max-width:100%; min-width:auto; }
+.sd-60 { border-radius:8px; flex:none; height:370px; margin:0px; width:568px; max-width:100%; }
+.sd-60.appear { opacity:0; transform:translate(0px, 20px); transition-delay:500ms; transition-duration:500ms; transition-timing-function:cubic-bezier(0.39, 0.575, 0.565, 1); }
+.sd-61 { color:#14314a; font-family:var(--s-font-f1a2f042); font-size:24px; font-weight:700; height:auto; left:24px; letter-spacing:0.2em; line-height:1.4; margin:0; position:absolute; text-align:center; top:24px; width:auto; writing-mode:vertical-rl; justify-content:center; max-width:100%; min-width:auto; }
+.sd-62 { background:rgb(255, 255, 255); color:#14314aff; flex:none; font-family:var(--s-font-f1a2f042); font-feature-settings:'palt' 1; font-size:36px; font-style:normal; font-weight:900; height:60px; line-height:1.5; margin:50px 0px 0px; padding:0px; text-align:center; width:100%; justify-content:center; max-width:100%; }
+.sd-62.appear { transform:scale(5, 5); transform-origin:center center; transition-delay:300ms; transition-duration:800ms; }
+.sd-63 { align-content:center; align-items:center; background:#000000ff; box-shadow:0px 0px 0px 0px rgb(0, 0, 0); flex:none; flex-wrap:nowrap; justify-content:center; opacity:1; padding:144px 48px; width:100%; max-width:100%; }
+.sd-63 > .image__bg-container::before { filter:blur(0px) brightness(60%); }
+.sd-64 { align-content:flex-start; align-items:flex-start; background:transparent; flex:none; flex-wrap:nowrap; justify-content:center; margin:0px; padding:0px; width:760px; max-width:100%; }
+.sd-65 { color:#ffffffff; flex:none; font-family:var(--s-font-f1a2f042); font-size:36px; font-weight:900; height:auto; letter-spacing:0.1em; line-height:1.4; margin:0px 0px 24px; text-align:left; text-shadow:0px 0px 10px rgb(0, 0, 0); transition-delay:300ms; transition-duration:400ms; transition-timing-function:ease-in-out; width:100%; justify-content:flex-start; max-width:100%; }
+.sd-65.appear { opacity:0; transform:translate(0px, 24px); }
+.sd-66 { color:#ffffffff; font-family:var(--s-font-f1a2f042); font-size:24px; font-weight:700; height:auto; letter-spacing:0.1em; line-height:1.6; text-align:left; text-shadow:0px 0px 10px rgb(0, 0, 0); transition-delay:400ms; transition-duration:800ms; width:auto; justify-content:flex-start; max-width:100%; min-width:auto; }
+.sd-66.appear { opacity:0; }
+.sd-67 { background:rgb(255, 255, 255); color:#14314aff; flex:none; font-family:var(--s-font-f1a2f042); font-feature-settings:'palt' 1; font-size:36px; font-style:normal; font-weight:900; height:60px; line-height:1.5; margin:50px 0px 0px; padding:0px; text-align:center; width:100%; justify-content:center; max-width:100%; }
+.sd-67.appear { transform:scale(5, 5); transform-origin:center center; transition-delay:300ms; transition-duration:800ms; }
+.sd-68 { align-content:center; align-items:center; flex-direction:row; flex-wrap:nowrap; height:640px; justify-content:center; overflow-x:hidden; overflow-y:hidden; padding:24px 0px 0px; transition-timing-function:cubic-bezier(0, 0, 0.99, 0.98); width:100%; max-width:100%; }
+.sd-75 { align-content:center; align-items:center; bottom:0px; flex:none; flex-direction:row; flex-wrap:nowrap; gap:24px; height:88px; justify-content:center; left:0px; position:absolute; right:0px; top:auto; transition-timing-function:cubic-bezier(0.4, 0.4, 0.05, 1); width:auto; z-index:3; max-width:100%; min-width:auto; }
+.sd-75 > * { --gap-h:24px; --gap-v:0px; }
+.sd-76 { align-content:center; align-items:center; background:#FFFFFF; border-radius:50%; flex:none; flex-direction:column; flex-wrap:nowrap; height:40px; justify-content:center; width:40px; max-width:100%; }
+.sd-76:hover { background:#e1e1e1; --ha:1; }
+.sd-77 { color:#222222; font-size:24px; min-width:auto; }
+.sd-78 { background:#FFFFFF; border-radius:50%; flex-direction:column; flex-wrap:nowrap; height:40px; justify-content:center; width:40px; max-width:100%; }
+.sd-78:hover { background:#e1e1e1; --ha:1; }
+.sd-79 { height:auto; width:auto; max-width:100%; min-width:auto; }
+.sd-80 { color:#222222; font-size:18px; min-width:auto; }
+.sd-81 { height:auto; width:auto; max-width:100%; min-width:auto; }
+.sd-82 { color:#222222; font-size:18px; min-width:auto; }
+.sd-83 { background:#FFFFFF; border-radius:50%; flex-direction:column; flex-wrap:nowrap; height:40px; justify-content:center; width:40px; max-width:100%; }
+.sd-83:hover { background:#e1e1e1; --ha:1; }
+.sd-84 { color:#222222; font-size:24px; min-width:auto; }
+.sd-68__content { align-content:center; align-items:center; flex:none; flex-direction:column; flex-wrap:nowrap; height:100%; justify-content:center; outline-offset:-4px; transform:var(--transform); transition-duration:var(--_durationms); transition-property:transform; transition-timing-function:cubic-bezier(0.58, 0.21, 0.41, 0.96); width:100%; will-change:transform; max-width:100%; }
+.sd-68__content:focus-visible { outline:2px solid black; }
+[data-animatingNext].sd-68__content { transform:translateX(-100%); }
+[data-animatingPrev].sd-68__content { transform:translateX(100%); }
+.sd-68__content__sd-1 { color:#ffffffff; font-family:var(--s-font-f1a2f042); font-size:24px; font-weight:700; height:auto; line-height:1.4; text-align:left; width:auto; justify-content:flex-start; max-width:100%; min-width:auto; }
+.sd-68__content__sd-2 { align-content:flex-start; align-items:flex-start; flex:none; flex-direction:column; flex-wrap:nowrap; height:100%; justify-content:flex-end; overflow-x:visible; overflow-y:visible; padding:0px 80px 88px 48px; width:100%; z-index:-1; max-width:100%; }
+.sd-68__content__sd-3 { align-content:flex-start; align-items:flex-start; flex-direction:column; flex-wrap:nowrap; gap:10px; justify-content:flex-end; width:auto; max-width:100%; min-width:auto; }
+.sd-68__content__sd-3 > * { --gap-h:0px; --gap-v:10px; }
+.sd-68__content__sd-4 { color:#FFFFFF; font-family:var(--s-font-f1a2f042); font-size:20px; font-weight:600; text-align:center; text-shadow:3px 3px 0px rgba(0, 0, 0, 0.5); justify-content:center; min-width:auto; }
+.sd-68__content__sd-5 { color:#FFFFFF; font-family:var(--s-font-f1a2f042); font-size:40px; font-style:normal; font-weight:900; line-height:1.2; text-align:left; text-shadow:0px 0px 10px rgb(0, 0, 0); justify-content:flex-start; min-width:auto; }
+.sd-68__content__sd-6 { color:#FFFFFF; flex:none; font-family:var(--s-font-f1a2f042); font-size:16px; font-weight:700; height:auto; line-height:1.5; text-align:left; text-shadow:0px 0px 10px rgb(0, 0, 0); justify-content:flex-start; min-width:auto; }
+.sd-85 { align-content:center; align-items:center; flex-direction:row; flex-wrap:nowrap; height:640px; justify-content:center; overflow-x:hidden; overflow-y:hidden; padding:24px 0px 0px; transition-timing-function:cubic-bezier(0, 0, 0.99, 0.98); width:100%; max-width:100%; }
+.sd-92 { align-content:center; align-items:center; bottom:0px; flex:none; flex-direction:row; flex-wrap:nowrap; gap:24px; height:88px; justify-content:center; left:0px; position:absolute; right:0px; top:auto; transition-timing-function:cubic-bezier(0.4, 0.4, 0.05, 1); width:auto; z-index:3; max-width:100%; min-width:auto; }
+.sd-92 > * { --gap-h:24px; --gap-v:0px; }
+.sd-93 { align-content:center; align-items:center; background:#FFFFFF; border-radius:50%; flex:none; flex-direction:column; flex-wrap:nowrap; height:40px; justify-content:center; width:40px; max-width:100%; }
+.sd-93:hover { background:#e1e1e1; --ha:1; }
+.sd-94 { color:#222222; font-size:24px; min-width:auto; }
+.sd-95 { background:#FFFFFF; border-radius:50%; flex-direction:column; flex-wrap:nowrap; height:40px; justify-content:center; width:40px; max-width:100%; }
+.sd-95:hover { background:#e1e1e1; --ha:1; }
+.sd-96 { height:auto; width:auto; max-width:100%; min-width:auto; }
+.sd-97 { color:#222222; font-size:18px; min-width:auto; }
+.sd-98 { height:auto; width:auto; max-width:100%; min-width:auto; }
+.sd-99 { color:#222222; font-size:18px; min-width:auto; }
+.sd-100 { background:#FFFFFF; border-radius:50%; flex-direction:column; flex-wrap:nowrap; height:40px; justify-content:center; width:40px; max-width:100%; }
+.sd-100:hover { background:#e1e1e1; --ha:1; }
+.sd-101 { color:#222222; font-size:24px; min-width:auto; }
+.sd-85__content { align-content:center; align-items:center; flex-direction:column; flex-wrap:nowrap; height:100%; justify-content:center; outline-offset:-4px; transform:var(--transform); transition-duration:var(--_durationms); transition-property:transform; transition-timing-function:cubic-bezier(0.58, 0.21, 0.41, 0.96); width:100%; will-change:transform; max-width:100%; }
+.sd-85__content:focus-visible { outline:2px solid black; }
+[data-animatingNext].sd-85__content { transform:translateX(-100%); }
+[data-animatingPrev].sd-85__content { transform:translateX(100%); }
+.sd-85__content__sd-1 { color:#ffffffff; font-family:var(--s-font-f1a2f042); font-size:24px; font-weight:700; height:auto; line-height:1.4; text-align:left; width:auto; justify-content:flex-start; max-width:100%; min-width:auto; }
+.sd-85__content__sd-2 { align-content:flex-start; align-items:flex-start; flex-direction:column; flex-wrap:nowrap; height:100%; justify-content:flex-end; overflow-x:visible; overflow-y:visible; padding:0px 80px 88px 48px; width:100%; z-index:-1; max-width:100%; }
+.sd-85__content__sd-3 { align-content:flex-start; align-items:flex-start; flex-direction:column; flex-wrap:nowrap; gap:10px; justify-content:flex-end; width:auto; max-width:100%; min-width:auto; }
+.sd-85__content__sd-3 > * { --gap-h:0px; --gap-v:10px; }
+.sd-85__content__sd-4 { color:#FFFFFF; font-family:var(--s-font-f1a2f042); font-size:20px; font-weight:600; text-align:center; justify-content:center; min-width:auto; }
+.sd-85__content__sd-5 { color:#FFFFFF; font-family:var(--s-font-f1a2f042); font-size:40px; font-style:normal; font-weight:900; line-height:1.2; text-align:left; justify-content:flex-start; min-width:auto; }
+.sd-85__content__sd-6 { color:#FFFFFF; flex:none; font-family:var(--s-font-f1a2f042); font-size:16px; font-weight:700; height:auto; line-height:1.5; text-align:left; justify-content:flex-start; min-width:auto; }
+.sd-102 { align-content:center; align-items:center; background:#14314a; flex:none; flex-wrap:nowrap; justify-content:center; padding:144px 96px; width:100%; max-width:100%; }
+.sd-103 { color:#ffffff; font-family:var(--s-font-f1a2f042); font-size:12px; font-weight:700; height:auto; left:24px; letter-spacing:0.2em; line-height:1.4; margin:0; position:absolute; text-align:center; top:24px; width:auto; writing-mode:vertical-rl; justify-content:center; max-width:100%; min-width:auto; }
+.sd-104 { align-content:center; align-items:center; flex:none; flex-wrap:nowrap; justify-content:center; padding:0px; width:760px; max-width:100%; }
+.sd-105 { color:#ffffff; flex:none; font-family:var(--s-font-f1a2f042); font-size:36px; font-weight:900; height:auto; letter-spacing:0.1em; line-height:1.4; margin:0px 0px 48px; text-align:center; transition-delay:300ms; transition-duration:400ms; transition-timing-function:cubic-bezier(0.445, 0.05, 0.55, 0.95); width:100%; justify-content:center; max-width:100%; }
+.sd-105.appear { opacity:0; transform:translate(0px, 24px); }
+.sd-106 { background:#ffffff; border-radius:8px; color:#14314a; font-family:var(--s-font-f1a2f042); font-size:18px; font-weight:900; height:auto; letter-spacing:normal; line-height:1.6; margin:0px 0px 24px; padding:12px 24px; text-align:left; transition-delay:300ms; transition-duration:400ms; transition-timing-function:ease-in-out; width:auto; justify-content:flex-start; max-width:100%; min-width:auto; }
+.sd-106.appear { opacity:0; transform:translate(0px, 12px); }
+.sd-107 { background:#ffffff; border-radius:8px; color:#14314a; font-family:var(--s-font-f1a2f042); font-size:18px; font-weight:900; height:auto; letter-spacing:normal; line-height:1.6; margin:0px 0px 24px; padding:12px 24px; text-align:left; transition-delay:300ms; transition-duration:400ms; transition-timing-function:ease-in-out; width:auto; justify-content:flex-start; max-width:100%; min-width:auto; }
+.sd-107.appear { opacity:0; transform:translate(0px, 12px); }
+.sd-108 { background:#ffffff; border-radius:8px; color:#14314a; font-family:var(--s-font-f1a2f042); font-size:18px; font-weight:900; height:auto; letter-spacing:normal; line-height:1.6; margin:0px 0px 24px; padding:12px 24px; text-align:left; transition-delay:300ms; transition-duration:400ms; transition-timing-function:ease-in-out; width:auto; justify-content:flex-start; max-width:100%; min-width:auto; }
+.sd-108.appear { opacity:0; transform:translate(0px, 12px); }
+.sd-109 { background:#ffffff; border-radius:8px; color:#14314a; font-family:var(--s-font-f1a2f042); font-size:18px; font-weight:900; height:auto; letter-spacing:normal; line-height:1.6; margin:0px; padding:12px 24px; text-align:left; transition-delay:300ms; transition-duration:400ms; transition-timing-function:ease-in-out; width:auto; justify-content:flex-start; max-width:100%; min-width:auto; }
+.sd-109.appear { opacity:0; transform:translate(0px, 12px); }
+.sd-110 { flex:none; height:100%; left:0; margin:0; mix-blend-mode:multiply; position:absolute; top:0; width:100%; z-index:-1; max-width:100%; }
+.sd-110 > .image__bg-container::before { filter:contrast(1.1) brightness(0.95); }
+.sd-111 { align-content:center; align-items:center; background:#edeef0; flex:none; flex-wrap:nowrap; justify-content:center; margin:0px; padding:96px 96px; width:100%; max-width:100%; }
+.sd-112 { align-content:center; align-items:center; flex:none; flex-wrap:nowrap; justify-content:center; padding:0px; width:1024px; max-width:100%; }
+.sd-113 { color:#14314a; flex:none; font-family:var(--s-font-f1a2f042); font-size:36px; font-weight:900; height:auto; letter-spacing:0.1em; line-height:1.4; margin:0px 0px 48px; text-align:center; transition-delay:300ms; transition-duration:400ms; width:100%; justify-content:center; max-width:100%; }
+.sd-113.appear { opacity:0; transform:translate(0px, 24px); }
+.sd-114 { align-content:stretch; align-items:stretch; background:#ffffff; border-radius:8px; flex:none; flex-direction:column; flex-wrap:nowrap; justify-content:center; margin:0px 0px 48px; overflow-x:hidden; overflow-y:hidden; padding:0px; transition-delay:400ms; transition-duration:600ms; width:80%; max-width:80%; }
+.sd-114.appear { opacity:0; transform:translate(0px, 0px); }
+.sd-115 { background:#14314a; border-bottom:0px dashed #cccccc; border-left:0px dashed #cccccc; border-right:0px dashed #cccccc; border-top:0px dashed #cccccc; color:#ffffff; flex:none; font-family:var(--s-font-f1a2f042); font-size:28px; font-weight:900; height:auto; letter-spacing:0.1em; line-height:1.6; margin:0px 0px 12px; padding:12px; text-align:center; width:100%; justify-content:center; max-width:100%; }
+.sd-116 { border-bottom:2px dashed #cccccc; border-left:0px dashed #cccccc; border-right:0px dashed #cccccc; border-top:0px dashed #cccccc; color:#14314a; flex:none; font-family:var(--s-font-f1a2f042); font-size:20px; font-weight:900; height:auto; letter-spacing:normal; line-height:1.6; margin:0px 0px 12px; padding:0px 12px 12px; text-align:center; width:100%; justify-content:center; max-width:100%; }
+.sd-117 { border-bottom:2px dashed #cccccc; border-left:0px dashed #cccccc; border-right:0px dashed #cccccc; border-top:0px dashed #cccccc; color:#14314a; flex:none; font-family:var(--s-font-f1a2f042); font-size:20px; font-weight:900; height:auto; letter-spacing:normal; line-height:1.6; margin:0px 0px 12px; padding:0px 12px 12px; text-align:center; width:100%; justify-content:center; max-width:100%; }
+.sd-118 { border-bottom:0px dashed #cccccc; border-left:0px dashed #cccccc; border-right:0px dashed #cccccc; border-top:0px dashed #cccccc; color:#14314a; flex:none; font-family:var(--s-font-f1a2f042); font-size:20px; font-weight:900; height:auto; letter-spacing:normal; line-height:1.6; margin:0px; padding:0px 12px 12px; text-align:center; width:100%; justify-content:center; max-width:100%; }
+.sd-119 { border-bottom:0px dashed #cccccc; border-left:0px dashed #cccccc; border-right:0px dashed #cccccc; border-top:0px dashed #cccccc; color:#14314a; flex:none; font-family:var(--s-font-f1a2f042); font-size:20px; font-weight:900; height:auto; letter-spacing:normal; line-height:1.6; margin:0px; padding:0px 12px 12px; text-align:center; width:100%; justify-content:center; max-width:100%; }
+.sd-120 { align-content:center; align-items:center; background:#edeef0; flex:none; flex-wrap:nowrap; justify-content:center; padding:0px; width:100%; max-width:100%; }
+.sd-121 { flex:none; height:auto; transition-delay:300ms; transition-duration:400ms; transition-timing-function:cubic-bezier(0.445, 0.05, 0.55, 0.95); width:640px; max-width:100%; }
+.sd-121.appear { opacity:0; transform:translate(0px, 24px); }
+.sd-122 { align-content:center; align-items:center; background:#edeef0; flex:none; flex-wrap:nowrap; justify-content:center; padding:48px 48px 144px; width:100%; max-width:100%; }
+.sd-122 > * { --gap-h:0px; --gap-v:0px; }
+.sd-123 { color:#14314a; flex:none; font-family:var(--s-font-f1a2f042); font-size:48px; font-weight:900; height:auto; letter-spacing:0.1em; line-height:1.4; margin:0px; text-align:center; transition-delay:300ms; transition-duration:400ms; transition-timing-function:cubic-bezier(0.445, 0.05, 0.55, 0.95); width:100%; justify-content:center; max-width:100%; }
+.sd-123.appear { opacity:0; }
+.sd-124 { color:#14314a; font-family:var(--s-font-f1a2f042); font-size:16px; font-weight:700; height:auto; letter-spacing:0.1em; line-height:1.6; margin:0px 0px 48px; text-align:center; transition-delay:300ms; transition-timing-function:cubic-bezier(0.445, 0.05, 0.55, 0.95); width:auto; justify-content:center; max-width:100%; min-width:auto; }
+.sd-124.appear { opacity:0; }
+.sd-125 { flex:none; height:370px; padding:0px; width:640px; max-width:100%; }
+.sd-126 { align-content:flex-start; align-items:flex-start; flex:none; flex-direction:column; flex-wrap:nowrap; gap:8px 16px; justify-content:flex-start; padding:56px 0px 0px; width:calc(80% - (var(--gap-h) * 0.2)); max-width:calc(80% - (var(--gap-h) * 0.2)); }
+.sd-126 > * { --gap-h:0px; --gap-v:8px; }
+.sd-127 { align-content:center; align-items:center; background:#ffffffff; border-radius:6px; flex:none; flex-direction:row; flex-wrap:nowrap; gap:8px; justify-content:center; padding:12px 24px; width:100%; max-width:100%; }
+.sd-127:hover { background:#ffffffff; --ha:1; }
+.sd-127 > * { --gap-h:8px; --gap-v:0px; }
+.sd-127:hover > * { --gap-h:8px; --gap-v:0px; }
+.sd-128 { color:#14314a; flex:none; font-family:var(--s-font-f1a2f042); font-feature-settings:'palt' 1; font-size:24px; font-weight:700; height:auto; line-height:1.75; text-align:left; width:auto; justify-content:flex-start; max-width:100%; min-width:auto; }
+.sd-127:hover .sd-128 { color:#ff5035ff; }
+.sd-129 { color:#14314a; font-size:20px; --material-symbol-weight:400; min-width:auto; }
+.sd-127:hover .sd-129 { color:#ff5035ff; transform:translate(2px, 0px); }
+.sd-130 { align-content:center; align-items:center; background:#14314a; border-radius:6px; flex:none; flex-direction:row; flex-wrap:nowrap; gap:8px; justify-content:center; padding:12px 24px; width:100%; max-width:100%; }
+.sd-130:hover { background:#fafafaff; opacity:1; --ha:1; }
+.sd-130 > * { --gap-h:8px; --gap-v:0px; }
+.sd-130:hover > * { --gap-h:8px; --gap-v:0px; }
+.sd-131 { color:#ffffffff; flex:none; font-family:var(--s-font-f1a2f042); font-feature-settings:'palt' 1; font-size:24px; font-weight:700; height:auto; line-height:1.75; text-align:left; width:auto; justify-content:flex-start; max-width:100%; min-width:auto; }
+.sd-130:hover .sd-131 { color:#ff5035ff; }
+.sd-132 { color:#ffffffff; font-size:20px; --material-symbol-weight:400; min-width:auto; }
+.sd-130:hover .sd-132 { color:#ff5035ff; transform:translate(2px, 0px); }
+.sd-133 { align-content:center; align-items:center; background:#14314a; flex:none; flex-wrap:nowrap; justify-content:center; padding:144px 48px; right:0px; top:0px; width:100%; max-width:100%; }
+.sd-134 { align-content:flex-start; align-items:flex-start; flex:none; flex-wrap:nowrap; justify-content:center; margin:0px 0px 48px; padding:0px; width:1080px; max-width:100%; }
+.sd-135 { color:#ffffff; font-family:var(--s-font-f1a2f042); font-size:28px; font-weight:700; height:auto; letter-spacing:0.1em; line-height:1.6; margin:0px 0px 24px; text-align:left; width:auto; justify-content:flex-start; max-width:100%; min-width:auto; }
+.sd-136 { color:#ffffff; font-family:var(--s-font-f1a2f042); font-size:14px; font-weight:700; height:auto; letter-spacing:0.1em; line-height:1.6; margin:0px 0px 12px; text-align:left; width:auto; justify-content:flex-start; max-width:100%; min-width:auto; }
+.sd-137 { color:#ffffff; font-family:var(--s-font-f1a2f042); font-size:14px; font-weight:700; height:auto; letter-spacing:0.1em; line-height:1.6; margin:0px 0px 12px; text-align:left; width:auto; justify-content:flex-start; max-width:100%; min-width:auto; }
+.sd-138 { color:#ffffff; font-family:var(--s-font-f1a2f042); font-size:14px; font-weight:700; height:auto; letter-spacing:0.1em; line-height:1.6; margin:0px 0px 12px; text-align:left; width:auto; justify-content:flex-start; max-width:100%; min-width:auto; }
+.sd-139 { color:#ffffff; font-family:var(--s-font-f1a2f042); font-size:14px; font-weight:700; height:auto; letter-spacing:0.1em; line-height:1.6; margin:0px 0px 12px; text-align:left; width:auto; justify-content:flex-start; max-width:100%; min-width:auto; }
+.sd-140 { color:#ffffff; font-family:var(--s-font-f1a2f042); font-size:14px; font-weight:700; height:auto; letter-spacing:0.1em; line-height:1.6; margin:0px 0px 12px; text-align:left; width:auto; justify-content:flex-start; max-width:100%; min-width:auto; }
+.sd-141 { color:#ffffff; font-family:var(--s-font-f1a2f042); font-size:14px; font-weight:700; height:auto; letter-spacing:0.1em; line-height:1.6; margin:0px; text-align:justify; width:auto; justify-content:space-between; max-width:100%; min-width:auto; }
+.sd-142 { color:#ffffff; font-family:var(--s-font-f1a2f042); font-size:11px; font-weight:700; height:auto; letter-spacing:0.1em; line-height:1.6; margin:0px; text-align:left; width:auto; justify-content:flex-start; max-width:100%; min-width:auto; }</style>
+<style media="(max-width: 1140px)">.sd-2 { display:none; }
+.sd-5 { display:none; }
+.symbol-1__sd-3 > .sd-img__inner > .sd-img__sizer { height:auto; }
+.symbol-1__sd-5 { display:flex; min-width:auto; }
+.symbol-1__sd-5 > * { --gap-h:24px; --gap-v:0px; }
+.list-1 { display:flex; min-width:auto; }
+.list-1 > * { --gap-h:0px; --gap-v:0px; }
+.symbol-1__sd-7 { display:flex; min-width:auto; }
+.symbol-1__sd-7 > * { --gap-h:16px; --gap-v:0px; }
+.symbol-1__sd-7:hover > * { --gap-h:16px; --gap-v:0px; }
+.symbol-1__sd-10 { background:#ffffffff; display:none; min-width:auto; }
+.symbol-1__sd-11 { color:#14314aff; min-width:auto; }
+.list-2 { display:none; min-width:auto; }
+.list-2 > * { --gap-h:0px; --gap-v:24px; }
+.list-2__item { display:none; min-width:auto; }
+.list-2__item > * { --gap-h:0px; --gap-v:4px; }
+.list-2__item:hover > * { --gap-h:0px; --gap-v:4px; }
+.sd-10 { gap:32px; min-width:auto; }
+.sd-10 > * { --gap-h:32px; --gap-v:0px; }
+.sd-37 { font-size:17px; min-width:auto; }
+.sd-44 { flex:none; height:420px; min-width:auto; }
+.sd-48 { flex:none; height:420px; min-width:auto; }
+.sd-60 { flex:none; height:420px; min-width:auto; }
+.sd-102 { padding:144px 48px; min-width:auto; }
+.sd-111 { padding:96px 48px; min-width:auto; }</style>
+<style media="(max-width: 840px)">.sd-2 { display:none; }
+.sd-3 { padding:18px; }
+.sd-4 { font-size:14px; min-width:auto; }
+.sd-5 { display:none; }
+.sd-6 { padding:18px; }
+.sd-7 { font-size:14px; min-width:auto; }
+.symbol-1 { padding:16px 32px; }
+.symbol-1__sd-3 > .sd-img__inner > .sd-img__sizer { height:auto; }
+.symbol-1__sd-4 { display:flex; min-width:auto; }
+.symbol-1__sd-4 > * { --gap-h:40px; --gap-v:40px; }
+.symbol-1__sd-5 { display:none; min-width:auto; }
+.symbol-1__sd-5 > * { --gap-h:24px; --gap-v:0px; }
+.list-1 { display:flex; min-width:auto; }
+.list-1 > * { --gap-h:0px; --gap-v:0px; }
+.symbol-1__sd-6 { gap:16px; min-width:auto; }
+.symbol-1__sd-6 > * { --gap-h:16px; --gap-v:0px; }
+.symbol-1__sd-7 { border-bottom:0px solid transparent; border-left:0px solid transparent; border-right:0px solid transparent; border-top:0px solid transparent; display:none; min-width:auto; }
+.symbol-1__sd-7 > * { --gap-h:16px; --gap-v:0px; }
+.symbol-1__sd-7:hover > * { --gap-h:16px; --gap-v:0px; }
+.symbol-1__sd-10 { background:#ffffffff; display:flex; min-width:auto; }
+.symbol-1__sd-11 { color:#14314aff; min-width:auto; }
+.list-2 { display:flex; min-width:auto; }
+.list-2 > * { --gap-h:0px; --gap-v:24px; }
+.list-2__item { display:flex; min-width:auto; }
+.list-2__item > * { --gap-h:0px; --gap-v:4px; }
+.list-2__item:hover > * { --gap-h:0px; --gap-v:4px; }
+.sd-9 { padding:104px 32px; min-width:auto; }
+.sd-10 { flex-direction:column-reverse; flex-wrap:nowrap; gap:50px; min-width:auto; }
+.sd-10 > * { --gap-h:0px; --gap-v:50px; }
+.sd-11 { flex:none; width:100%; max-width:100%; }
+.sd-11 > * { --gap-h:0px; --gap-v:32px; }
+.sd-13 { font-size:48px; min-width:auto; }
+.sd-16 { flex:1; width:auto; max-width:100%; min-width:auto; }
+.sd-16 > * { --gap-h:8px; --gap-v:0px; }
+.sd-16:hover > * { --gap-h:8px; --gap-v:0px; }
+.sd-19 { flex:1; width:auto; max-width:100%; min-width:auto; }
+.sd-19 > * { --gap-h:8px; --gap-v:0px; }
+.sd-19:hover > * { --gap-h:8px; --gap-v:0px; }
+.sd-22 { padding:104px 32px; min-width:auto; }
+.sd-22 > * { --gap-h:0px; --gap-v:50px; }
+.sd-23 { flex-direction:column; flex-wrap:nowrap; min-width:auto; }
+.sd-23 > * { --gap-h:0px; --gap-v:64px; }
+.sd-24 { align-content:center; align-items:center; flex:none; justify-content:flex-start; width:100%; max-width:100%; }
+.sd-24 > * { --gap-h:0px; --gap-v:0px; }
+.sd-26 { font-size:48px; text-align:center; justify-content:center; min-width:auto; }
+.sd-27 { height:197px; width:100%; max-width:100%; }
+.sd-28 { font-size:14px; min-width:auto; }
+.sd-32 { font-size:28px; min-width:auto; }
+.sd-33 { font-size:28px; min-width:auto; }
+.sd-36 { left:20px; }
+.sd-38 { padding:104px 32px; min-width:auto; }
+.sd-38 > * { --gap-h:0px; --gap-v:50px; }
+.sd-39 { flex-direction:column; flex-wrap:nowrap; min-width:auto; }
+.sd-39 > * { --gap-h:0px; --gap-v:0px; }
+.sd-40 { align-content:flex-start; align-items:flex-start; flex:none; justify-content:flex-start; width:100%; max-width:100%; }
+.sd-40 > * { --gap-h:0px; --gap-v:32px; }
+.sd-42 { font-size:48px; min-width:auto; }
+.sd-44 { flex:none; height:420px; width:100%; max-width:100%; }
+.sd-45 { left:20px; }
+.sd-46 { padding:104px 32px; min-width:auto; }
+.sd-46 > * { --gap-h:0px; --gap-v:50px; }
+.sd-47 { flex-direction:column; flex-wrap:nowrap; min-width:auto; }
+.sd-47 > * { --gap-h:0px; --gap-v:0px; }
+.sd-48 { flex:none; height:420px; width:100%; max-width:100%; }
+.sd-49 { align-content:flex-start; align-items:flex-start; flex:none; justify-content:flex-start; width:100%; max-width:100%; }
+.sd-49 > * { --gap-h:0px; --gap-v:32px; }
+.sd-51 { font-size:48px; min-width:auto; }
+.sd-53 { left:20px; }
+.sd-54 { padding:104px 32px; min-width:auto; }
+.sd-54 > * { --gap-h:0px; --gap-v:50px; }
+.sd-55 { flex-direction:column; flex-wrap:nowrap; min-width:auto; }
+.sd-55 > * { --gap-h:0px; --gap-v:0px; }
+.sd-56 { align-content:flex-start; align-items:flex-start; flex:none; justify-content:flex-start; width:100%; max-width:100%; }
+.sd-56 > * { --gap-h:0px; --gap-v:32px; }
+.sd-58 { font-size:48px; min-width:auto; }
+.sd-60 { flex:none; height:420px; width:100%; max-width:100%; }
+.sd-61 { left:20px; }
+.sd-65 { font-size:28px; min-width:auto; }
+.sd-102 { flex:none; padding:96px 48px; min-width:auto; }
+.sd-103 { left:20px; }
+.sd-105 { font-size:28px; min-width:auto; }
+.sd-111 { flex:none; padding:96px 48px; min-width:auto; }
+.sd-113 { font-size:28px; min-width:auto; }
+.sd-114 { flex:none; justify-content:flex-start; overflow-x:hidden; overflow-y:hidden; width:90%; max-width:90%; }
+.sd-123 { font-size:28px; min-width:auto; }
+.sd-127 { flex:1; width:auto; max-width:100%; min-width:auto; }
+.sd-127 > * { --gap-h:8px; --gap-v:0px; }
+.sd-127:hover > * { --gap-h:8px; --gap-v:0px; }
+.sd-130 { flex:1; width:auto; max-width:100%; min-width:auto; }
+.sd-130 > * { --gap-h:8px; --gap-v:0px; }
+.sd-130:hover > * { --gap-h:8px; --gap-v:0px; }</style>
+<style media="(max-width: 540px)">.sd-1 { background:#14314a; gap:0px; min-width:auto; }
+.sd-1 > * { --gap-h:0px; --gap-v:0px; }
+.sd-2 { border-radius:0px; bottom:auto; display:flex; flex:none; height:104px; justify-content:center; left:auto; right:0px; top:623px; width:36px; max-width:36px; }
+.sd-2.appear { opacity:0; transform:translate(20px, 0px); transition-delay:1500ms; transition-duration:800ms; }
+.sd-3 { bottom:0px; flex:none; height:146px; left:0px; margin:0; padding:0px; position:absolute; right:0px; top:-47px; width:36px; max-width:36px; }
+.sd-4 { display:flex; font-size:16px; margin:0px; padding:0px; max-width:100%; min-width:auto; }
+.sd-5 { border-radius:0px; bottom:auto; display:flex; flex:none; height:100px; justify-content:center; left:auto; right:0px; top:445px; width:36px; max-width:36px; }
+.sd-5.appear { opacity:0; transform:translate(20px, 0px); transition-delay:1500ms; transition-duration:800ms; }
+.sd-6 { bottom:0px; flex:none; flex-direction:row; flex-wrap:nowrap; height:auto; left:0px; margin:0; padding:0px; position:absolute; right:0px; top:-15px; width:36px; max-width:36px; }
+.sd-7 { display:flex; font-size:16px; margin:0px; padding:0px; max-width:100%; min-width:auto; }
+.symbol-1 { padding:12px 16px; }
+.symbol-1__sd-1 { gap:16px; min-width:auto; }
+.symbol-1__sd-1 > * { --gap-h:16px; --gap-v:0px; }
+.symbol-1__sd-3 { flex:none; height:39px; width:auto; max-width:100%; min-width:auto; }
+.symbol-1__sd-3 { aspect-ratio:unset; }
+.symbol-1__sd-3 > .sd-img__inner > .sd-img__figure { width:auto; height:100%; }
+.symbol-1__sd-3 > .sd-img__inner > .sd-img__sizer { height:100%; }
+.symbol-1__sd-4 { display:flex; min-width:auto; }
+.symbol-1__sd-4 > * { --gap-h:40px; --gap-v:40px; }
+.symbol-1__sd-5 { display:none; gap:16px; min-width:auto; }
+.symbol-1__sd-5 > * { --gap-h:16px; --gap-v:0px; }
+.list-1 { display:flex; min-width:auto; }
+.list-1 > * { --gap-h:0px; --gap-v:0px; }
+.list-1__item__sd-2 { font-size:14px; min-width:auto; }
+.symbol-1__sd-7 { display:none; min-width:auto; }
+.symbol-1__sd-7 > * { --gap-h:16px; --gap-v:0px; }
+.symbol-1__sd-7:hover > * { --gap-h:16px; --gap-v:0px; }
+.symbol-1__sd-8 { font-size:14px; min-width:auto; }
+.symbol-1__sd-10 { background:#ffffffff; display:flex; min-width:auto; }
+.symbol-1__sd-11 { color:#14314aff; min-width:auto; }
+.modal-7__container { align-content:flex-end; align-items:flex-end; flex-direction:column; flex-wrap:nowrap; justify-content:flex-start; }
+.list-2 { align-content:flex-end; align-items:flex-end; background:rgb(255, 255, 255); display:flex; flex:none; height:auto; justify-content:flex-start; padding:20px; width:100%; max-width:100%; }
+.list-2.appear { opacity:0; transform:translate(50px, 0px); transition-duration:1000ms; transition-timing-function:ease-in-out; }
+.list-2 > * { --gap-h:0px; --gap-v:24px; }
+.list-2__item { align-content:flex-end; align-items:flex-end; display:flex; justify-content:flex-start; min-width:auto; }
+.list-2__item > * { --gap-h:0px; --gap-v:4px; }
+.list-2__item:hover > * { --gap-h:0px; --gap-v:4px; }
+.list-2__item__sd-1 { color:#14314a; min-width:auto; }
+.list-2__item:hover .list-2__item__sd-1 { color:#3c6488; }
+.list-2__item__sd-2 { color:#14314a; font-size:11px; min-width:auto; }
+.list-2__item:hover .list-2__item__sd-2 { color:#3c6488; }
+.sd-8 { background:#14314aff; border-bottom:0px double #3c6488; border-left:0px double #3c6488; border-right:0px double #3c6488; border-top:0px double #3c6488; bottom:0; box-shadow:0 2px 5px rgba(0,0,0,0.2) inset; gap:50px; left:0; margin:0px 0px 38px; padding:168px 0px 0px; position:relative; right:0; top:0; transform:translate(0px, 0px); transform-origin:center center; max-width:100%; min-width:auto; }
+.sd-8.appear { mix-blend-mode:normal; transition-delay:1000ms; transition-duration:1400ms; }
+.sd-8 > * { --gap-h:0px; --gap-v:50px; }
+.sd-9 { flex:none; height:auto; padding:96px 16px 48px; width:100%; max-width:100%; }
+.sd-9 > .image__bg-container::before { background-position:center center; background-repeat:no-repeat; background-size:cover; }
+.sd-10 { gap:40px; min-width:auto; }
+.sd-10 > * { --gap-h:0px; --gap-v:40px; }
+.sd-11 { gap:24px; min-width:auto; }
+.sd-11 > * { --gap-h:0px; --gap-v:24px; }
+.sd-13 { font-size:36px; text-shadow:3px 3px 0px rgba(0, 0, 0, 0.4); min-width:auto; }
+.sd-14 { text-shadow:0px 0px 10px rgb(0, 0, 0); min-width:auto; }
+.sd-15 { gap:8px; min-width:auto; }
+.sd-15 > * { --gap-h:8px; --gap-v:8px; }
+.sd-16 { flex:none; width:100%; max-width:100%; }
+.sd-16 > * { --gap-h:8px; --gap-v:0px; }
+.sd-16:hover > * { --gap-h:8px; --gap-v:0px; }
+.sd-17 { font-size:14px; height:auto; min-width:auto; }
+.sd-19 { flex:none; width:100%; max-width:100%; }
+.sd-19 > * { --gap-h:8px; --gap-v:0px; }
+.sd-19:hover > * { --gap-h:8px; --gap-v:0px; }
+.sd-20 { font-size:14px; min-width:auto; }
+.sd-22 { border-radius:0px; padding:168px 0px 0px; min-width:auto; }
+.sd-22 > * { --gap-h:0px; --gap-v:50px; }
+.sd-23 { align-content:center; align-items:center; flex:none; gap:32px; justify-content:center; width:100%; max-width:100%; }
+.sd-23 > * { --gap-h:0px; --gap-v:32px; }
+.sd-24 { align-content:center; align-items:center; background:rgb(255, 255, 255); flex:none; gap:0px; height:auto; justify-content:flex-start; padding:0px; width:100%; max-width:100%; }
+.sd-24 > * { --gap-h:0px; --gap-v:0px; }
+.sd-26 { font-size:32px; min-width:auto; }
+.sd-27 { flex:none; font-size:100px; height:auto; padding:0px; width:100%; max-width:100%; }
+.sd-28 { font-size:20px; font-weight:800; min-width:auto; }
+.sd-31 { flex:none; width:100%; max-width:100%; }
+.sd-31 > * { --gap-h:0px; --gap-v:0px; }
+.sd-32 { flex:none; margin:0px 0px 24px; padding:0px; text-decoration:none; width:120%; max-width:120%; }
+.sd-33 { flex:none; margin:0px 0px 24px; padding:0px; text-decoration:none; width:120%; max-width:120%; }
+.sd-34 { flex:none; margin:0px; width:105%; max-width:105%; }
+.sd-35 { font-size:14px; min-width:auto; }
+.sd-36 { left:16px; top:24px; }
+.sd-37 { font-size:24px; min-width:auto; }
+.sd-38 { padding:96px 16px; min-width:auto; }
+.sd-38 > * { --gap-h:0px; --gap-v:50px; }
+.sd-39 { gap:32px; min-width:auto; }
+.sd-39 > * { --gap-h:0px; --gap-v:32px; }
+.sd-40 { align-content:flex-start; align-items:flex-start; gap:24px; justify-content:center; width:auto; max-width:100%; min-width:auto; }
+.sd-40 > * { --gap-h:0px; --gap-v:24px; }
+.sd-42 { font-size:32px; min-width:auto; }
+.sd-43 { font-size:14px; min-width:auto; }
+.sd-44 { border-radius:6px; flex:none; height:320px; min-width:auto; }
+.sd-45 { font-family:var(--s-font-6fafbe69); font-size:13px; left:16px; top:24px; }
+.sd-46 { padding:96px 16px; min-width:auto; }
+.sd-46 > * { --gap-h:0px; --gap-v:50px; }
+.sd-47 { gap:32px; min-width:auto; }
+.sd-47 > * { --gap-h:0px; --gap-v:32px; }
+.sd-48 { border-radius:6px; flex:none; height:320px; min-width:auto; }
+.sd-49 { align-content:flex-start; align-items:flex-start; gap:24px; justify-content:center; width:auto; max-width:100%; min-width:auto; }
+.sd-49 > * { --gap-h:0px; --gap-v:24px; }
+.sd-51 { font-size:32px; min-width:auto; }
+.sd-52 { font-size:14px; min-width:auto; }
+.sd-53 { font-family:var(--s-font-6fafbe69); font-size:13px; left:16px; top:24px; }
+.sd-54 { padding:96px 16px; min-width:auto; }
+.sd-54 > * { --gap-h:0px; --gap-v:50px; }
+.sd-55 { gap:32px; min-width:auto; }
+.sd-55 > * { --gap-h:0px; --gap-v:32px; }
+.sd-56 { align-content:flex-start; align-items:flex-start; gap:24px; justify-content:center; width:auto; max-width:100%; min-width:auto; }
+.sd-56 > * { --gap-h:0px; --gap-v:24px; }
+.sd-58 { font-size:32px; min-width:auto; }
+.sd-59 { font-size:14px; min-width:auto; }
+.sd-60 { border-radius:6px; flex:none; height:320px; min-width:auto; }
+.sd-61 { font-family:var(--s-font-6fafbe69); font-size:13px; left:16px; top:24px; }
+.sd-62 { font-size:36px; min-width:auto; }
+.sd-63 { height:378px; padding:63px 48px 96px; z-index:-1; min-width:auto; }
+.sd-64 { height:219px; padding:0px; width:100%; z-index:0; max-width:100%; }
+.sd-65 { color:#ffffffff; min-width:auto; }
+.sd-66 { color:#ffffffff; flex:none; font-size:16px; width:405px; max-width:100%; }
+.sd-68 { height:500px; min-width:auto; }
+.sd-68__content__sd-5 { font-size:28px; min-width:auto; }
+.sd-85 { height:500px; min-width:auto; }
+.sd-85__content__sd-5 { font-size:28px; min-width:auto; }
+.sd-102 { height:598px; padding:48px 24px; min-width:auto; }
+.sd-103 { left:16px; top:24px; }
+.sd-106 { font-size:16px; padding:12px 12px; min-width:auto; }
+.sd-107 { font-size:16px; padding:12px 12px; min-width:auto; }
+.sd-108 { font-size:16px; padding:12px 12px; min-width:auto; }
+.sd-109 { font-size:16px; padding:12px 12px; min-width:auto; }
+.sd-111 { height:593px; padding:48px 24px; min-width:auto; }
+.sd-114 { justify-content:center; margin:0px 0px 24px; overflow-x:hidden; overflow-y:hidden; width:90%; max-width:90%; }
+.sd-115 { font-size:20px; min-width:auto; }
+.sd-116 { font-size:18px; text-align:left; justify-content:flex-start; min-width:auto; }
+.sd-117 { font-size:18px; text-align:left; justify-content:flex-start; min-width:auto; }
+.sd-118 { font-size:18px; text-align:left; justify-content:flex-start; min-width:auto; }
+.sd-119 { font-size:18px; text-align:center; justify-content:center; min-width:auto; }
+.sd-121 { flex:none; height:auto; width:524px; max-width:100%; }
+.sd-122 { gap:14px; padding:48px 24px 96px; min-width:auto; }
+.sd-122 > * { --gap-h:0px; --gap-v:14px; }
+.sd-123 { font-size:26px; padding:0px; width:100%; max-width:100%; }
+.sd-124 { font-size:20px; font-weight:700; margin:0px; padding:16px; max-width:100%; min-width:auto; }
+.sd-126 { gap:8px; min-width:auto; }
+.sd-126 > * { --gap-h:0px; --gap-v:8px; }
+.sd-127 { flex:none; width:100%; max-width:100%; }
+.sd-127 > * { --gap-h:8px; --gap-v:0px; }
+.sd-127:hover > * { --gap-h:8px; --gap-v:0px; }
+.sd-128 { font-size:14px; height:auto; min-width:auto; }
+.sd-130 { flex:none; width:100%; max-width:100%; }
+.sd-130 > * { --gap-h:8px; --gap-v:0px; }
+.sd-130:hover > * { --gap-h:8px; --gap-v:0px; }
+.sd-131 { font-size:14px; min-width:auto; }
+.sd-133 { padding:96px 48px; min-width:auto; }
+.sd-135 { font-size:20px; min-width:auto; }
+.sd-136 { font-size:14px; min-width:auto; }
+.sd-137 { font-size:14px; margin:0px 0px 12px; padding:0px; max-width:100%; min-width:auto; }
+.sd-138 { font-size:14px; margin:0px 0px 12px; max-width:100%; min-width:auto; }
+.sd-139 { font-size:14px; margin:0px 0px 12px; max-width:100%; min-width:auto; }
+.sd-140 { font-size:14px; min-width:auto; }
+.sd-141 { font-size:14px; margin:0px 0px 12px; width:auto; max-width:100%; min-width:auto; }
+.sd-142 { font-family:var(--s-font-6fafbe69); min-width:auto; }</style>
+<style media="(max-width: 320px)">.sd-2 { display:none; }
+.sd-3 { padding:14px 12px; }
+.sd-4 { display:flex; min-width:auto; }
+.sd-5 { display:none; }
+.sd-6 { padding:14px 12px; }
+.sd-7 { display:flex; min-width:auto; }
+.symbol-1__sd-3 > .sd-img__inner > .sd-img__sizer { height:auto; }
+.symbol-1__sd-4 { display:flex; min-width:auto; }
+.symbol-1__sd-4 > * { --gap-h:40px; --gap-v:40px; }
+.symbol-1__sd-5 { display:none; min-width:auto; }
+.symbol-1__sd-5 > * { --gap-h:24px; --gap-v:0px; }
+.symbol-1__sd-7 { display:none; min-width:auto; }
+.symbol-1__sd-7 > * { --gap-h:16px; --gap-v:0px; }
+.symbol-1__sd-7:hover > * { --gap-h:16px; --gap-v:0px; }
+.symbol-1__sd-10 { display:flex; min-width:auto; }
+.list-2 { display:flex; min-width:auto; }
+.list-2 > * { --gap-h:0px; --gap-v:24px; }
+.list-2__item { display:flex; min-width:auto; }
+.list-2__item > * { --gap-h:0px; --gap-v:4px; }
+.list-2__item:hover > * { --gap-h:0px; --gap-v:4px; }
+.sd-32 { font-size:24px; min-width:auto; }
+.sd-33 { font-size:24px; min-width:auto; }
+.sd-36 { font-size:11px; }
+.sd-45 { font-size:11px; }
+.sd-53 { font-size:11px; }
+.sd-61 { font-size:11px; }
+.sd-65 { font-size:24px; min-width:auto; }
+.sd-103 { font-size:11px; }
+.sd-105 { font-size:24px; min-width:auto; }
+.sd-113 { font-size:24px; min-width:auto; }
+.sd-122 { padding:48px 36px 96px; min-width:auto; }
+.sd-123 { font-size:20px; min-width:auto; }</style>
+<style>
+.apps-studio-banner {
+    align-items: center;
+    border-radius: 4px;
+    bottom: 20px;
+    height: 20px;
+    justify-content: center;
+    display: flex;
+    left: 20px;
+    perspective: 300px;
+    position: fixed;
+    width: 84px;
+    z-index: 2000;
+    transition: .4s cubic-bezier(.4,.4,0,1);
+    background-color: #000000;
+    padding: 0;
+    box-sizing: border-box;
+}
+.apps-studio-banner .long-banner {
+  display:none;
+}
+.apps-studio-banner:hover {
+    width: 200px;
+    height: 32px;
+}
+.apps-studio-banner:hover .long-banner {
+  display:initial;
+}
+.apps-studio-banner:hover .short-banner {
+  display:none;
+}
+.apps-studio-banner path {
+  fill: #FFFFFF;
+}
+</style>
+
+<script>
+(()=>{function B1(f=".appear"){let K=typeof f!=="string",$=K?f:null,q=K?".appear":f,J=$?$.querySelectorAll(q):document.querySelectorAll(q);for(let Z of J){if(!$){if(Z.hasAttribute("data-appear-manual"))continue;if(Z.closest("[data-appear-manual]"))continue}a(Z)}if($)return;for(let Z of document.querySelectorAll("dialog")){if(Z.dataset.initedAppear==="")continue;Z.addEventListener("close",()=>{l(Z)}),Z.dataset.initedAppear=""}}function l(f){let K=f.querySelectorAll("[data-appear]");for(let $ of K)$.classList.add("appear"),y.observe($)}function _1(f){if(!f)return;let K=f;if(!K.hasAttribute("data-appear"))return;K.removeAttribute("data-inited-appear"),K.classList.add("appear");let $=K.querySelectorAll("[data-appear]");for(let q of $)q.removeAttribute("data-inited-appear"),q.classList.add("appear")}function v1(f){if(!f)return;if(f.getAttribute("data-inited-appear")==="")return;if(!f.classList.contains("appear"))return;let K=f,$=b(getComputedStyle(K));f.setAttribute("data-inited-appear",""),f.setAttribute("data-appear",""),I(K,$);let q=f.querySelectorAll(".appear:not([data-inited-appear])");for(let J of q){let Z=J,Q=b(getComputedStyle(Z));J.setAttribute("data-inited-appear",""),J.setAttribute("data-appear",""),I(Z,Q)}}var y=new IntersectionObserver((f,K)=>{for(let $ of f){if(!$.isIntersecting)continue;let q=$.target,J=b(getComputedStyle(q));I(q,J),K.unobserve($.target)}});function b(f){let K={};for(let $ in f)if($.startsWith("transition")&&typeof f[$]==="string")K[$]=f[$];return K}function I(f,K){Object.assign(f.style,K),f.classList.remove("appear"),f.classList.add("appear-active"),requestAnimationFrame(()=>{f.classList.remove("appear-active")});let $=()=>{for(let q in K)if(q in f.style){let J=q;if(typeof f.style[J]==="string")f.style[J]=""}f.removeEventListener("transitionend",$)};f.addEventListener("transitionend",$)}function a(f){if(f.dataset.initedAppear==="");else f.dataset.appear="",y.observe(f),f.dataset.initedAppear="";return()=>{y.unobserve(f),f.removeAttribute("data-inited-appear"),f.removeAttribute("data-appear")}}Object.assign(window,{appear:B1,appearReset:l,appearManual:v1,resetAppear:_1});window.componentLifecycles??=[];window.componentLifecycles.push({selector:".appear",mode:"self",init:a});function M(){try{return globalThis.window!==void 0&&globalThis.window===window}catch{return!1}}function k(f){if(typeof f!=="string")throw TypeError("Path must be a string. Received "+JSON.stringify(f))}function t(f,K){var $="",q=0,J=-1,Z=0,Q;for(var Y=0;Y<=f.length;++Y){if(Y<f.length)Q=f.charCodeAt(Y);else if(Q===47)break;else Q=47;if(Q===47){if(J===Y-1||Z===1);else if(J!==Y-1&&Z===2){if($.length<2||q!==2||$.charCodeAt($.length-1)!==46||$.charCodeAt($.length-2)!==46){if($.length>2){var X=$.lastIndexOf("/");if(X!==$.length-1){if(X===-1)$="",q=0;else $=$.slice(0,X),q=$.length-1-$.lastIndexOf("/");J=Y,Z=0;continue}}else if($.length===2||$.length===1){$="",q=0,J=Y,Z=0;continue}}if(K){if($.length>0)$+="/..";else $="..";q=2}}else{if($.length>0)$+="/"+f.slice(J+1,Y);else $=f.slice(J+1,Y);q=Y-J-1}J=Y,Z=0}else if(Q===46&&Z!==-1)++Z;else Z=-1}return $}function P1(f,K){var $=K.dir||K.root,q=K.base||(K.name||"")+(K.ext||"");if(!$)return q;if($===K.root)return $+q;return $+f+q}function h(){var f="",K=!1,$;for(var q=arguments.length-1;q>=-1&&!K;q--){var J;if(q>=0)J=arguments[q];else{if($===void 0)$=process.cwd();J=$}if(k(J),J.length===0)continue;f=J+"/"+f,K=J.charCodeAt(0)===47}if(f=t(f,!K),K)if(f.length>0)return"/"+f;else return"/";else if(f.length>0)return f;else return"."}function e(f){if(k(f),f.length===0)return".";var K=f.charCodeAt(0)===47,$=f.charCodeAt(f.length-1)===47;if(f=t(f,!K),f.length===0&&!K)f=".";if(f.length>0&&$)f+="/";if(K)return"/"+f;return f}function L1(f){return k(f),f.length>0&&f.charCodeAt(0)===47}function A1(){if(arguments.length===0)return".";var f;for(var K=0;K<arguments.length;++K){var $=arguments[K];if(k($),$.length>0)if(f===void 0)f=$;else f+="/"+$}if(f===void 0)return".";return e(f)}function y1(f,K){if(k(f),k(K),f===K)return"";if(f=h(f),K=h(K),f===K)return"";var $=1;for(;$<f.length;++$)if(f.charCodeAt($)!==47)break;var q=f.length,J=q-$,Z=1;for(;Z<K.length;++Z)if(K.charCodeAt(Z)!==47)break;var Q=K.length,Y=Q-Z,X=J<Y?J:Y,G=-1,z=0;for(;z<=X;++z){if(z===X){if(Y>X){if(K.charCodeAt(Z+z)===47)return K.slice(Z+z+1);else if(z===0)return K.slice(Z+z)}else if(J>X){if(f.charCodeAt($+z)===47)G=z;else if(z===0)G=0}break}var O=f.charCodeAt($+z),j1=K.charCodeAt(Z+z);if(O!==j1)break;else if(O===47)G=z}var w="";for(z=$+G+1;z<=q;++z)if(z===q||f.charCodeAt(z)===47)if(w.length===0)w+="..";else w+="/..";if(w.length>0)return w+K.slice(Z+G);else{if(Z+=G,K.charCodeAt(Z)===47)++Z;return K.slice(Z)}}function b1(f){return f}function I1(f){if(k(f),f.length===0)return".";var K=f.charCodeAt(0),$=K===47,q=-1,J=!0;for(var Z=f.length-1;Z>=1;--Z)if(K=f.charCodeAt(Z),K===47){if(!J){q=Z;break}}else J=!1;if(q===-1)return $?"/":".";if($&&q===1)return"//";return f.slice(0,q)}function h1(f,K){if(K!==void 0&&typeof K!=="string")throw TypeError('"ext" argument must be a string');k(f);var $=0,q=-1,J=!0,Z;if(K!==void 0&&K.length>0&&K.length<=f.length){if(K.length===f.length&&K===f)return"";var Q=K.length-1,Y=-1;for(Z=f.length-1;Z>=0;--Z){var X=f.charCodeAt(Z);if(X===47){if(!J){$=Z+1;break}}else{if(Y===-1)J=!1,Y=Z+1;if(Q>=0)if(X===K.charCodeAt(Q)){if(--Q===-1)q=Z}else Q=-1,q=Y}}if($===q)q=Y;else if(q===-1)q=f.length;return f.slice($,q)}else{for(Z=f.length-1;Z>=0;--Z)if(f.charCodeAt(Z)===47){if(!J){$=Z+1;break}}else if(q===-1)J=!1,q=Z+1;if(q===-1)return"";return f.slice($,q)}}function E1(f){k(f);var K=-1,$=0,q=-1,J=!0,Z=0;for(var Q=f.length-1;Q>=0;--Q){var Y=f.charCodeAt(Q);if(Y===47){if(!J){$=Q+1;break}continue}if(q===-1)J=!1,q=Q+1;if(Y===46){if(K===-1)K=Q;else if(Z!==1)Z=1}else if(K!==-1)Z=-1}if(K===-1||q===-1||Z===0||Z===1&&K===q-1&&K===$+1)return"";return f.slice(K,q)}function S1(f){if(f===null||typeof f!=="object")throw TypeError('The "pathObject" argument must be of type Object. Received type '+typeof f);return P1("/",f)}function c1(f){k(f);var K={root:"",dir:"",base:"",ext:"",name:""};if(f.length===0)return K;var $=f.charCodeAt(0),q=$===47,J;if(q)K.root="/",J=1;else J=0;var Z=-1,Q=0,Y=-1,X=!0,G=f.length-1,z=0;for(;G>=J;--G){if($=f.charCodeAt(G),$===47){if(!X){Q=G+1;break}continue}if(Y===-1)X=!1,Y=G+1;if($===46){if(Z===-1)Z=G;else if(z!==1)z=1}else if(Z!==-1)z=-1}if(Z===-1||Y===-1||z===0||z===1&&Z===Y-1&&Z===Q+1){if(Y!==-1)if(Q===0&&q)K.base=K.name=f.slice(1,Y);else K.base=K.name=f.slice(Q,Y)}else{if(Q===0&&q)K.name=f.slice(1,Z),K.base=f.slice(1,Y);else K.name=f.slice(Q,Z),K.base=f.slice(Q,Y);K.ext=f.slice(Z,Y)}if(Q>0)K.dir=f.slice(0,Q-1);else if(q)K.dir="/";return K}var u1="/",p1=":",g1=((f)=>(f.posix=f,f))({resolve:h,normalize:e,isAbsolute:L1,join:A1,relative:y1,_makeLong:b1,dirname:I1,basename:h1,extname:E1,format:S1,parse:c1,sep:u1,delimiter:p1,win32:null,posix:null}),V=g1;var f1="fileLogs";function E(f,K){if(Bun.argv.includes("--dev")){let $=V.normalize(f);if($.startsWith("..")||$.startsWith("/")||$.includes("..")||/^[a-zA-Z]:/.test($)){T.warn("fileLog: 不正なパスが検出されました",f);return}let q=V.join(f1,$),J=V.resolve(q),Z=V.resolve(f1);if(!J.startsWith(Z+V.sep)&&J!==Z){T.warn("fileLog: パストラバーサルが検出されました",f);return}T.info("fileLog",q),Bun.write(q,JSON.stringify(K,null,2)).catch((Q)=>{T.warn("fileLog: ファイル書き込みエラー",Q)})}}var S={silent:0,error:1,warn:2,info:3,debug:4},m1=()=>{let f=process.env.LOG_LEVEL?.toLowerCase();return f&&f in S?f:"silent"},R=(f)=>{return S[f]<=S[m1()]},T={error:(...f)=>R("error")&&console.error(...f),warn:(...f)=>R("warn")&&console.warn(...f),info:(...f)=>R("info")&&console.info(...f),debug:(...f)=>R("debug")&&console.log(...f),time:(f)=>R("debug")&&console.time(f),timeEnd:(f)=>R("debug")&&console.timeEnd(f),fileLog:E};var k4=Symbol("NO");function j(...f){return(K)=>{let $=f.find(({rule:q})=>q(K));if(!$)throw Error(`No match cases for ${JSON.stringify(K)}`);return $.transform(K)}}function H(f){return{pipe(K){return H(K(f))},fork(K){let $={};for(let q in K)$[q]=K[q](f);return H($)},match(...K){return H(j(...K)(f))},log(K){if(K)T.info(K,f);else T.info(f);return H(f)},value(){return f}}}var K1=(f,K)=>{if(K)f.setAttribute("is-playing","");else f.removeAttribute("is-playing")};var B=(f,K)=>{f.setAttribute("aria-live",K?"polite":"off")},F=(f)=>{if(f.state.autoplayIntervalId!==void 0)clearInterval(f.state.autoplayIntervalId),f.state.autoplayIntervalId=void 0;B(f.element,!0)},$1=(f,K)=>{if(f.state.autoplayIntervalId!==void 0)clearInterval(f.state.autoplayIntervalId),f.state.autoplayIntervalId=void 0;f.state.autoplayIntervalId=window.setInterval(()=>{if(!(f.state.isAnimating||f.state.isPaused||f.state.isPausedByHover))K()},f.config.intervalDuration),B(f.element,!1)},c=(f,K)=>{if(!f.config.autoplay)return;$1(f,K)},u=(f,K)=>{$1(f,K)},e1=(f,K)=>{let $=f.dataset.playText||"▶",q=f.dataset.pauseText||"⏸";f.textContent=K?$:q},ff=(f,K)=>{if(f.setAttribute("aria-label",K?"再生":"一時停止"),K)f.classList.remove("is-playing"),f.classList.add("is-paused");else f.classList.remove("is-paused"),f.classList.add("is-playing")},W=(f,K)=>{let $=f.querySelector('[slot="play"]'),q=f.querySelector('[slot="pause"]');if(!$&&!q)e1(f,K);ff(f,K);let J=f.closest(".sd-carousel");if(J)K1(J,!K)};var C=(f)=>Array.from(f.children).filter((K)=>K instanceof HTMLElement&&!K.classList.contains("sd-carousel__controls")),Kf=(f)=>Array.from(f.content.children).filter((K)=>K instanceof HTMLElement),q1=(f)=>{let{element:K}=f,$=K.querySelector("template.sd-carousel__template"),q;if($)q=Kf($),$.remove();else q=C(K);return{...f,slides:q}},$f=(f)=>({prevButton:f.querySelector('[slot="prev"]'),nextButton:f.querySelector('[slot="next"]'),playPauseButton:f.querySelector('[slot="play-toggle"]')}),qf=(f,K)=>{if(K.prevButton&&K.nextButton)return K;let $=f.querySelectorAll("button");if($.length<2)return K;if($.length===3)return{prevButton:K.prevButton||$[0],playPauseButton:K.playPauseButton||$[1],nextButton:K.nextButton||$[2]};return{prevButton:K.prevButton||$[0],nextButton:K.nextButton||$[1],playPauseButton:K.playPauseButton}},J1=(f)=>{let K=f.element.querySelector(".sd-carousel__controls");if(!K)return{...f,controls:{}};let $=$f(K),q=qf(K,$),J={prevButton:q.prevButton??void 0,nextButton:q.nextButton??void 0,playPauseButton:q.playPauseButton??void 0};return{...f,controls:J}},p=(f,K)=>{if(f===void 0)return K;let $=Number.parseInt(f,10);return Number.isNaN($)?K:$},Z1=(f)=>{let{element:K}=f,$={autoplay:K.dataset.autoplay!==void 0,intervalDuration:p(K.dataset.intervalDuration,4000),animateDuration:p(K.dataset.animateDuration,300),hoverStop:K.dataset.hoverStop!=="false",maxLength:p(K.dataset.maxLength,0)};return{...f,config:$}},_=(f)=>{let K=($)=>{if($.classList.contains("appear")||$.hasAttribute("data-appear"))$.classList.add("appear"),$.dataset.appear="",$.removeAttribute("data-inited-appear")};K(f),f.querySelectorAll(".appear, [data-appear]").forEach(K)},Y1=(f)=>{let{slides:K}=f,$=K.map((q,J)=>{let Z=q.cloneNode(!0);return _(Z),Z.dataset.originalIndex=J.toString(),Z.classList.add("sd-carousel__slide"),q.remove(),Z});return{...f,slideTemplates:$,currentIndex:0,state:{isAnimating:!1,isPaused:!f.config.autoplay,isPausedByHover:!1,isManuallyStarted:!1,autoplayIntervalId:void 0}}};var v=7,N=(f,K)=>(f%K+K)%K,g=(f)=>Math.floor(f/2),Q1=(f,K,$=7)=>{if(K===0)return[];let q=f-Math.floor($/2);return Array.from({length:$},(J,Z)=>N(q+Z,K))};var U="--_durationms",m="data-animatingnext",r="data-animatingprev",X1=(f,K,$)=>{if(f.dataset.slideIndex=K.toString(),f.style.zIndex="1",K===$)f.setAttribute("aria-current","true"),f.classList.add("current");else f.removeAttribute("aria-current"),f.classList.remove("current")},Jf=(f,K)=>{C(f).forEach((q,J)=>{X1(q,J,K)})},z1=(f,K,$,q)=>{let J=f.querySelector(".sd-carousel__controls"),Z=Q1($,K.length,q),Q=g(q),Y=document.createDocumentFragment(),X=Z.map((G,z)=>{let O=K[G].cloneNode(!0);return X1(O,z,Q),_(O),Y.appendChild(O),O});if(J)f.insertBefore(Y,J);else f.appendChild(Y);return X},Zf=(f,K,$,q)=>{let J=$==="next"?K:-K;return N(f+J,q)},Yf=(f,K)=>{let $=C(f);if($.length===0)return;(K==="next"?$[0]:$[$.length-1]).remove()},Qf=(f,K,$,q)=>{if($==="next"){if(q)f.insertBefore(K,q);else f.appendChild(K);return}let J=C(f)[0];if(J)f.insertBefore(K,J);else if(q)f.insertBefore(K,q);else f.appendChild(K)},G1=(f,K,$,q,J)=>{let Z=f.querySelector(".sd-carousel__controls"),Q=g(J),Y=Zf($,Q,q,K.length),X=K[Y].cloneNode(!0);return _(X),Yf(f,q),Qf(f,X,q,Z),Jf(f,Q),X};var x=(f)=>{if(f.navigationTimerId!==void 0)clearTimeout(f.navigationTimerId),f.navigationTimerId=void 0},Xf=(f,K,$)=>{f.style.setProperty(U,`${$}ms`);let q=K==="next"?m:r,J=C(f);for(let Z of J)Z.setAttribute(q,"")},zf=(f,K,$)=>{$.rafId=requestAnimationFrame(()=>{try{f.style.setProperty(U,`${K}ms`);let q=C(f);for(let J of q)J.style.removeProperty("transition")}finally{$.isAnimating=!1,$.rafId=void 0}})},Gf=(f)=>{let K=C(f);for(let $ of K)$.style.setProperty("transition","none","important"),$.removeAttribute(m),$.removeAttribute(r)},kf=(f,K,$,q)=>{let{element:J,config:Z,slideTemplates:Q,state:Y}=f;try{Gf(J),J.style.setProperty(U,"0ms"),f.currentIndex=K,G1(J,Q,K,$,q),J.offsetHeight,window.appear?.(J)}finally{zf(J,Z.animateDuration,Y),Y.navigationTimerId=void 0}},k1=(f,K)=>{let $=f.slideTemplates.length;if($===0)return;let q=K==="next"?1:-1,J=N(f.currentIndex+q,$);if(x(f.state),f.state.rafId!==void 0)cancelAnimationFrame(f.state.rafId),f.state.rafId=void 0;f.state.isAnimating=!0;let{element:Z,config:Q}=f,{animateDuration:Y}=Q,X=Q.maxLength||v;Xf(Z,K,Y),f.state.navigationTimerId=window.setTimeout(()=>{kf(f,J,K,X)},Y)};var Tf=50,Cf={ArrowLeft:"prev",ArrowRight:"next"},P=(f,K)=>{try{k1(f,K)}catch($){f.state.isAnimating=!1,x(f.state),console.error("カルーセルナビゲーションエラー:",$)}},C1=(f)=>{let K=new AbortController,{signal:$}=K,q=[];if(q.push(Of(f)),f.controls.prevButton)q.push(T1(f.controls.prevButton,"prev",f,$));if(f.controls.nextButton)q.push(T1(f.controls.nextButton,"next",f,$));if(f.controls.playPauseButton)q.push(Hf(f.controls.playPauseButton,f,$));if(q.push(Uf(f)),f.config.hoverStop)q.push(Mf(f,$));q.push(Vf(f,$));let J=wf(f,$);if(J)q.push(J);if(f.config.autoplay)q.push(Wf(f,$));return{...f,abortController:K,effects:q}},Of=(f)=>{let{element:K,config:$,slideTemplates:q}=f,J=$.maxLength||v;return{type:"dom",run:()=>{if(z1(K,q,0,J),B(K,f.state.isPaused),f.controls.prevButton?.setAttribute("aria-label","前のスライド"),f.controls.nextButton?.setAttribute("aria-label","次のスライド"),window.appear?.(K),f.controls.playPauseButton)W(f.controls.playPauseButton,f.state.isPaused);K.style.setProperty(U,`${$.animateDuration}ms`),K.dataset.initedCarousel=""},cleanup:()=>{let Z=K.querySelectorAll(".sd-carousel__slide");for(let Q of Z)Q.remove();K.style.removeProperty(U),delete K.dataset.initedCarousel}}},T1=(f,K,$,q)=>{let J=()=>{P($,K)};return{type:"listener",run:()=>{f.addEventListener("click",J,{signal:q})},cleanup:()=>{}}},n=(f)=>{return()=>P(f,"next")},Hf=(f,K,$)=>{let q=n(K),J=()=>{if(K.state.isPaused=!K.state.isPaused,!K.state.isPaused)K.state.isPausedByHover=!1,K.state.isManuallyStarted=!0;if(W(f,K.state.isPaused),K.state.isPaused)F(K);else u(K,q)};return{type:"listener",run:()=>{f.addEventListener("click",J,{signal:$}),W(f,K.state.isPaused)},cleanup:()=>{}}},Uf=(f)=>{let K=n(f);return{type:"timer",run:()=>{if(f.config.autoplay&&!f.state.isPaused)c(f,K)},cleanup:()=>{F(f)}}},Mf=(f,K)=>{let{element:$}=f,q=n(f),J=()=>{f.state.isPausedByHover=!0,F(f)},Z=()=>{if(f.state.isPausedByHover=!1,!f.state.isPaused&&(f.config.autoplay||f.state.isManuallyStarted))if(f.config.autoplay)c(f,q);else u(f,q)};return{type:"listener",run:()=>{$.addEventListener("mouseenter",J,{signal:K}),$.addEventListener("mouseleave",Z,{signal:K})},cleanup:()=>{}}},Vf=(f,K)=>{let{element:$}=f,q=0,J=0,Z=(Y)=>{if(!("touches"in Y))return;q=Y.touches[0].clientX},Q=(Y)=>{if(!("changedTouches"in Y))return;J=Y.changedTouches[0].clientX;let X=q-J;if(Math.abs(X)>Tf){let G=X>0?"next":"prev";P(f,G)}};return{type:"listener",run:()=>{$.addEventListener("touchstart",Z,{passive:!0,signal:K}),$.addEventListener("touchend",Q,{passive:!0,signal:K})},cleanup:()=>{}}},Rf=(f)=>{return(K)=>{let $=Cf[K.key];if($)P(f,$)}},wf=(f,K)=>{let{controls:$}=f;if(!$.prevButton&&!$.nextButton)return null;let q=Rf(f);return{type:"listener",run:()=>{if($.prevButton)$.prevButton.addEventListener("keydown",q,{signal:K});if($.nextButton)$.nextButton.addEventListener("keydown",q,{signal:K})},cleanup:()=>{}}},Ff=(f,K)=>{return[K.prevButton,K.nextButton,K.playPauseButton].some((q)=>q&&(f===q||q.contains(f)))},Wf=(f,K)=>{let{element:$}=f,q=(J)=>{let Z=J.target;if(Z&&Ff(Z,f.controls))return;if(f.config.autoplay&&!f.state.isPaused){if(f.state.isPaused=!0,F(f),f.controls.playPauseButton)W(f.controls.playPauseButton,f.state.isPaused)}};return{type:"listener",run:()=>{$.addEventListener("focusin",q,{signal:K})},cleanup:()=>{}}};var O1=(f)=>{return H({element:f}).pipe(q1).pipe(J1).pipe(Z1).pipe(Y1).pipe(C1).value()},H1=(f)=>{for(let K of f.effects)K.run()},U1=(f)=>{if(x(f.state),f.state.rafId!==void 0)cancelAnimationFrame(f.state.rafId),f.state.rafId=void 0;f.abortController.abort();for(let K of f.effects)K.cleanup()};var M1=(f)=>{if(f.dataset.initedCarousel==="")return()=>{};let K=O1(f);return H1(K),()=>{U1(K),delete f.dataset.initedCarousel}};function Nf(f="body"){let K=document.querySelector(f);if(!K)return[];let $=K.querySelectorAll(".sd-carousel"),q=[];for(let J of $){let Z=M1(J);q.push(Z)}return q}function xf(f,K){if(!f.classList.contains("sd-carousel")){console.warn("指定された要素はカルーセルではありません");return}if(f.dataset.initedCarousel!==""){console.warn("カルーセルが初期化されていません");return}let $=f.querySelector(".sd-carousel__controls");K.classList.add("sd-carousel__slide");let q=Array.from(f.children).filter((Z)=>Z.classList.contains("sd-carousel__slide")&&!Z.hasAttribute("data-slide-reference"));if(K.dataset.originalIndex=q.length.toString(),$)f.insertBefore(K,$);else f.appendChild(K);((Z)=>{let Q=Z.querySelector(".sd-carousel__slide.current"),Y=window.appearManual;if(Q&&typeof Y==="function")requestAnimationFrame(()=>{Y(Q);let X=Q.querySelectorAll(".appear");for(let G of X)Y(G)})})(f)}if(M())Object.assign(window,{carousel:Nf,carouselAddSlide:xf}),window.componentLifecycles??=[],window.componentLifecycles.push({selector:".sd-carousel",init:M1});function o(){if(!document.fonts){setTimeout(()=>{if(document.body)document.body.setAttribute("data-material-symbols-loaded","true")},1000);return}function f(){let J=document.querySelectorAll('[class*="material-symbols-"]'),Z=new Set;for(let Q of J){let Y=Q.className;if(Y.includes("material-symbols-outlined"))Z.add("Material Symbols Outlined");if(Y.includes("material-symbols-rounded"))Z.add("Material Symbols Rounded");if(Y.includes("material-symbols-sharp"))Z.add("Material Symbols Sharp")}return Array.from(Z)}function K(J){for(let Z of J)if(!document.fonts.check(`24px "${Z}"`))return!1;return!0}function $(){if(!document.body)return!1;let J=f();if(J.length===0)return document.body.setAttribute("data-material-symbols-loaded","true"),!0;try{if(K(J))return document.body.setAttribute("data-material-symbols-loaded","true"),!0}catch(Z){}return!1}function q(){try{let J=[];for(let Z of document.fonts)if(Z.family.includes("Material Symbols")){if(Z.status==="loading")J.push(Z.family)}return J.length===0}catch(J){return!0}}setTimeout(()=>{if($())return;let J=0,Z=setInterval(()=>{J++;let Q=q();if($()||Q&&J>10||J>60){if(clearInterval(Z),!document.body.hasAttribute("data-material-symbols-loaded"))document.body.setAttribute("data-material-symbols-loaded","true")}},50)},100)}function Df(){o()}if(M())Object.assign(window,{materialSymbolsLoader:Df});if(typeof document<"u")if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",o);else setTimeout(o,10);var L,V1=!1;function D(){function f(J,Z){let Q=new URLSearchParams(window.location.search);Q.set(J,Z),history.pushState({},"",`${window.location.pathname}?${Q.toString()}`),L?.()}function K(J){return new URLSearchParams(window.location.search).get(J)}function $(J){let Z=new URLSearchParams(window.location.search);if(!Z.has(J))return;Z.delete(J);let Q=Z.toString()?`?${Z.toString()}`:"";history.pushState({},"",`${window.location.pathname}${Q}`),L?.()}function q(J){L=J}if(!V1)window.addEventListener("popstate",()=>{L?.()}),V1=!0;return{set:f,read:K,remove:$,addChangeLocationEvent:q}}var s=new WeakMap,R1=new WeakSet;function jf(){{let $=document.querySelectorAll("dialog");for(let q of $){if(R1.has(q))continue;R1.add(q),q.addEventListener("click",(J)=>{if(J.target!==q)return;J.preventDefault(),d(q)}),q.addEventListener("cancel",(J)=>{J.preventDefault(),d(q)})}}let f=D();function K(){let $=f.read("m");if($)W1($);else w1()}f.addChangeLocationEvent(K),K()}function w1(f,K){let $=document.querySelectorAll("dialog"),q=new Set;if(K){let J=K.closest("dialog");while(J){if(J.id&&J.open)q.add(J.id);J=J.parentElement?.closest("dialog")??null}}for(let J of $){if(J.id===f)continue;if(q.has(J.id))continue;N1(J)}}function Bf(f,K){let $=document.getElementById(f);if(!($ instanceof HTMLDialogElement))return;if($.dataset.changeUrl!==void 0)D().set("m",f);else D().remove("m"),W1(f,K)}var i=new WeakMap;function F1(f,K,$,q=500){let J=!1,Z=!K,Q=!1,Y=null,X=()=>{if(Q)return;if(Q=!0,f.removeEventListener("transitionend",G),Y!==null)clearTimeout(Y),Y=null;$()},G=(z)=>{if(z.propertyName==="opacity"){if(z.target===f)J=!0;else if(z.target===K)Z=!0;if(J&&Z)X()}};f.addEventListener("transitionend",G),Y=setTimeout(X,q)}function W1(f,K){w1(f,K);let $=document.getElementById(f);if($ instanceof HTMLDialogElement){let q=document.activeElement;if(q instanceof HTMLElement)s.set($,q);let J=x1($);if(!i.has($)){let Y=document.createElement("template");Y.innerHTML=$.innerHTML,i.set($,Y.content)}if($.classList.remove("modal-ready","modal-closing"),J){let Y=$.querySelector(".modal-container");if($.style.display="flex",$.style.visibility="hidden",$.style.opacity="0",Y)Y.style.opacity="0",Y.style.transform=J.transform;$.offsetHeight,$.showModal(),$.style.display="",$.style.visibility=""}else $.showModal();$.setAttribute("tabindex","-1"),$.focus();let Z=$.querySelectorAll("[data-inited-appear]");for(let Y of Z)Y.removeAttribute("data-inited-appear");if(window.appear?.($),!J)return;let Q=$.querySelector(".modal-container");requestAnimationFrame(()=>{if($.classList.add("modal-ready"),$.style.opacity="1",Q)Q.style.opacity="1",Q.style.transform="none"}),F1($,Q,()=>{if($.style.opacity="",Q)Q.style.opacity="",Q.style.transform=""})}}function _f(f){let K=f.closest("dialog");if(K)d(K)}function d(f){if(D().remove("m"),f.dataset.changeUrl===void 0)N1(f)}function N1(f){let K=x1(f),$=()=>{f.classList.remove("modal-ready","modal-closing");let J=i.get(f);if(J){f.replaceChildren(J.cloneNode(!0));for(let Q of f.querySelectorAll("[data-inited-appear]"))Q.removeAttribute("data-inited-appear"),Q.classList.add("appear")}f.removeAttribute("tabindex");let Z=s.get(f);if(Z&&document.contains(Z)&&typeof Z.focus==="function")Z.focus();s.delete(f)};if(!K){f.close(),$();return}let q=f.querySelector(".modal-container");if(f.classList.add("modal-closing"),f.classList.remove("modal-ready"),f.style.opacity="0",q)q.style.opacity="0",q.style.transform=K.transform;F1(f,q,()=>{if(f.open)f.close();$()})}function x1(f){if(!f.dataset.modalTransitionBase)return null;try{let K=JSON.parse(f.dataset.modalTransitionBase);if(typeof K.transform==="string"&&typeof K.opacity==="number")return{transform:K.transform,opacity:K.opacity}}catch{return null}return null}if(M())Object.assign(window,{modal:jf,showModal:Bf,hideCurrentModal:_f});var vf=[["windows nt","windows"],["android","android"],["iphone","iphone"],["ipad","iphone"],["mac os x","mac"]],Pf=[[(f)=>f.includes("msie")||f.includes("trident"),"IE"],[(f)=>f.includes("edge")||f.includes("edg"),"Edge"],[(f)=>f.includes("opr")||f.includes("opera"),"opera"],[(f)=>f.includes("firefox"),"firefox"],[(f)=>f.includes("chrome")&&!f.includes("edg"),"chrome"],[(f)=>f.includes("safari")&&!f.includes("chrome"),"safari"]];function A(f=8){let K=new Uint8Array(f);crypto.getRandomValues(K);let $="";for(let q=0;q<f;q++)$+="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789"[K[q]%63];return $}function Lf(){let f=sessionStorage.getItem("studio_analytics_session_id");if(f)return f;let K=A();return sessionStorage.setItem("studio_analytics_session_id",K),K}function Af(f){return!f||f===""?"none":f}function yf(f){let K=new URL(f);return{url:f,domain:K.hostname,path:K.pathname}}function bf(f){let K=f.toLowerCase(),$=vf.find(([q])=>K.includes(q));if($)return $[1];return"etc"}function If(f){let K=f.toLowerCase(),$=Pf.find(([q])=>q(K));if($)return $[1];return"other"}function hf(f,K,$,q,J=Lf){let{url:Z,domain:Q,path:Y}=yf(f);return{url:Z,domain:Q,path:Y,session_id:J(),user_agent:$,referrer:Af(K),os:bf($),browser:If($),project_id:q}}function Ef(){try{return sessionStorage.setItem("__sas_test__","1"),sessionStorage.removeItem("__sas_test__"),!0}catch{return!1}}function D1(f){if(!f)return null;try{return new URL(f).hostname}catch{return null}}function Sf(f,K){let $=D1(f),q=D1(K);if(!q)return!0;if(!$)return!0;return $!==q}function cf(f,K){if(!Ef())return A();let $=Sf(f,K),q=sessionStorage.getItem("studio_analytics_session_id");if($){let Z=A();return sessionStorage.setItem("studio_analytics_session_id",Z),Z}if(q)return q;let J=A();return sessionStorage.setItem("studio_analytics_session_id",J),J}function uf(f){try{let K=window.location.href,$=document.referrer||void 0,q=navigator.userAgent,J=cf(K,$),Z=hf(K,$,q,f,()=>J);setTimeout(()=>{fetch("https://analytics.studiodesignapp.com/event",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(Z),keepalive:!0}).catch(()=>{})},0)}catch{}}Object.assign(window,{sendAnalytics:uf});})();
+
+</script>
+
+</head>
+<body>
+<div class="box sd-1"><div class="box sd-2 appear"><a class="box sd-3" href="https://tally.so/r/mDRkRN" target="_blank"><p class="text sd-4">教科書を出品する</p></a></div><div class="box sd-5 appear"><a class="box sd-6 appear" href="https://deluxe-umbrella-809.notion.site/TETOMI-23180c9e3f1880848d1ecd36e7b8fcee?source=copy_link" target="_blank"><p class="text sd-7">教科書を探す</p></a></div><header class="box symbol-1 appear" data-scope-1><div class="box symbol-1__sd-1"><div class="box symbol-1__sd-2" aria-label="Logo"><div class="sd-img-horizontal symbol-1__sd-3"><div class="sd-img__inner"><img class="sd-img__sizer" src="data:image/svg+xml,%3Csvg xmlns=&#x27;http://www.w3.org/2000/svg&#x27; viewBox=&#x27;0 0 518 164&#x27; width=&#x27;518&#x27; height=&#x27;164&#x27; %3E%3C/svg%3E" alt="" aria-hidden="true" /><figure class="sd-img__figure" style="aspect-ratio: 518/164;"><img class="sd-img__actual sd-img__actual--small" src="https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-518x164_webp_c91d2989-73b2-4a7a-96d5-01377ae40fd0.webp" alt=" " loading="lazy" /><img class="sd-img__actual sd-img__actual--middle" src="https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-518x164_webp_c91d2989-73b2-4a7a-96d5-01377ae40fd0.webp" alt="" loading="lazy" aria-hidden="true" /><img class="sd-img__actual sd-img__actual--regular" src="https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-518x164_webp_c91d2989-73b2-4a7a-96d5-01377ae40fd0.webp" alt="" loading="lazy" aria-hidden="true" /><img class="sd-img__actual sd-img__actual--origin" src="https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-518x164_webp_c91d2989-73b2-4a7a-96d5-01377ae40fd0.webp" alt="" loading="lazy" aria-hidden="true" /></figure></div></div></div><div class="box symbol-1__sd-4"><nav class="box symbol-1__sd-5"><ul class="box list-1"><li class="box list-1__item" data-scope-2><a class="box list-1__item__sd-1" href="/" data-current><p class="text list-1__item__sd-2">ホーム</p><div class="box list-1__item__sd-3"></div></a></li><li class="box list-1__item" data-scope-3><a class="box list-1__item__sd-1" href="#service"><p class="text list-1__item__sd-2">特徴</p><div class="box list-1__item__sd-3"></div></a></li><li class="box list-1__item" data-scope-4><a class="box list-1__item__sd-1" href="/5"><p class="text list-1__item__sd-2">運営メンバー</p><div class="box list-1__item__sd-3"></div></a></li><li class="box list-1__item" data-scope-5><a class="box list-1__item__sd-1" href="/6"><p class="text list-1__item__sd-2">FAQ</p><div class="box list-1__item__sd-3"></div></a></li></ul></nav><div class="box symbol-1__sd-6"><a class="box symbol-1__sd-7" href="/3"><p class="text symbol-1__sd-8">お問い合わせ</p><span class="icon symbol-1__sd-9 material-symbols-outlined" aria-hidden="true">arrow_forward</span></a><button class="box symbol-1__sd-10" aria-label="Open Menu" data-modal="modal-7" onclick="showModal(&quot;modal-7&quot;,this)" type="button"><span class="icon symbol-1__sd-11 material-icons" aria-hidden="true">menu</span></button></div></div></div></header><header class="box sd-8 appear"><div class="box image image--horizontal sd-9" style="--img-origin:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-4000x1966_v-frms_webp_6a7f2d63-4d46-4d9f-9e3c-91a2e6092753.webp);--img-small:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-4000x1966_v-frms_webp_6a7f2d63-4d46-4d9f-9e3c-91a2e6092753_small.webp);--img-middle:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-4000x1966_v-frms_webp_6a7f2d63-4d46-4d9f-9e3c-91a2e6092753_middle.webp);--img-regular:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-4000x1966_v-frms_webp_6a7f2d63-4d46-4d9f-9e3c-91a2e6092753_regular.webp)"><span class="image__bg-container" aria-hidden="true"></span><div class="box sd-10"><div class="box sd-11 appear"><div class="box sd-12"><p class="text sd-13 theme-728cbb74">手から手へ、<br>教科書とつながりを。</p></div><p class="text sd-14 theme-48a70f87">TETOMIは学生目線で、<br>「なるべく安く教科書を手に入れたい。」<br>「学部内の先輩後輩のつながりが少ない。」<br>こんな声に応えるため、作られたプラットフォームです。</p><div class="box sd-15"><a class="box sd-16" href="https://www.notion.so/TETOMI-23180c9e3f1880848d1ecd36e7b8fcee?source=copy_link" target="_blank"><p class="text sd-17">教科書を探す</p><span class="icon sd-18 material-symbols-outlined" aria-hidden="true">arrow_forward</span></a><a class="box sd-19" href="https://tally.so/r/mDRkRN" target="_blank"><p class="text sd-20">教科書を出品する</p><span class="icon sd-21 material-symbols-outlined" aria-hidden="true">arrow_forward</span></a></div></div></div></div></header><div class="box sd-22"><div class="box sd-23"><div class="box sd-24 appear"><div class="box sd-25"><p class="text sd-26 theme-728cbb74">【GLOMAC専用】<br>教科書取引サービス</p></div><p class="text sd-27">TETOMI</p><p class="text sd-28 appear">　手から手へ、教科書とつながりを。</p></div></div></div><main class="box sd-29"><div class="box image image--horizontal sd-30" id="service" style="--img-origin:url(https://images.unsplash.com/photo-1604882355165-4450cb6155b2?crop=entropy%26cs=tinysrgb%26fit=max%26fm=jpg%26ixid=M3w2MzQ2fDB8MXxzZWFyY2h8NDV8fFNwaXJpdHVhbGl0eXxlbnwwfHx8fDE3NTIyNDQyMDJ8MA%26ixlib=rb-4.1.0%26q=80%26w=1080);--img-small:url(https://images.unsplash.com/photo-1604882355165-4450cb6155b2?crop=entropy%26cs=tinysrgb%26fit=max%26fm=jpg%26ixid=M3w2MzQ2fDB8MXxzZWFyY2h8NDV8fFNwaXJpdHVhbGl0eXxlbnwwfHx8fDE3NTIyNDQyMDJ8MA%26ixlib=rb-4.1.0%26q=80%26w=1080);--img-middle:url(https://images.unsplash.com/photo-1604882355165-4450cb6155b2?crop=entropy%26cs=tinysrgb%26fit=max%26fm=jpg%26ixid=M3w2MzQ2fDB8MXxzZWFyY2h8NDV8fFNwaXJpdHVhbGl0eXxlbnwwfHx8fDE3NTIyNDQyMDJ8MA%26ixlib=rb-4.1.0%26q=80%26w=1080);--img-regular:url(https://images.unsplash.com/photo-1604882355165-4450cb6155b2?crop=entropy%26cs=tinysrgb%26fit=max%26fm=jpg%26ixid=M3w2MzQ2fDB8MXxzZWFyY2h8NDV8fFNwaXJpdHVhbGl0eXxlbnwwfHx8fDE3NTIyNDQyMDJ8MA%26ixlib=rb-4.1.0%26q=80%26w=1080)"><span class="image__bg-container" aria-hidden="true"></span><div class="box sd-31"><h2 class="text sd-32 appear">TETOMIとは<br></h2><h2 class="text sd-33 appear">GLOMAC専用の<br>教科書を手渡しで取引するためのサービス</h2><p class="text sd-34 appear">送料・手数料ゼロ。<br>運営のサポートで不安もなし。<br>教科書から学部内の新たな“つながり”が生まれます。<br></p><p class="text sd-35 appear"><br></p></div></div><p class="text sd-36">&nbsp;ABOUT THE TETOMI</p><h3 class="text sd-37 appear" id="tokutyo">３つの特徴</h3><div class="box sd-38"><div class="box sd-39"><div class="box sd-40 appear"><div class="box sd-41"><p class="text sd-42">手渡しでシンプル</p></div><p class="text sd-43">受け取りは学内で手渡しです。</p></div><div class="box image image--horizontal sd-44 appear" style="--img-origin:url(https://storage.stock.studio.design/optimized/okXCzAQkbpFM6tw4--w_M.webp);--img-small:url(https://storage.stock.studio.design/optimized/okXCzAQkbpFM6tw4--w_M.webp);--img-middle:url(https://storage.stock.studio.design/optimized/okXCzAQkbpFM6tw4--w_M.webp);--img-regular:url(https://storage.stock.studio.design/optimized/okXCzAQkbpFM6tw4--w_M.webp)"><span class="image__bg-container" aria-hidden="true"></span></div></div><p class="text sd-45">Point 1</p></div><div class="box sd-46"><div class="box sd-47"><div class="box image image--horizontal sd-48 appear" style="--img-origin:url(https://images.unsplash.com/photo-1666771621396-0160a92fd024?crop=entropy%26cs=tinysrgb%26fit=max%26fm=jpg%26ixid=M3w2MzQ2fDB8MXxzZWFyY2h8ODl8fGFmZm9yZGJsZXxlbnwwfHx8fDE3NTIyNDg5OTB8MA%26ixlib=rb-4.1.0%26q=80%26w=1080);--img-small:url(https://images.unsplash.com/photo-1666771621396-0160a92fd024?crop=entropy%26cs=tinysrgb%26fit=max%26fm=jpg%26ixid=M3w2MzQ2fDB8MXxzZWFyY2h8ODl8fGFmZm9yZGJsZXxlbnwwfHx8fDE3NTIyNDg5OTB8MA%26ixlib=rb-4.1.0%26q=80%26w=1080);--img-middle:url(https://images.unsplash.com/photo-1666771621396-0160a92fd024?crop=entropy%26cs=tinysrgb%26fit=max%26fm=jpg%26ixid=M3w2MzQ2fDB8MXxzZWFyY2h8ODl8fGFmZm9yZGJsZXxlbnwwfHx8fDE3NTIyNDg5OTB8MA%26ixlib=rb-4.1.0%26q=80%26w=1080);--img-regular:url(https://images.unsplash.com/photo-1666771621396-0160a92fd024?crop=entropy%26cs=tinysrgb%26fit=max%26fm=jpg%26ixid=M3w2MzQ2fDB8MXxzZWFyY2h8ODl8fGFmZm9yZGJsZXxlbnwwfHx8fDE3NTIyNDg5OTB8MA%26ixlib=rb-4.1.0%26q=80%26w=1080)"><span class="image__bg-container" aria-hidden="true"></span></div><div class="box sd-49 appear"><div class="box sd-50"><p class="text sd-51">なるべく安く</p></div><p class="text sd-52">手数料、配送料はかかりません。<br>無料での譲渡なら一円も発生しません。</p></div></div><p class="text sd-53">Point 2</p></div><div class="box sd-54"><div class="box sd-55"><div class="box sd-56 appear"><div class="box sd-57"><p class="text sd-58">学部内で、<br>新たなつながりを</p></div><p class="text sd-59">使い終わった教科書を先輩から後輩へ、<br>学年をこえたあたたかい交流のきっかけになります。</p></div><div class="box image image--horizontal sd-60 appear" style="--img-origin:url(https://images.unsplash.com/photo-1573497491208-6b1acb260507?crop=entropy%26cs=tinysrgb%26fit=max%26fm=jpg%26ixid=M3w2MzQ2fDB8MXxzZWFyY2h8MXx8Y29udmVyc2F0aW9ufGVufDB8fHx8MTc1MjM0MTM3Mnww%26ixlib=rb-4.1.0%26q=80%26w=1080);--img-small:url(https://images.unsplash.com/photo-1573497491208-6b1acb260507?crop=entropy%26cs=tinysrgb%26fit=max%26fm=jpg%26ixid=M3w2MzQ2fDB8MXxzZWFyY2h8MXx8Y29udmVyc2F0aW9ufGVufDB8fHx8MTc1MjM0MTM3Mnww%26ixlib=rb-4.1.0%26q=80%26w=1080);--img-middle:url(https://images.unsplash.com/photo-1573497491208-6b1acb260507?crop=entropy%26cs=tinysrgb%26fit=max%26fm=jpg%26ixid=M3w2MzQ2fDB8MXxzZWFyY2h8MXx8Y29udmVyc2F0aW9ufGVufDB8fHx8MTc1MjM0MTM3Mnww%26ixlib=rb-4.1.0%26q=80%26w=1080);--img-regular:url(https://images.unsplash.com/photo-1573497491208-6b1acb260507?crop=entropy%26cs=tinysrgb%26fit=max%26fm=jpg%26ixid=M3w2MzQ2fDB8MXxzZWFyY2h8MXx8Y29udmVyc2F0aW9ufGVufDB8fHx8MTc1MjM0MTM3Mnww%26ixlib=rb-4.1.0%26q=80%26w=1080)"><span class="image__bg-container" aria-hidden="true"></span></div></div><p class="text sd-61">Point 3</p></div><h3 class="text sd-62 appear">不安がある方でも</h3><div class="box image image--horizontal sd-63" style="--img-origin:url(https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?crop=entropy%26cs=tinysrgb%26fit=max%26fm=jpg%26ixid=M3w2MzQ2fDB8MXxzZWFyY2h8NHx8c3VwcG9ydHxlbnwwfHx8fDE3NTg5MDM1NDZ8MA%26ixlib=rb-4.1.0%26q=80%26w=1080);--img-small:url(https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?crop=entropy%26cs=tinysrgb%26fit=max%26fm=jpg%26ixid=M3w2MzQ2fDB8MXxzZWFyY2h8NHx8c3VwcG9ydHxlbnwwfHx8fDE3NTg5MDM1NDZ8MA%26ixlib=rb-4.1.0%26q=80%26w=1080);--img-middle:url(https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?crop=entropy%26cs=tinysrgb%26fit=max%26fm=jpg%26ixid=M3w2MzQ2fDB8MXxzZWFyY2h8NHx8c3VwcG9ydHxlbnwwfHx8fDE3NTg5MDM1NDZ8MA%26ixlib=rb-4.1.0%26q=80%26w=1080);--img-regular:url(https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?crop=entropy%26cs=tinysrgb%26fit=max%26fm=jpg%26ixid=M3w2MzQ2fDB8MXxzZWFyY2h8NHx8c3VwcG9ydHxlbnwwfHx8fDE3NTg5MDM1NDZ8MA%26ixlib=rb-4.1.0%26q=80%26w=1080)"><span class="image__bg-container" aria-hidden="true"></span><div class="box sd-64"><h2 class="text sd-65 appear">運営の仲介で安心</h2><p class="text sd-66 appear">日程調整から当日の引き渡しまで、<br>運営メンバーがサポート、仲介します。<br>初対面の人とのやりとりも、心配いりません。</p></div></div><h3 class="text sd-67 appear">使い方はこちら</h3><div class="box sd-carousel sd-68" data-type="carousel" data-animate-duration="600" data-interval-duration="3000" data-hover-stop data-max-length="7" role="region" aria-roledescription="carousel" aria-label="Image carousel"><div class="box sd-75 sd-carousel__controls"><button class="box sd-76" aria-label="Prev Slide" slot="prev"><span class="icon sd-77 material-icons" aria-hidden="true">keyboard_arrow_left</span></button><button class="box sd-78" slot="play-toggle"><div class="box sd-79" slot="pause"><span class="icon sd-80 material-icons" aria-hidden="true">pause</span></div><div class="box sd-81" slot="play"><span class="icon sd-82 material-icons" aria-hidden="true">play_arrow</span></div></button><button class="box sd-83" aria-label="Next Slide" slot="next"><span class="icon sd-84 material-icons" aria-hidden="true">keyboard_arrow_right</span></button></div><template class="sd-carousel__template"><div class="sd-carousel__slide box sd-68__content" data-scope-11 data-appear-manual="" aria-roledescription="slide" aria-label="1 of 5" role="group"><p class="text sd-68__content__sd-1">出品の流れを見る</p><div class="box image image--horizontal sd-68__content__sd-2" style="--img-origin:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1621x1080_v-fms_webp_5d8ac65c-1ef1-4900-86f7-97956f13b32b.webp);--img-small:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1621x1080_v-fms_webp_5d8ac65c-1ef1-4900-86f7-97956f13b32b_small.webp);--img-middle:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1621x1080_v-fms_webp_5d8ac65c-1ef1-4900-86f7-97956f13b32b_middle.webp);--img-regular:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1621x1080_v-fms_webp_5d8ac65c-1ef1-4900-86f7-97956f13b32b.webp)"><span class="image__bg-container" aria-hidden="true"></span><div class="box sd-68__content__sd-3"><p class="text sd-68__content__sd-4">Step 1</p><p class="text sd-68__content__sd-5">出品フォームを入力</p><p class="text sd-68__content__sd-6">まずは、こちらのサイトにある出品フォームから必要な情報を入力してください。</p></div></div></div><div class="sd-carousel__slide box sd-68__content" data-scope-12 data-appear-manual="" aria-roledescription="slide" aria-label="2 of 5" role="group"><p class="text sd-68__content__sd-1">出品の流れを見る</p><div class="box image image--horizontal sd-68__content__sd-2" style="--img-origin:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1920x1080_v-frms_webp_d141899d-1677-446a-a6ba-ec192da2fe75.webp);--img-small:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1920x1080_v-frms_webp_d141899d-1677-446a-a6ba-ec192da2fe75_small.webp);--img-middle:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1920x1080_v-frms_webp_d141899d-1677-446a-a6ba-ec192da2fe75_middle.webp);--img-regular:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1920x1080_v-frms_webp_d141899d-1677-446a-a6ba-ec192da2fe75_regular.webp)"><span class="image__bg-container" aria-hidden="true"></span><div class="box sd-68__content__sd-3"><p class="text sd-68__content__sd-4">Step 2</p><p class="text sd-68__content__sd-5">ページに掲載される</p><p class="text sd-68__content__sd-6">運営メンバーが内容をチェックし問題がなければ、Notionの「教科書一覧」に追加され、公開されます。</p></div></div></div><div class="sd-carousel__slide box sd-68__content" data-scope-13 data-appear-manual="" aria-roledescription="slide" aria-label="3 of 5" role="group"><p class="text sd-68__content__sd-1">出品の流れを見る</p><div class="box image image--horizontal sd-68__content__sd-2" style="--img-origin:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1920x1080_v-frms_webp_fb74888f-02a4-4ced-89ba-238edc22fec0.webp);--img-small:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1920x1080_v-frms_webp_fb74888f-02a4-4ced-89ba-238edc22fec0_small.webp);--img-middle:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1920x1080_v-frms_webp_fb74888f-02a4-4ced-89ba-238edc22fec0_middle.webp);--img-regular:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1920x1080_v-frms_webp_fb74888f-02a4-4ced-89ba-238edc22fec0_regular.webp)"><span class="image__bg-container" aria-hidden="true"></span><div class="box sd-68__content__sd-3"><p class="text sd-68__content__sd-4">Step 3</p><p class="text sd-68__content__sd-5">予約が入る</p><p class="text sd-68__content__sd-6">誰かが予約フォームから申し込むと、運営からLINEまたはGmailで連絡が届きます。</p></div></div></div><div class="sd-carousel__slide box sd-68__content" data-scope-14 data-appear-manual="" aria-roledescription="slide" aria-label="4 of 5" role="group"><p class="text sd-68__content__sd-1">出品の流れを見る</p><div class="box image image--horizontal sd-68__content__sd-2" style="--img-origin:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1920x1080_v-frms_webp_7d77ef3f-e47b-44f3-bd63-874028aa0f10.webp);--img-small:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1920x1080_v-frms_webp_7d77ef3f-e47b-44f3-bd63-874028aa0f10_small.webp);--img-middle:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1920x1080_v-frms_webp_7d77ef3f-e47b-44f3-bd63-874028aa0f10_middle.webp);--img-regular:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1920x1080_v-frms_webp_7d77ef3f-e47b-44f3-bd63-874028aa0f10_regular.webp)"><span class="image__bg-container" aria-hidden="true"></span><div class="box sd-68__content__sd-3"><p class="text sd-68__content__sd-4">Step 4 </p><p class="text sd-68__content__sd-5">受け渡しの日程調整</p><p class="text sd-68__content__sd-6">運営が仲介しながら予約者の方と受け渡し日時を調整します。</p></div></div></div><div class="sd-carousel__slide box sd-68__content" data-scope-15 data-appear-manual="" aria-roledescription="slide" aria-label="5 of 5" role="group"><p class="text sd-68__content__sd-1">出品の流れを見る</p><div class="box image image--horizontal sd-68__content__sd-2" style="--img-origin:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-2816x1536_v-frms_webp_3056b4b4-15e9-45c4-8446-710fecc1aef8.webp);--img-small:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-2816x1536_v-frms_webp_3056b4b4-15e9-45c4-8446-710fecc1aef8_small.webp);--img-middle:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-2816x1536_v-frms_webp_3056b4b4-15e9-45c4-8446-710fecc1aef8_middle.webp);--img-regular:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-2816x1536_v-frms_webp_3056b4b4-15e9-45c4-8446-710fecc1aef8_regular.webp)"><span class="image__bg-container" aria-hidden="true"></span><div class="box sd-68__content__sd-3"><p class="text sd-68__content__sd-4">Step 5 </p><p class="text sd-68__content__sd-5">キャンパス内で手渡し</p><p class="text sd-68__content__sd-6">キャンパス内で教科書を手渡し、完了です。<br>現金でのやり取りが基本ですが、予約者の同意があればPayPayも可能です。</p></div></div></div></template></div><div class="box sd-carousel sd-85" data-type="carousel" data-animate-duration="600" data-interval-duration="3000" data-hover-stop data-max-length="7" role="region" aria-roledescription="carousel" aria-label="Image carousel"><div class="box sd-92 sd-carousel__controls"><button class="box sd-93" aria-label="Prev Slide" slot="prev"><span class="icon sd-94 material-icons" aria-hidden="true">keyboard_arrow_left</span></button><button class="box sd-95" slot="play-toggle"><div class="box sd-96" slot="pause"><span class="icon sd-97 material-icons" aria-hidden="true">pause</span></div><div class="box sd-98" slot="play"><span class="icon sd-99 material-icons" aria-hidden="true">play_arrow</span></div></button><button class="box sd-100" aria-label="Next Slide" slot="next"><span class="icon sd-101 material-icons" aria-hidden="true">keyboard_arrow_right</span></button></div><template class="sd-carousel__template"><div class="sd-carousel__slide box sd-85__content" data-scope-16 data-appear-manual="" aria-roledescription="slide" aria-label="1 of 5" role="group"><p class="text sd-85__content__sd-1">予約の流れを見る</p><div class="box image image--horizontal sd-85__content__sd-2" style="--img-origin:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1920x1080_v-frms_webp_d141899d-1677-446a-a6ba-ec192da2fe75.webp);--img-small:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1920x1080_v-frms_webp_d141899d-1677-446a-a6ba-ec192da2fe75_small.webp);--img-middle:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1920x1080_v-frms_webp_d141899d-1677-446a-a6ba-ec192da2fe75_middle.webp);--img-regular:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1920x1080_v-frms_webp_d141899d-1677-446a-a6ba-ec192da2fe75_regular.webp)"><span class="image__bg-container" aria-hidden="true"></span><div class="box sd-85__content__sd-3"><p class="text sd-85__content__sd-4">Step 1</p><p class="text sd-85__content__sd-5">教科書一覧から探す</p><p class="text sd-85__content__sd-6">まずは、このサイトにある教科書一覧から予約したい教科書をみつけてください。</p></div></div></div><div class="sd-carousel__slide box sd-85__content" data-scope-17 data-appear-manual="" aria-roledescription="slide" aria-label="2 of 5" role="group"><p class="text sd-85__content__sd-1">予約の流れを見る</p><div class="box image image--horizontal sd-85__content__sd-2" style="--img-origin:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1440x1080_v-fms_webp_509ff993-1bc3-4a51-82ca-e219a52fbe73.webp);--img-small:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1440x1080_v-fms_webp_509ff993-1bc3-4a51-82ca-e219a52fbe73_small.webp);--img-middle:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1440x1080_v-fms_webp_509ff993-1bc3-4a51-82ca-e219a52fbe73_middle.webp);--img-regular:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1440x1080_v-fms_webp_509ff993-1bc3-4a51-82ca-e219a52fbe73.webp)"><span class="image__bg-container" aria-hidden="true"></span><div class="box sd-85__content__sd-3"><p class="text sd-85__content__sd-4">Step 2</p><p class="text sd-85__content__sd-5">予約するボタンを押す</p><p class="text sd-85__content__sd-6">それぞれの教科書の「予約ボタン」を押して予約フォームに遷移します。</p></div></div></div><div class="sd-carousel__slide box sd-85__content" data-scope-18 data-appear-manual="" aria-roledescription="slide" aria-label="3 of 5" role="group"><p class="text sd-85__content__sd-1">予約の流れを見る</p><div class="box image image--horizontal sd-85__content__sd-2" style="--img-origin:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1920x1080_v-frms_webp_fb74888f-02a4-4ced-89ba-238edc22fec0.webp);--img-small:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1920x1080_v-frms_webp_fb74888f-02a4-4ced-89ba-238edc22fec0_small.webp);--img-middle:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1920x1080_v-frms_webp_fb74888f-02a4-4ced-89ba-238edc22fec0_middle.webp);--img-regular:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1920x1080_v-frms_webp_fb74888f-02a4-4ced-89ba-238edc22fec0_regular.webp)"><span class="image__bg-container" aria-hidden="true"></span><div class="box sd-85__content__sd-3"><p class="text sd-85__content__sd-4">Step 3</p><p class="text sd-85__content__sd-5">予約フォームを入力</p><p class="text sd-85__content__sd-6">受け取り希望日など必要な情報を入力してください。</p></div></div></div><div class="sd-carousel__slide box sd-85__content" data-scope-19 data-appear-manual="" aria-roledescription="slide" aria-label="4 of 5" role="group"><p class="text sd-85__content__sd-1">予約の流れを見る</p><div class="box image image--horizontal sd-85__content__sd-2" style="--img-origin:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1920x1080_v-frms_webp_7d77ef3f-e47b-44f3-bd63-874028aa0f10.webp);--img-small:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1920x1080_v-frms_webp_7d77ef3f-e47b-44f3-bd63-874028aa0f10_small.webp);--img-middle:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1920x1080_v-frms_webp_7d77ef3f-e47b-44f3-bd63-874028aa0f10_middle.webp);--img-regular:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-1920x1080_v-frms_webp_7d77ef3f-e47b-44f3-bd63-874028aa0f10_regular.webp)"><span class="image__bg-container" aria-hidden="true"></span><div class="box sd-85__content__sd-3"><p class="text sd-85__content__sd-4">Step 4 </p><p class="text sd-85__content__sd-5">受け渡しの日程調整</p><p class="text sd-85__content__sd-6">運営が仲介しながら出品者の方と日程を調整します。</p></div></div></div><div class="sd-carousel__slide box sd-85__content" data-scope-20 data-appear-manual="" aria-roledescription="slide" aria-label="5 of 5" role="group"><p class="text sd-85__content__sd-1">予約の流れを見る</p><div class="box image image--horizontal sd-85__content__sd-2" style="--img-origin:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-2816x1536_v-frms_webp_3056b4b4-15e9-45c4-8446-710fecc1aef8.webp);--img-small:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-2816x1536_v-frms_webp_3056b4b4-15e9-45c4-8446-710fecc1aef8_small.webp);--img-middle:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-2816x1536_v-frms_webp_3056b4b4-15e9-45c4-8446-710fecc1aef8_middle.webp);--img-regular:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-2816x1536_v-frms_webp_3056b4b4-15e9-45c4-8446-710fecc1aef8_regular.webp)"><span class="image__bg-container" aria-hidden="true"></span><div class="box sd-85__content__sd-3"><p class="text sd-85__content__sd-4">Step 5 </p><p class="text sd-85__content__sd-5">手渡しで受け取る</p><p class="text sd-85__content__sd-6">キャンパス内で手渡しで受け取り、完了です。<br>現金でのやり取りが基本ですが、出品者の同意があればPayPayも可能です。</p></div></div></div></template></div><div class="box sd-102"><p class="text sd-103">RECOMMENDED</p><div class="box sd-104"><h2 class="text sd-105 appear">TETOMIは<br>こんな方におすすめ</h2><p class="text sd-106 appear">「教科書を安く・手早く手に入れたい」</p><p class="text sd-107 appear">「使わなくなった教科書を有効活用したい」</p><p class="text sd-108 appear">「同じ学部の先輩、後輩をつくりたい」</p><p class="text sd-109 appear">「フリマアプリはちょっと面倒・不安…」</p></div><div class="box image image--horizontal sd-110" style="--img-origin:url(https://images.unsplash.com/photo-1497633762265-9d179a990aa6?crop=entropy%26cs=tinysrgb%26fit=max%26fm=jpg%26ixid=M3w2MzQ2fDB8MXxzZWFyY2h8Mnx8JUU2JTlDJUFDfGVufDB8fHx8MTc1MjIwOTE0MXww%26ixlib=rb-4.1.0%26q=80%26w=1080);--img-small:url(https://images.unsplash.com/photo-1497633762265-9d179a990aa6?crop=entropy%26cs=tinysrgb%26fit=max%26fm=jpg%26ixid=M3w2MzQ2fDB8MXxzZWFyY2h8Mnx8JUU2JTlDJUFDfGVufDB8fHx8MTc1MjIwOTE0MXww%26ixlib=rb-4.1.0%26q=80%26w=1080);--img-middle:url(https://images.unsplash.com/photo-1497633762265-9d179a990aa6?crop=entropy%26cs=tinysrgb%26fit=max%26fm=jpg%26ixid=M3w2MzQ2fDB8MXxzZWFyY2h8Mnx8JUU2JTlDJUFDfGVufDB8fHx8MTc1MjIwOTE0MXww%26ixlib=rb-4.1.0%26q=80%26w=1080);--img-regular:url(https://images.unsplash.com/photo-1497633762265-9d179a990aa6?crop=entropy%26cs=tinysrgb%26fit=max%26fm=jpg%26ixid=M3w2MzQ2fDB8MXxzZWFyY2h8Mnx8JUU2JTlDJUFDfGVufDB8fHx8MTc1MjIwOTE0MXww%26ixlib=rb-4.1.0%26q=80%26w=1080)"><span class="image__bg-container" aria-hidden="true"></span></div></div><div class="box sd-111"><div class="box sd-112"><h2 class="text sd-113 appear">名前に込められた意味</h2><div class="box sd-114 appear"><p class="text sd-115">TETOMI</p><p class="text sd-116">te（手）：直接「手」で受け渡す(Te-xtbook)</p><p class="text sd-117">to（と）：手から実になる方向性</p><p class="text sd-118">mi（実）：新たなつながりが実りあるものに</p></div><p class="text sd-119">TETOMI＝手と実<br>「手(教科書)から生まれる新たなつながりが実になるように」という意味が込められています。</p></div></div><div class="box sd-120"><img class="img sd-121 appear" alt="" src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?crop=entropy&amp;amp;cs=tinysrgb&amp;amp;fit=max&amp;amp;fm=jpg&amp;amp;ixid=M3w2MzQ2fDB8MXxzZWFyY2h8Nnx8c3R1ZGVudHN8ZW58MHx8fHwxNzUyMjI4MTE4fDA&amp;amp;ixlib=rb-4.1.0&amp;amp;q=80&amp;amp;w=1080" loading="lazy" /></div><div class="box sd-122"><p class="text sd-123 appear">TETOMIで<br>学生ライフをもっと豊かに<br></p><p class="text sd-124 appear">タップでスタート！</p><div class="box image image--horizontal sd-125" style="--img-origin:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-553x403_webp_7b07add4-a547-4f90-9f08-2547ec999e12.webp);--img-small:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-553x403_webp_7b07add4-a547-4f90-9f08-2547ec999e12.webp);--img-middle:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-553x403_webp_7b07add4-a547-4f90-9f08-2547ec999e12.webp);--img-regular:url(https://storage.googleapis.com/studio-design-asset-files/projects/9YWy6lZjOM/s-553x403_webp_7b07add4-a547-4f90-9f08-2547ec999e12.webp)"><span class="image__bg-container" aria-hidden="true"></span></div><div class="box sd-126"><a class="box sd-127" href="https://www.notion.so/TETOMI-23180c9e3f1880848d1ecd36e7b8fcee?source=copy_link" target="_blank"><p class="text sd-128">教科書を探す</p><span class="icon sd-129 material-symbols-outlined" aria-hidden="true">call_made</span></a><a class="box sd-130" href="https://tally.so/r/mDRkRN" target="_blank"><p class="text sd-131">教科書を出品する</p><span class="icon sd-132 material-symbols-outlined" aria-hidden="true">call_made</span></a></div></div></main><footer class="box sd-133"><div class="box sd-134"><p class="text sd-135">TETOMI</p><a class="text sd-136" href="/3">お問い合わせ</a><a class="text sd-137" href="/5">運営メンバー</a><a class="text sd-138" href="/4">サービスビジョン</a><a class="text sd-139" href="/6">よくある質問</a><a class="text sd-140" id="riyokiyaku" href="/2" target="_blank">利用規約</a><a class="text sd-141" href="/1">プライバシーポリシー</a></div><p class="text sd-142">TETOMI 2025.</p></footer></div>
+
+<dialog class="modal-7" data-modal-transition-base="{&quot;opacity&quot;:0,&quot;transform&quot;:&quot;translateY(-100px)&quot;}" id="modal-7"><div class="modal-container modal-7__container"><ul class="box list-2 appear"><a class="box list-2__item" href="/" data-current data-scope-6><p class="text list-2__item__sd-1">About</p><p class="text list-2__item__sd-2">ホーム</p></a><a class="box list-2__item" href="/#service" data-scope-7><p class="text list-2__item__sd-1">Service</p><p class="text list-2__item__sd-2">特徴</p></a><a class="box list-2__item" href="/5" data-scope-8><p class="text list-2__item__sd-1">Member</p><p class="text list-2__item__sd-2">運営メンバー</p></a><a class="box list-2__item" href="/6" data-scope-9><p class="text list-2__item__sd-1">FAQ</p><p class="text list-2__item__sd-2">よくある質問</p></a><a class="box list-2__item" href="/3" data-scope-10><p class="text list-2__item__sd-1">Contact</p><p class="text list-2__item__sd-2">お問い合わせ</p></a></ul></div></dialog>
+
+<a class="apps-studio-banner" href="https://studio.design/?utm_source=/state-carouse&amp;utm_medium=STUDIO%20Banner&amp;utm_campaign=STUDIO%20Banner" target="_blank" aria-label="Created in Studio">
+<svg class="long-banner" width="180" height="14" viewBox="0 0 180 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M175.324 6.72785V10.8937H173.648V3.78398L175.25 3.78398V4.99208H175.333C175.497 4.59401 175.758 4.27771 176.116 4.04319C176.477 3.80867 176.922 3.69141 177.453 3.69141C177.944 3.69141 178.371 3.79632 178.735 4.00616C179.103 4.216 179.387 4.51995 179.587 4.91802C179.791 5.31609 179.891 5.79902 179.888 6.36681V10.8937H178.212V6.62602C178.212 6.15081 178.089 5.77896 177.842 5.5105C177.598 5.24203 177.26 5.1078 176.828 5.1078C176.535 5.1078 176.274 5.1726 176.046 5.3022C175.821 5.42872 175.643 5.61233 175.514 5.85302C175.387 6.09372 175.324 6.38533 175.324 6.72785Z"/>
+    <path d="M169.243 13.708C168.641 13.708 168.124 13.6262 167.692 13.4627C167.26 13.3022 166.913 13.0862 166.651 12.8146C166.389 12.5431 166.207 12.2422 166.105 11.912L167.614 11.5464C167.682 11.6852 167.78 11.8225 167.91 11.9583C168.04 12.0972 168.214 12.2114 168.433 12.3008C168.655 12.3934 168.934 12.4397 169.271 12.4397C169.746 12.4397 170.139 12.324 170.451 12.0926C170.763 11.8642 170.919 11.4877 170.919 10.9631V9.61618H170.835C170.749 9.78899 170.622 9.96642 170.456 10.1485C170.292 10.3305 170.075 10.4833 169.803 10.6067C169.535 10.7302 169.197 10.7919 168.789 10.7919C168.243 10.7919 167.748 10.6638 167.304 10.4077C166.862 10.1485 166.51 9.76276 166.248 9.25051C165.989 8.73518 165.859 8.09024 165.859 7.3157C165.859 6.53499 165.989 5.87617 166.248 5.33923C166.51 4.79922 166.864 4.39034 167.308 4.11262C167.753 3.83181 168.248 3.69141 168.794 3.69141C169.211 3.69141 169.553 3.76238 169.822 3.90433C170.093 4.04319 170.309 4.21137 170.47 4.40886C170.63 4.60327 170.752 4.78687 170.835 4.95968H170.928V3.78398H172.58V11.0094C172.58 11.6173 172.435 12.1203 172.145 12.5184C171.855 12.9165 171.459 13.2142 170.956 13.4117C170.453 13.6092 169.882 13.708 169.243 13.708ZM169.257 9.47732C169.612 9.47732 169.914 9.39092 170.164 9.21811C170.414 9.04531 170.604 8.7969 170.733 8.47289C170.863 8.14887 170.928 7.76006 170.928 7.30645C170.928 6.859 170.863 6.4671 170.733 6.13075C170.607 5.79439 170.419 5.53364 170.169 5.34849C169.922 5.16026 169.618 5.06614 169.257 5.06614C168.883 5.06614 168.572 5.16334 168.322 5.35775C168.072 5.55216 167.884 5.81908 167.757 6.15852C167.631 6.49487 167.567 6.87752 167.567 7.30645C167.567 7.74155 167.631 8.12264 167.757 8.44974C167.887 8.77375 168.077 9.02679 168.326 9.20885C168.58 9.38783 168.89 9.47732 169.257 9.47732Z"/>
+    <path d="M164.241 3.09908C163.99 3.09908 163.775 3.01035 163.595 2.83289C163.416 2.65543 163.327 2.43915 163.33 2.18405C163.327 1.9345 163.416 1.72099 163.595 1.54353C163.775 1.36607 163.99 1.27734 164.241 1.27734C164.484 1.27734 164.695 1.36607 164.874 1.54353C165.057 1.72099 165.149 1.9345 165.152 2.18405C165.149 2.3532 165.105 2.50709 165.019 2.64573C164.937 2.78437 164.826 2.89528 164.688 2.97846C164.553 3.05888 164.404 3.09908 164.241 3.09908Z"/>
+    <path d="M163.404 10.8871V3.77734L165.08 3.77734V10.8871H163.404Z"/>
+    <path d="M162.563 5.82988H160.993C160.95 5.67559 160.875 5.53056 160.767 5.39478C160.662 5.259 160.52 5.14946 160.341 5.06614C160.162 4.98282 159.943 4.94116 159.683 4.94116C159.335 4.94116 159.042 5.01677 158.804 5.16797C158.569 5.31918 158.454 5.51513 158.457 5.75582C158.454 5.96257 158.529 6.13075 158.684 6.26035C158.841 6.38996 159.1 6.49642 159.461 6.57974L160.674 6.83894C161.347 6.98398 161.847 7.21387 162.174 7.52862C162.504 7.84338 162.671 8.25534 162.674 8.7645C162.671 9.21194 162.539 9.60693 162.28 9.94945C162.024 10.2889 161.668 10.5543 161.211 10.7456C160.754 10.9369 160.23 11.0326 159.637 11.0326C158.767 11.0326 158.066 10.8505 157.536 10.4864C157.005 10.1192 156.663 9.42125 156.551 8.81069H158.223C158.297 9.13161 158.452 9.36006 158.693 9.52361C158.934 9.68716 159.247 9.76893 159.633 9.76893C160.031 9.76893 160.35 9.68716 160.591 9.52361C160.834 9.36006 160.956 9.15794 160.956 8.91724C160.956 8.71358 160.878 8.5454 160.72 8.41271C160.566 8.28002 160.325 8.17819 159.998 8.10722L158.785 7.85264C158.103 7.71069 157.599 7.47154 157.272 7.13518C156.945 6.79574 156.783 6.36681 156.786 5.8484C156.783 5.41021 156.902 5.03065 157.142 4.70973C157.386 4.38572 157.724 4.13576 158.156 3.95987C158.591 3.78089 159.092 3.69141 159.66 3.69141C160.493 3.69141 161.149 3.86884 161.627 4.22371C162.109 4.57858 162.44 5.06614 162.563 5.82988Z"/>
+    <path d="M160.994 5.65625H162.518V5.83344H160.994V5.65625Z"/>
+    <path d="M152.976 11.0326C152.264 11.0326 151.648 10.8845 151.13 10.5882C150.614 10.2889 150.218 9.86613 149.94 9.31994C149.662 8.77067 149.523 8.12419 149.523 7.38051C149.523 6.64917 149.662 6.00732 149.94 5.45495C150.221 4.89951 150.613 4.46749 151.116 4.15891C151.619 3.84724 152.21 3.69141 152.889 3.69141C153.327 3.69141 153.74 3.76238 154.129 3.90433C154.521 4.04319 154.867 4.2592 155.166 4.55235C155.468 4.8455 155.706 5.21889 155.879 5.6725C156.051 6.12303 156.138 6.65997 156.138 7.2833V7.79709L150.31 7.79709V6.66768L154.532 6.66768C154.529 6.34676 154.459 6.06132 154.323 5.81137C154.188 5.55833 153.998 5.35929 153.754 5.21426C153.513 5.06923 153.233 4.99671 152.912 4.99671C152.569 4.99671 152.268 5.08003 152.009 5.24666C151.75 5.41021 151.548 5.62622 151.403 5.89468C151.261 6.16006 151.188 6.45167 151.185 6.76951V7.75543C151.185 8.16893 151.261 8.5238 151.412 8.82004C151.563 9.11319 151.775 9.33846 152.046 9.49584C152.318 9.65013 152.635 9.72727 153 9.72727C153.243 9.72727 153.464 9.69333 153.662 9.62544C153.859 9.55447 154.03 9.45109 154.175 9.31532C154.32 9.17954 154.43 9.01136 154.504 8.81078H156.138C155.969 9.42125 155.781 9.76122 155.504 10.0698C155.229 10.3753 154.877 10.6129 154.448 10.7826C154.019 10.9493 153.529 11.0326 152.976 11.0326Z"/>
+    <path d="M144.32 10.8859H141.107V1.40625L144.385 1.40625C145.326 1.40625 146.134 1.59603 146.81 1.97558C147.489 2.35205 148.01 2.89362 148.375 3.60027C148.739 4.30692 148.921 5.15244 148.921 6.13681C148.921 7.12428 148.737 7.97288 148.37 8.68262C148.006 9.39236 147.48 9.937 146.792 10.3166C146.106 10.6961 145.283 10.8859 144.32 10.8859ZM142.825 9.40007H144.236C144.897 9.40007 145.448 9.27972 145.889 9.03903C146.33 8.79525 146.662 8.43267 146.884 7.95128C147.106 7.4668 147.217 6.86198 147.217 6.13681C147.217 5.41165 147.106 4.80991 146.884 4.33161C146.662 3.85022 146.333 3.49072 145.898 3.25311C145.466 3.01242 144.929 2.89207 144.287 2.89207L142.825 2.89207V9.40007Z"/>
+    <path d="M138.936 10.9922C138.656 10.9922 138.415 10.8935 138.214 10.696C138.014 10.4985 137.915 10.2578 137.918 9.97391C137.915 9.69618 138.014 9.45857 138.214 9.26108C138.415 9.06359 138.656 8.96484 138.936 8.96484C139.208 8.96484 139.444 9.06359 139.645 9.26108C139.848 9.45857 139.952 9.69618 139.955 9.97391C139.952 10.1621 139.902 10.3334 139.807 10.4877C139.714 10.642 139.591 10.7654 139.436 10.858C139.285 10.9475 139.118 10.9922 138.936 10.9922Z"/>
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M101.065 2.46885L92.548 10.9855L91.3242 9.76172L99.8408 1.24509L101.065 2.46885Z"/>
+    <path d="M133.725 11.0358C133.031 11.0358 132.429 10.8831 131.92 10.5776C131.411 10.2721 131.016 9.84478 130.735 9.29555C130.457 8.74633 130.318 8.10454 130.318 7.37018C130.318 6.63582 130.457 5.99249 130.735 5.44018C131.016 4.88787 131.411 4.45898 131.92 4.15351C132.429 3.84805 133.031 3.69531 133.725 3.69531C134.419 3.69531 135.021 3.84805 135.53 4.15351C136.039 4.45898 136.432 4.88787 136.71 5.44018C136.991 5.99249 137.131 6.63582 137.131 7.37018C137.131 8.10454 136.991 8.74633 136.71 9.29555C136.432 9.84478 136.039 10.2721 135.53 10.5776C135.021 10.8831 134.419 11.0358 133.725 11.0358ZM133.734 9.69359C134.11 9.69359 134.425 9.59022 134.678 9.38349C134.931 9.17367 135.119 8.89289 135.243 8.54114C135.369 8.18939 135.433 7.79753 135.433 7.36555C135.433 6.93049 135.369 6.53709 135.243 6.18534C135.119 5.8305 134.931 5.54817 134.678 5.33836C134.425 5.12854 134.11 5.02363 133.734 5.02363C133.348 5.02363 133.027 5.12854 132.771 5.33836C132.518 5.54817 132.329 5.8305 132.202 6.18534C132.079 6.53709 132.017 6.93049 132.017 7.36555C132.017 7.79753 132.079 8.18939 132.202 8.54114C132.329 8.89289 132.518 9.17367 132.771 9.38349C133.027 9.59022 133.348 9.69359 133.734 9.69359Z"/>
+    <path d="M127.873 10.902V3.79297L129.548 3.79297V10.902H127.873Z"/>
+    <path d="M122.955 11.0192C122.397 11.0192 121.897 10.8757 121.456 10.5888C121.014 10.3018 120.666 9.88528 120.41 9.33915C120.153 8.79301 120.025 8.12962 120.025 7.34898C120.025 6.55908 120.155 5.89261 120.414 5.34956C120.676 4.80342 121.03 4.3915 121.474 4.1138C121.918 3.83302 122.414 3.69263 122.96 3.69263C123.376 3.69263 123.719 3.76359 123.987 3.90553C124.256 4.04438 124.469 4.21254 124.626 4.41001C124.783 4.6044 124.905 4.78799 124.992 4.96078H125.061V1.41797L126.741 1.41797V10.8943L125.093 10.8943V9.77421H124.992C124.905 9.94699 124.78 10.1306 124.617 10.325C124.453 10.5163 124.237 10.6798 123.969 10.8156C123.7 10.9513 123.362 11.0192 122.955 11.0192ZM123.423 9.64461C123.777 9.64461 124.08 9.54896 124.33 9.35766C124.58 9.16327 124.769 8.89329 124.899 8.54771C125.029 8.20213 125.093 7.79947 125.093 7.33972C125.093 6.87998 125.029 6.4804 124.899 6.14099C124.772 5.80159 124.584 5.53777 124.334 5.34956C124.087 5.16134 123.784 5.06723 123.423 5.06723C123.049 5.06723 122.738 5.16443 122.488 5.35881C122.238 5.5532 122.049 5.82164 121.923 6.16414C121.796 6.50663 121.733 6.89849 121.733 7.33972C121.733 7.78404 121.796 8.18053 121.923 8.52919C122.053 8.87477 122.242 9.14784 122.492 9.3484C122.745 9.54588 123.055 9.64461 123.423 9.64461Z"/>
+    <path d="M117.57 7.91215V3.79297H119.246V10.902H117.621V9.63851H117.547C117.387 10.0365 117.123 10.3621 116.756 10.6151C116.391 10.8681 115.943 10.9946 115.409 10.9946C114.943 10.9946 114.531 10.8912 114.173 10.6845C113.818 10.4747 113.54 10.1708 113.34 9.77273C113.139 9.37161 113.039 8.88718 113.039 8.31944V3.79297L114.715 3.79297V8.06026C114.715 8.51075 114.838 8.86867 115.085 9.13402C115.332 9.39938 115.656 9.53206 116.057 9.53206C116.304 9.53206 116.543 9.47189 116.774 9.35155C117.006 9.23122 117.195 9.05226 117.343 8.81467C117.495 8.574 117.57 8.27316 117.57 7.91215Z"/>
+    <path d="M112.293 3.79306V5.08898L108.197 5.08237V3.78645L112.293 3.79306ZM109.216 2.08984L110.891 2.08984V8.76385C110.891 8.98909 110.925 9.16188 110.993 9.28222C111.064 9.39947 111.156 9.47969 111.27 9.52289C111.385 9.56609 111.511 9.58769 111.65 9.58769C111.755 9.58769 111.851 9.57997 111.937 9.56454C112.026 9.54912 112.094 9.53523 112.141 9.52289L112.423 10.8327C112.333 10.8636 112.205 10.8975 112.039 10.9345C111.875 10.9715 111.675 10.9931 111.437 10.9993C111.017 11.0117 110.639 10.9484 110.303 10.8096C109.967 10.6676 109.7 10.4485 109.502 10.1523C109.308 9.85613 109.212 9.48586 109.216 9.04155V2.08984Z"/>
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M106.511 3.78593C106.431 3.49609 106.264 3.26215 106.01 3.08412C105.692 2.85888 105.279 2.74625 104.77 2.74625C104.412 2.74625 104.105 2.80025 103.849 2.90825C103.593 3.01624 103.397 3.1628 103.261 3.34793C103.125 3.53307 103.056 3.74442 103.053 3.98201C103.053 4.17948 103.097 4.35073 103.187 4.49575C103.279 4.64077 103.404 4.76419 103.562 4.86601C103.719 4.96475 103.893 5.04806 104.085 5.11594C104.276 5.18382 104.469 5.24091 104.663 5.28719L105.552 5.50935C105.91 5.59266 106.254 5.70528 106.584 5.84721C106.917 5.98915 107.215 6.16811 107.477 6.3841C107.743 6.60008 107.952 6.86081 108.107 7.16628C108.261 7.47175 108.338 7.82967 108.338 8.24004C108.338 8.79544 108.196 9.2845 107.912 9.70722C107.629 10.1268 107.218 10.4555 106.681 10.693C106.147 10.9275 105.501 11.0448 104.742 11.0448C104.005 11.0448 103.364 10.9306 102.821 10.7023C102.281 10.474 101.859 10.1407 101.553 9.70259C101.251 9.26444 101.087 8.73064 101.062 8.1012H102.752C102.777 8.43135 102.878 8.70596 103.057 8.92503C103.236 9.1441 103.469 9.30764 103.756 9.41563C104.046 9.52363 104.37 9.57762 104.728 9.57762C105.101 9.57762 105.429 9.52208 105.709 9.411C105.993 9.29684 106.215 9.13948 106.376 8.93892C106.536 8.73527 106.618 8.49769 106.621 8.22616C106.618 7.97932 106.545 7.77567 106.404 7.61522C106.262 7.45169 106.063 7.31593 105.807 7.20793C105.553 7.09685 105.257 6.99812 104.918 6.91172L103.839 6.63403C103.059 6.43347 102.442 6.12954 101.988 5.72225C101.538 5.31187 101.312 4.76728 101.312 4.08846C101.312 3.52998 101.464 3.04092 101.766 2.62129C102.071 2.20166 102.486 1.87613 103.011 1.64472C103.536 1.41022 104.13 1.29297 104.793 1.29297C105.466 1.29297 106.055 1.41022 106.561 1.64472C107.07 1.87613 107.47 2.19857 107.76 2.61203C108.005 2.95917 108.15 3.35047 108.194 3.78593H106.511Z"/>
+    <path d="M128.714 3.11454C128.462 3.11454 128.247 3.02581 128.068 2.84837C127.888 2.67093 127.8 2.45467 127.803 2.19959C127.8 1.95006 127.888 1.73658 128.068 1.55913C128.247 1.38169 128.462 1.29297 128.714 1.29297C128.956 1.29297 129.168 1.38169 129.347 1.55913C129.529 1.73658 129.622 1.95006 129.624 2.19959C129.622 2.36872 129.577 2.5226 129.492 2.66122C129.409 2.79985 129.299 2.91075 129.161 2.99393C129.025 3.07433 128.876 3.11454 128.714 3.11454Z"/>
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M101.064 2.47734L92.5479 10.9932L91.3242 9.76953L99.84 1.2537L101.064 2.47734Z"/>
+    <path d="M6.07067 4.07812C6.02758 3.67495 5.846 3.36103 5.52592 3.13636C5.20893 2.91169 4.79652 2.79936 4.28871 2.79936C3.9317 2.79936 3.62547 2.85322 3.37003 2.96094C3.11458 3.06865 2.91915 3.21484 2.78374 3.3995C2.64832 3.58416 2.57907 3.79498 2.57599 4.03196C2.57599 4.22893 2.62062 4.39974 2.70987 4.54439C2.8022 4.68904 2.92685 4.81214 3.08381 4.91371C3.24077 5.01219 3.41465 5.09529 3.60547 5.163C3.79628 5.23071 3.98864 5.28764 4.18253 5.33381L5.06889 5.5554C5.4259 5.63849 5.76906 5.75083 6.09837 5.8924C6.43075 6.03397 6.72775 6.21248 6.98935 6.42791C7.25402 6.64335 7.4633 6.90341 7.61719 7.2081C7.77107 7.51278 7.84801 7.86979 7.84801 8.27912C7.84801 8.8331 7.70644 9.3209 7.4233 9.74254C7.14015 10.1611 6.73082 10.4889 6.19531 10.7259C5.66288 10.9598 5.01811 11.0767 4.26101 11.0767C3.52545 11.0767 2.88684 10.9628 2.34517 10.7351C1.80658 10.5073 1.38494 10.175 1.08026 9.73793C0.778646 9.3009 0.61553 8.76847 0.590909 8.14062H2.27592C2.30054 8.46993 2.40211 8.74384 2.58061 8.96236C2.75911 9.18087 2.99148 9.34399 3.2777 9.4517C3.567 9.55942 3.89015 9.61328 4.24716 9.61328C4.61956 9.61328 4.94579 9.55788 5.22585 9.44709C5.509 9.33321 5.73059 9.17625 5.89062 8.97621C6.05066 8.77308 6.13222 8.5361 6.1353 8.26527C6.13222 8.01906 6.0599 7.81593 5.91832 7.65589C5.77675 7.49278 5.57824 7.35736 5.3228 7.24964C5.07043 7.13885 4.77498 7.04036 4.43643 6.95419L3.3608 6.6772C2.58215 6.47715 1.96662 6.17401 1.5142 5.76776C1.06487 5.35843 0.840199 4.81522 0.840199 4.13814C0.840199 3.58108 0.991004 3.09328 1.29261 2.67472C1.5973 2.25616 2.01125 1.93146 2.53445 1.70064C3.05765 1.46674 3.65009 1.34979 4.31179 1.34979C4.98272 1.34979 5.57055 1.46674 6.07528 1.70064C6.5831 1.93146 6.98165 2.25308 7.27095 2.66548C7.56025 3.07481 7.70952 3.54569 7.71875 4.07812H6.07067ZM11.9319 3.84268V5.1353H7.85554V3.84268H11.9319ZM8.86193 2.14382H10.5331V8.80078C10.5331 9.02545 10.5669 9.1978 10.6347 9.31783C10.7054 9.43478 10.7978 9.5148 10.9116 9.55788C11.0255 9.60097 11.1517 9.62251 11.2902 9.62251C11.3948 9.62251 11.4902 9.61482 11.5764 9.59943C11.6657 9.58404 11.7334 9.57019 11.7795 9.55788L12.0611 10.8643C11.9719 10.8951 11.8442 10.929 11.678 10.9659C11.5149 11.0028 11.3148 11.0244 11.0778 11.0305C10.6593 11.0429 10.2823 10.9798 9.9468 10.8413C9.61134 10.6997 9.34512 10.4812 9.14815 10.1857C8.95426 9.89027 8.85885 9.52095 8.86193 9.07777V2.14382ZM14.46 11.0767C14.0107 11.0767 13.606 10.9967 13.2459 10.8366C12.8889 10.6735 12.6057 10.4335 12.3964 10.1165C12.1902 9.79948 12.0871 9.40862 12.0871 8.94389C12.0871 8.5438 12.161 8.21295 12.3087 7.95135C12.4565 7.68975 12.658 7.48047 12.9135 7.32351C13.1689 7.16655 13.4567 7.04806 13.7768 6.96804C14.0999 6.88494 14.4338 6.82493 14.7785 6.788C15.194 6.74491 15.531 6.70644 15.7896 6.67258C16.0481 6.63565 16.2358 6.58026 16.3528 6.50639C16.4728 6.42945 16.5328 6.31096 16.5328 6.15092V6.12322C16.5328 5.77545 16.4297 5.50616 16.2235 5.31534C16.0173 5.12453 15.7203 5.02912 15.3325 5.02912C14.9232 5.02912 14.5985 5.11837 14.3584 5.29688C14.1215 5.47538 13.9614 5.6862 13.8783 5.92933L12.318 5.70774C12.4411 5.27687 12.6442 4.91678 12.9273 4.62749C13.2105 4.33511 13.5567 4.1166 13.966 3.97195C14.3754 3.82422 14.8278 3.75036 15.3233 3.75036C15.6649 3.75036 16.005 3.79036 16.3435 3.87038C16.6821 3.9504 16.9914 4.08274 17.2714 4.2674C17.5515 4.44898 17.7762 4.69673 17.9454 5.01065C18.1178 5.32457 18.204 5.71697 18.204 6.18785V10.9336H16.5974V9.95952H16.542C16.4405 10.1565 16.2974 10.3411 16.1127 10.5135C15.9311 10.6828 15.7018 10.8197 15.4249 10.9244C15.1509 11.0259 14.8293 11.0767 14.46 11.0767ZM14.894 9.84872C15.2294 9.84872 15.5203 9.78255 15.7665 9.65021C16.0127 9.5148 16.202 9.33629 16.3343 9.1147C16.4697 8.89311 16.5374 8.65152 16.5374 8.38991V7.55433C16.4851 7.59742 16.3959 7.63743 16.2697 7.67436C16.1466 7.71129 16.0081 7.74361 15.8542 7.77131C15.7003 7.79901 15.548 7.82363 15.3972 7.84517C15.2463 7.86671 15.1155 7.88518 15.0048 7.90057C14.7555 7.93442 14.5323 7.98982 14.3354 8.06676C14.1384 8.1437 13.983 8.25142 13.8691 8.38991C13.7552 8.52533 13.6983 8.70076 13.6983 8.91619C13.6983 9.22396 13.8106 9.45632 14.0353 9.61328C14.26 9.77024 14.5462 9.84872 14.894 9.84872ZM18.9744 10.9336V3.84268H20.5948V5.0245H20.6686C20.7979 4.61518 21.0195 4.29972 21.3334 4.07812C21.6504 3.85346 22.012 3.74112 22.4183 3.74112C22.5106 3.74112 22.6137 3.74574 22.7276 3.75497C22.8445 3.76113 22.9415 3.7719 23.0184 3.78729V5.32457C22.9476 5.29995 22.8353 5.27841 22.6814 5.25994C22.5306 5.2384 22.3844 5.22763 22.2428 5.22763C21.9381 5.22763 21.6642 5.2938 21.4211 5.42614C21.181 5.5554 20.9918 5.73544 20.8533 5.96626C20.7148 6.19709 20.6455 6.4633 20.6455 6.76491V10.9336H18.9744ZM27.1404 3.84268V5.1353H23.064V3.84268H27.1404ZM24.0704 2.14382H25.7416V8.80078C25.7416 9.02545 25.7754 9.1978 25.8431 9.31783C25.9139 9.43478 26.0062 9.5148 26.1201 9.55788C26.234 9.60097 26.3602 9.62251 26.4987 9.62251C26.6033 9.62251 26.6987 9.61482 26.7849 9.59943C26.8741 9.58404 26.9419 9.57019 26.988 9.55788L27.2696 10.8643C27.1804 10.8951 27.0526 10.929 26.8865 10.9659C26.7233 11.0028 26.5233 11.0244 26.2863 11.0305C25.8678 11.0429 25.4907 10.9798 25.1553 10.8413C24.8198 10.6997 24.5536 10.4812 24.3566 10.1857C24.1627 9.89027 24.0673 9.52095 24.0704 9.07777V2.14382ZM30.9813 13.5927C30.7536 13.5927 30.5428 13.5742 30.3489 13.5373C30.158 13.5034 30.0057 13.4634 29.8918 13.4173L30.2796 12.1154C30.5227 12.1862 30.7397 12.2201 30.9305 12.217C31.1213 12.2139 31.2891 12.1539 31.4337 12.0369C31.5815 11.9231 31.7061 11.7322 31.8077 11.4645L31.9508 11.0813L29.3794 3.84268H31.1521L32.7864 9.1978H32.8602L34.4991 3.84268H36.2764L33.4373 11.7923C33.3049 12.1677 33.1295 12.4893 32.911 12.7571C32.6925 13.0279 32.4247 13.2341 32.1077 13.3757C31.7938 13.5204 31.4183 13.5927 30.9813 13.5927ZM39.3747 11.0721C38.6822 11.0721 38.0821 10.9197 37.5742 10.6151C37.0664 10.3104 36.6725 9.88411 36.3924 9.33629C36.1154 8.78847 35.9769 8.14832 35.9769 7.41584C35.9769 6.68336 36.1154 6.04167 36.3924 5.49077C36.6725 4.93987 37.0664 4.51207 37.5742 4.20739C38.0821 3.9027 38.6822 3.75036 39.3747 3.75036C40.0671 3.75036 40.6673 3.9027 41.1751 4.20739C41.6829 4.51207 42.0753 4.93987 42.3523 5.49077C42.6324 6.04167 42.7724 6.68336 42.7724 7.41584C42.7724 8.14832 42.6324 8.78847 42.3523 9.33629C42.0753 9.88411 41.6829 10.3104 41.1751 10.6151C40.6673 10.9197 40.0671 11.0721 39.3747 11.0721ZM39.3839 9.73331C39.7594 9.73331 40.0733 9.63021 40.3257 9.42401C40.578 9.21473 40.7658 8.93466 40.8889 8.58381C41.0151 8.23295 41.0782 7.84209 41.0782 7.41122C41.0782 6.97727 41.0151 6.58487 40.8889 6.23402C40.7658 5.88009 40.578 5.59848 40.3257 5.3892C40.0733 5.17992 39.7594 5.07528 39.3839 5.07528C38.9992 5.07528 38.6791 5.17992 38.4237 5.3892C38.1713 5.59848 37.982 5.88009 37.8559 6.23402C37.7327 6.58487 37.6712 6.97727 37.6712 7.41122C37.6712 7.84209 37.7327 8.23295 37.8559 8.58381C37.982 8.93466 38.1713 9.21473 38.4237 9.42401C38.6791 9.63021 38.9992 9.73331 39.3839 9.73331ZM47.8003 7.95135V3.84268H49.4715V10.9336H47.8511V9.6733H47.7773C47.6172 10.0703 47.3541 10.395 46.9878 10.6474C46.6247 10.8997 46.1769 11.0259 45.6445 11.0259C45.1797 11.0259 44.7689 10.9228 44.4119 10.7166C44.0579 10.5073 43.7809 10.2042 43.5809 9.80717C43.3808 9.40708 43.2808 8.92389 43.2808 8.3576V3.84268H44.952V8.09908C44.952 8.54841 45.0751 8.90542 45.3213 9.1701C45.5675 9.43478 45.8907 9.56712 46.2908 9.56712C46.537 9.56712 46.7755 9.5071 47.0063 9.38707C47.2371 9.26705 47.4264 9.08854 47.5741 8.85156C47.7249 8.61151 47.8003 8.31143 47.8003 7.95135ZM50.28 10.9336V3.84268H51.9004V5.0245H51.9742C52.1035 4.61518 52.3251 4.29972 52.639 4.07812C52.956 3.85346 53.3176 3.74112 53.7239 3.74112C53.8162 3.74112 53.9193 3.74574 54.0332 3.75497C54.1501 3.76113 54.2471 3.7719 54.324 3.78729V5.32457C54.2532 5.29995 54.1409 5.27841 53.987 5.25994C53.8362 5.2384 53.69 5.22763 53.5485 5.22763C53.2438 5.22763 52.9699 5.2938 52.7267 5.42614C52.4867 5.5554 52.2974 5.73544 52.1589 5.96626C52.0204 6.19709 51.9512 6.4633 51.9512 6.76491V10.9336H50.28ZM62.4433 5.71697L60.9199 5.88317C60.8768 5.72928 60.8014 5.58464 60.6937 5.44922C60.589 5.3138 60.4474 5.20455 60.2689 5.12145C60.0904 5.03835 59.8719 4.9968 59.6134 4.9968C59.2656 4.9968 58.9732 5.07221 58.7363 5.22301C58.5024 5.37382 58.387 5.56925 58.39 5.8093C58.387 6.01551 58.4624 6.18324 58.6162 6.3125C58.7732 6.44176 59.0317 6.54794 59.3918 6.63104L60.6013 6.88956C61.2723 7.03421 61.7708 7.26349 62.0971 7.57741C62.4264 7.89134 62.5926 8.3022 62.5956 8.81001C62.5926 9.25627 62.4618 9.65021 62.2032 9.99183C61.9478 10.3304 61.5923 10.5951 61.1368 10.7859C60.6813 10.9767 60.1581 11.0721 59.5672 11.0721C58.6993 11.0721 58.0007 10.8905 57.4714 10.5273C56.942 10.1611 56.6265 9.65175 56.525 8.99929L58.1546 8.84233C58.2285 9.16241 58.3854 9.404 58.6255 9.56712C58.8655 9.73023 59.1779 9.81179 59.5626 9.81179C59.9596 9.81179 60.2782 9.73023 60.5182 9.56712C60.7614 9.404 60.8829 9.20241 60.8829 8.96236C60.8829 8.75923 60.8045 8.5915 60.6475 8.45916C60.4936 8.32682 60.2536 8.22526 59.9273 8.15447L58.7178 7.90057C58.0376 7.759 57.5344 7.52048 57.2082 7.18501C56.882 6.84647 56.7204 6.41868 56.7235 5.90163C56.7204 5.46461 56.8389 5.08606 57.079 4.76598C57.3221 4.44283 57.6591 4.19354 58.09 4.01811C58.5239 3.83961 59.024 3.75036 59.5903 3.75036C60.4213 3.75036 61.0753 3.92732 61.5523 4.28125C62.0324 4.63518 62.3294 5.11375 62.4433 5.71697ZM63.0637 10.9336V3.84268H64.7348V10.9336H63.0637ZM63.9039 2.83629C63.6392 2.83629 63.4114 2.74858 63.2206 2.57315C63.0298 2.39465 62.9344 2.18075 62.9344 1.93146C62.9344 1.6791 63.0298 1.4652 63.2206 1.28977C63.4114 1.11127 63.6392 1.02202 63.9039 1.02202C64.1716 1.02202 64.3994 1.11127 64.5871 1.28977C64.7779 1.4652 64.8733 1.6791 64.8733 1.93146C64.8733 2.18075 64.7779 2.39465 64.5871 2.57315C64.3994 2.74858 64.1716 2.83629 63.9039 2.83629ZM69.0841 3.84268V5.1353H65.0078V3.84268H69.0841ZM66.0142 2.14382H67.6854V8.80078C67.6854 9.02545 67.7192 9.1978 67.7869 9.31783C67.8577 9.43478 67.95 9.5148 68.0639 9.55788C68.1778 9.60097 68.304 9.62251 68.4425 9.62251C68.5471 9.62251 68.6425 9.61482 68.7287 9.59943C68.8179 9.58404 68.8856 9.57019 68.9318 9.55788L69.2134 10.8643C69.1242 10.8951 68.9964 10.929 68.8302 10.9659C68.6671 11.0028 68.4671 11.0244 68.2301 11.0305C67.8115 11.0429 67.4345 10.9798 67.0991 10.8413C66.7636 10.6997 66.4974 10.4812 66.3004 10.1857C66.1065 9.89027 66.0111 9.52095 66.0142 9.07777V2.14382ZM72.6348 11.0721C71.9239 11.0721 71.3099 10.9244 70.7929 10.6289C70.2789 10.3304 69.8834 9.90874 69.6064 9.36399C69.3294 8.81617 69.1909 8.1714 69.1909 7.42969C69.1909 6.70028 69.3294 6.06013 69.6064 5.50923C69.8865 4.95526 70.2773 4.52438 70.779 4.21662C71.2807 3.90578 71.87 3.75036 72.5471 3.75036C72.9841 3.75036 73.3965 3.82114 73.7843 3.96271C74.1752 4.10121 74.5199 4.31664 74.8184 4.60902C75.12 4.9014 75.357 5.27379 75.5294 5.72621C75.7017 6.17554 75.7879 6.71106 75.7879 7.33274V7.84517H69.9757V6.71875H74.186C74.1829 6.39867 74.1136 6.11399 73.9782 5.8647C73.8428 5.61233 73.6535 5.41383 73.4104 5.26918C73.1703 5.12453 72.8903 5.0522 72.5702 5.0522C72.2286 5.0522 71.9285 5.1353 71.67 5.30149C71.4115 5.46461 71.2099 5.68004 71.0652 5.9478C70.9237 6.21248 70.8513 6.50331 70.8482 6.82031V7.80362C70.8482 8.21603 70.9237 8.56996 71.0745 8.86541C71.2253 9.15779 71.4361 9.38246 71.7069 9.53942C71.9777 9.6933 72.2947 9.77024 72.6579 9.77024C72.901 9.77024 73.1211 9.73639 73.3181 9.66868C73.515 9.59789 73.6858 9.49479 73.8305 9.35938C73.9751 9.22396 74.0844 9.05623 74.1583 8.85618L75.7186 9.0316C75.6201 9.44401 75.4324 9.8041 75.1554 10.1119C74.8815 10.4165 74.5307 10.6535 74.1029 10.8228C73.6751 10.989 73.1857 11.0721 72.6348 11.0721ZM78.6063 10.9336V3.84268H80.2774V10.9336H78.6063ZM79.4465 2.83629C79.1818 2.83629 78.9541 2.74858 78.7632 2.57315C78.5724 2.39465 78.477 2.18075 78.477 1.93146C78.477 1.6791 78.5724 1.4652 78.7632 1.28977C78.9541 1.11127 79.1818 1.02202 79.4465 1.02202C79.7142 1.02202 79.942 1.11127 80.1297 1.28977C80.3205 1.4652 80.4159 1.6791 80.4159 1.93146C80.4159 2.18075 80.3205 2.39465 80.1297 2.57315C79.942 2.74858 79.7142 2.83629 79.4465 2.83629ZM82.7571 6.77876V10.9336H81.0859V3.84268H82.6832V5.04758H82.7663C82.9294 4.65057 83.1895 4.33511 83.5465 4.10121C83.9066 3.86731 84.3513 3.75036 84.8807 3.75036C85.37 3.75036 85.7963 3.855 86.1594 4.06428C86.5257 4.27356 86.8088 4.5767 87.0089 4.97372C87.212 5.37074 87.312 5.85239 87.3089 6.41868V10.9336H85.6378V6.6772C85.6378 6.20324 85.5147 5.83239 85.2685 5.56463C85.0253 5.29687 84.6883 5.163 84.2574 5.163C83.9651 5.163 83.705 5.22763 83.4773 5.35689C83.2526 5.48307 83.0756 5.66619 82.9464 5.90625C82.8202 6.14631 82.7571 6.43714 82.7571 6.77876Z"/>
+</svg>
+<svg class="short-banner" width="75" height="11" viewBox="0 0 75 11" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M72.5601 3.52827C72.4834 3.24795 72.3236 3.0217 72.0808 2.84951C71.7765 2.63167 71.3806 2.52274 70.8932 2.52274C70.5505 2.52274 70.2566 2.57497 70.0114 2.67941C69.7662 2.78386 69.5786 2.92561 69.4486 3.10466C69.3186 3.28371 69.2521 3.48813 69.2492 3.71791C69.2492 3.9089 69.292 4.07452 69.3777 4.21478C69.4663 4.35504 69.586 4.4744 69.7366 4.57288C69.8873 4.66838 70.0542 4.74895 70.2374 4.8146C70.4205 4.88025 70.6052 4.93546 70.7913 4.98023L71.6421 5.19509C71.9848 5.27566 72.3142 5.38458 72.6303 5.52186C72.9493 5.65913 73.2344 5.83221 73.4855 6.04111C73.7395 6.25 73.9404 6.50216 74.0881 6.7976C74.2358 7.09303 74.3097 7.4392 74.3097 7.8361C74.3097 8.37325 74.1738 8.84625 73.902 9.25508C73.6302 9.66093 73.2373 9.97875 72.7233 10.2085C72.2122 10.4353 71.5933 10.5487 70.8666 10.5487C70.1606 10.5487 69.5476 10.4383 69.0276 10.2175C68.5107 9.99665 68.1059 9.67436 67.8135 9.25061C67.524 8.82685 67.3674 8.31059 67.3438 7.70181H68.9612C68.9848 8.02112 69.0823 8.28671 69.2536 8.49859C69.425 8.71047 69.648 8.86863 69.9227 8.97308C70.2004 9.07752 70.5106 9.12975 70.8533 9.12975C71.2108 9.12975 71.5239 9.07603 71.7927 8.9686C72.0645 8.85818 72.2772 8.70599 72.4308 8.51202C72.5845 8.31506 72.6628 8.08528 72.6657 7.82267C72.6628 7.58393 72.5933 7.38698 72.4574 7.2318C72.3215 7.07364 72.131 6.94233 71.8858 6.83788C71.6436 6.73045 71.36 6.63496 71.035 6.5514L70.0025 6.28283C69.2551 6.08885 68.6643 5.79491 68.23 5.401C67.7987 5.0041 67.583 4.47739 67.583 3.82087C67.583 3.28073 67.7278 2.80773 68.0173 2.40188C68.3098 1.99603 68.7071 1.6812 69.2093 1.45739C69.7115 1.23059 70.2802 1.11719 70.9154 1.11719C71.5594 1.11719 72.1236 1.23059 72.6081 1.45739C73.0955 1.6812 73.4781 1.99305 73.7558 2.39293C73.9907 2.72867 74.1294 3.10712 74.172 3.52827H72.5601Z"/>
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M67.3444 2.26762L59.1911 10.5038L58.0195 9.32031L66.1728 1.08417L67.3444 2.26762Z"/>
+    <path d="M50.3175 6.35328V10.4125H48.7012V3.48474H50.246V4.66192H50.3264C50.4842 4.27404 50.7357 3.96583 51.081 3.73731C51.4292 3.50879 51.8594 3.39453 52.3713 3.39453C52.8446 3.39453 53.2569 3.49676 53.6081 3.70123C53.9623 3.9057 54.2362 4.20187 54.4297 4.58976C54.6261 4.97764 54.7229 5.44822 54.7199 6.00148V10.4125H53.1036V6.25405C53.1036 5.791 52.9845 5.42867 52.7464 5.16707C52.5112 4.90548 52.1853 4.77468 51.7686 4.77468C51.4858 4.77468 51.2343 4.83782 51.014 4.96411C50.7967 5.08739 50.6256 5.2663 50.5005 5.50084C50.3785 5.73537 50.3175 6.01952 50.3175 6.35328Z"/>
+    <path d="M46.1758 10.4141V3.48625H47.7921V10.4141H46.1758ZM46.9884 2.50301C46.7324 2.50301 46.5122 2.41732 46.3276 2.24593C46.1431 2.07153 46.0508 1.86255 46.0508 1.619C46.0508 1.37243 46.1431 1.16346 46.3276 0.992065C46.5122 0.817667 46.7324 0.730469 46.9884 0.730469C47.2474 0.730469 47.4676 0.817667 47.6492 0.992065C47.8338 1.16346 47.926 1.37243 47.926 1.619C47.926 1.86255 47.8338 2.07153 47.6492 2.24593C47.4676 2.41732 47.2474 2.50301 46.9884 2.50301Z"/>
+    <path d="M39.1915 10.5346C38.6528 10.5346 38.1706 10.3948 37.7449 10.1152C37.3192 9.83554 36.9829 9.42961 36.7358 8.8974C36.4888 8.36518 36.3652 7.71871 36.3652 6.95797C36.3652 6.18822 36.4903 5.53873 36.7403 5.00953C36.9933 4.47731 37.3341 4.0759 37.7628 3.80528C38.1914 3.53166 38.6691 3.39484 39.196 3.39484C39.5978 3.39484 39.9282 3.464 40.1872 3.60232C40.4462 3.73763 40.6516 3.9015 40.8034 4.09394C40.9552 4.28337 41.0728 4.46228 41.1561 4.63066H41.2231V1.17578H42.8438V10.4129H41.2543V9.32136H41.1561C41.0728 9.48975 40.9522 9.66866 40.7944 9.85809C40.6367 10.0445 40.4283 10.2039 40.1694 10.3362C39.9104 10.4685 39.5844 10.5346 39.1915 10.5346ZM39.6425 9.19507C39.9848 9.19507 40.2765 9.10186 40.5176 8.91544C40.7587 8.72601 40.9418 8.4629 41.0668 8.12614C41.1918 7.78937 41.2543 7.39697 41.2543 6.94895C41.2543 6.50093 41.1918 6.11154 41.0668 5.78079C40.9448 5.45003 40.7632 5.19295 40.5221 5.00953C40.284 4.82611 39.9908 4.7344 39.6425 4.7344C39.2823 4.7344 38.9817 4.82911 38.7406 5.01855C38.4995 5.20798 38.3179 5.46958 38.1959 5.80334C38.0738 6.1371 38.0128 6.51897 38.0128 6.94895C38.0128 7.38194 38.0738 7.76832 38.1959 8.10809C38.3209 8.44486 38.5039 8.71097 38.745 8.90642C38.9891 9.09885 39.2883 9.19507 39.6425 9.19507Z"/>
+    <path d="M32.9832 10.5478C32.2956 10.5478 31.7017 10.4035 31.2017 10.1149C30.7046 9.82319 30.3221 9.41126 30.0542 8.87904C29.7863 8.34382 29.6523 7.71388 29.6523 6.98923C29.6523 6.27661 29.7863 5.65118 30.0542 5.11295C30.3251 4.57172 30.7031 4.15076 31.1883 3.85007C31.6735 3.54638 32.2435 3.39453 32.8983 3.39453C33.321 3.39453 33.7199 3.46369 34.0949 3.602C34.473 3.73731 34.8064 3.94779 35.0951 4.23344C35.3868 4.5191 35.616 4.88293 35.7827 5.32493C35.9494 5.76394 36.0327 6.28713 36.0327 6.89451V7.39516H30.4114V6.29465H34.4834C34.4804 5.98193 34.4134 5.7038 34.2825 5.46024C34.1515 5.21368 33.9684 5.01974 33.7333 4.87842C33.5011 4.73709 33.2302 4.66643 32.9207 4.66643C32.5903 4.66643 32.3 4.74762 32.05 4.90999C31.8 5.06935 31.605 5.27983 31.4651 5.54143C31.3282 5.80002 31.2582 6.08417 31.2553 6.39387V7.35456C31.2553 7.75748 31.3282 8.10327 31.474 8.39193C31.6199 8.67758 31.8238 8.89708 32.0857 9.05043C32.3477 9.20078 32.6543 9.27595 33.0055 9.27595C33.2407 9.27595 33.4535 9.24287 33.644 9.17672C33.8345 9.10756 33.9997 9.00683 34.1396 8.87453C34.2795 8.74223 34.3852 8.57836 34.4566 8.38291L35.9657 8.5543C35.8705 8.95722 35.6889 9.30902 35.421 9.60971C35.1561 9.90739 34.8168 10.1389 34.403 10.3043C33.9893 10.4667 33.516 10.5478 32.9832 10.5478Z"/>
+    <path d="M29.425 3.48791V4.75079H25.4824V3.48791H29.425ZM26.4558 1.82812H28.0721V8.33196C28.0721 8.55146 28.1048 8.71985 28.1703 8.83711C28.2388 8.95137 28.3281 9.02955 28.4382 9.07165C28.5483 9.11374 28.6704 9.13479 28.8043 9.13479C28.9055 9.13479 28.9978 9.12728 29.0812 9.11224C29.1675 9.09721 29.233 9.08368 29.2776 9.07165L29.55 10.3481C29.4636 10.3781 29.3401 10.4112 29.1794 10.4473C29.0216 10.4834 28.8281 10.5044 28.5989 10.5104C28.1941 10.5225 27.8295 10.4608 27.505 10.3255C27.1806 10.1872 26.9231 9.97371 26.7326 9.68505C26.5451 9.39639 26.4528 9.03557 26.4558 8.60258V1.82812Z"/>
+    <path d="M21.5059 10.5524C21.0713 10.5524 20.6799 10.4742 20.3316 10.3178C19.9863 10.1585 19.7125 9.92392 19.5101 9.61422C19.3107 9.30451 19.2109 8.92264 19.2109 8.46861C19.2109 8.07771 19.2824 7.75448 19.4253 7.49889C19.5681 7.24331 19.7631 7.03884 20.0102 6.88549C20.2572 6.73214 20.5355 6.61638 20.8451 6.5382C21.1576 6.45702 21.4806 6.39838 21.814 6.3623C22.2158 6.3202 22.5418 6.28262 22.7918 6.24954C23.0418 6.21346 23.2234 6.15934 23.3365 6.08717C23.4526 6.012 23.5107 5.89624 23.5107 5.73988V5.71282C23.5107 5.37304 23.4109 5.10994 23.2115 4.92352C23.0121 4.73709 22.7248 4.64388 22.3498 4.64388C21.9539 4.64388 21.6399 4.73108 21.4077 4.90548C21.1785 5.07988 21.0237 5.28584 20.9433 5.52339L19.4342 5.30689C19.5532 4.88593 19.7497 4.53413 20.0236 4.25149C20.2974 3.96583 20.6323 3.75235 21.0282 3.61102C21.4241 3.4667 21.8616 3.39453 22.3408 3.39453C22.6713 3.39453 23.0002 3.43362 23.3276 3.5118C23.655 3.58998 23.9542 3.71927 24.225 3.89968C24.4959 4.07709 24.7132 4.31914 24.8769 4.62584C25.0436 4.93254 25.127 5.31591 25.127 5.77596V10.4125H23.5732V9.46087H23.5196C23.4214 9.65331 23.2829 9.83372 23.1044 10.0021C22.9287 10.1675 22.707 10.3013 22.4391 10.4035C22.1742 10.5027 21.8631 10.5524 21.5059 10.5524ZM21.9256 9.35262C22.2501 9.35262 22.5314 9.28797 22.7695 9.15868C23.0076 9.02638 23.1907 8.85198 23.3187 8.63549C23.4496 8.41899 23.5151 8.18295 23.5151 7.92737V7.11101C23.4645 7.1531 23.3782 7.19219 23.2562 7.22828C23.1371 7.26436 23.0031 7.29593 22.8543 7.32299C22.7055 7.35005 22.5581 7.37411 22.4123 7.39516C22.2664 7.4162 22.1399 7.43425 22.0328 7.44928C21.7917 7.48236 21.5759 7.53648 21.3854 7.61165C21.1949 7.68682 21.0445 7.79206 20.9344 7.92737C20.8243 8.05967 20.7692 8.23106 20.7692 8.44154C20.7692 8.74223 20.8778 8.96925 21.0951 9.1226C21.3124 9.27595 21.5893 9.35262 21.9256 9.35262Z"/>
+    <path d="M15.8718 10.5478C15.1843 10.5478 14.5904 10.4035 14.0903 10.1149C13.5932 9.82319 13.2108 9.41126 12.9429 8.87904C12.675 8.34382 12.541 7.71388 12.541 6.98923C12.541 6.27661 12.675 5.65118 12.9429 5.11295C13.2137 4.57172 13.5918 4.15076 14.0769 3.85007C14.5621 3.54638 15.1322 3.39453 15.787 3.39453C16.2097 3.39453 16.6086 3.46369 16.9836 3.602C17.3616 3.73731 17.695 3.94779 17.9838 4.23344C18.2755 4.5191 18.5047 4.88293 18.6714 5.32493C18.838 5.76394 18.9214 6.28713 18.9214 6.89451V7.39516H13.3001V6.29465H17.3721C17.3691 5.98193 17.3021 5.7038 17.1711 5.46024C17.0402 5.21368 16.8571 5.01974 16.622 4.87842C16.3898 4.73709 16.1189 4.66643 15.8093 4.66643C15.4789 4.66643 15.1887 4.74762 14.9387 4.90999C14.6886 5.06935 14.4937 5.27983 14.3538 5.54143C14.2169 5.80002 14.1469 6.08417 14.1439 6.39387V7.35456C14.1439 7.75748 14.2169 8.10327 14.3627 8.39193C14.5086 8.67758 14.7125 8.89708 14.9744 9.05043C15.2363 9.20078 15.5429 9.27595 15.8942 9.27595C16.1293 9.27595 16.3422 9.24287 16.5327 9.17672C16.7232 9.10756 16.8884 9.00683 17.0283 8.87453C17.1682 8.74223 17.2738 8.57836 17.3453 8.38291L18.8544 8.5543C18.7592 8.95722 18.5776 9.30902 18.3097 9.60971C18.0448 9.90739 17.7054 10.1389 17.2917 10.3043C16.8779 10.4667 16.4047 10.5478 15.8718 10.5478Z"/>
+    <path d="M8.88672 10.4137V3.48595H10.4539V4.64058H10.5253C10.6504 4.24067 10.8647 3.93246 11.1683 3.71597C11.4749 3.49647 11.8246 3.38672 12.2176 3.38672C12.3069 3.38672 12.4066 3.39123 12.5167 3.40025C12.6298 3.40626 12.7236 3.41679 12.798 3.43182V4.93375C12.7295 4.90969 12.6209 4.88864 12.4721 4.8706C12.3262 4.84956 12.1848 4.83903 12.0479 4.83903C11.7532 4.83903 11.4883 4.90368 11.2531 5.03297C11.021 5.15926 10.8379 5.33516 10.7039 5.56068C10.57 5.78619 10.503 6.04629 10.503 6.34096V10.4137H8.88672Z"/>
+    <path d="M8.19591 4.29368H6.52603C6.4784 4.01705 6.39059 3.77199 6.2626 3.5585C6.1346 3.34201 5.97535 3.15859 5.78485 3.00825C5.59435 2.8579 5.37705 2.74515 5.13297 2.66998C4.89186 2.5918 4.63141 2.55271 4.35161 2.55271C3.85451 2.55271 3.41397 2.679 3.02999 2.93157C2.64601 3.18114 2.34537 3.54798 2.12808 4.03208C1.91078 4.51318 1.80214 5.10102 1.80214 5.7956C1.80214 6.50222 1.91078 7.09757 2.12808 7.58168C2.34834 8.06278 2.64898 8.42661 3.02999 8.67317C3.41397 8.91672 3.85302 9.0385 4.34714 9.0385C4.62099 9.0385 4.87698 9.00242 5.11511 8.93026C5.35622 8.85508 5.57202 8.74533 5.76252 8.601C5.956 8.45668 6.11823 8.27927 6.2492 8.06879C6.38315 7.85831 6.47542 7.61776 6.52603 7.34714L8.19591 7.35616C8.1334 7.79517 7.99796 8.20711 7.7896 8.59198C7.58421 8.97686 7.31483 9.31664 6.98145 9.61131C6.64807 9.90298 6.25813 10.1315 5.81164 10.2969C5.36515 10.4592 4.86954 10.5404 4.32482 10.5404C3.52113 10.5404 2.80377 10.3525 2.17272 9.97664C1.54168 9.60079 1.04459 9.05805 0.68144 8.34843C0.318292 7.63881 0.136719 6.78787 0.136719 5.7956C0.136719 4.80033 0.319781 3.94939 0.685904 3.24278C1.05203 2.53316 1.55061 1.99043 2.18165 1.61457C2.8127 1.23871 3.52708 1.05078 4.32482 1.05078C4.83382 1.05078 5.3071 1.12295 5.74466 1.26728C6.18223 1.4116 6.57216 1.62359 6.91447 1.90323C7.25679 2.17986 7.53808 2.51963 7.75835 2.92255C7.98159 3.32246 8.12745 3.77951 8.19591 4.29368Z"/>
+</svg>
+</a>
+<script>
+function initModules() {
+    appear();materialSymbolsLoader();modal();carousel();sendAnalytics("9YWy6lZjOM");
+}
+window.addEventListener('load', initModules, { once: true });
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TETOMI【教科書取引サービス】</title>
+  <meta name="description" content="GLOMAC専用の教科書を手渡しで取引するサービス。送料・手数料ゼロ。TETOMIから学部内に新たなつながりを。" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,700;1,800;1,900&family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    /* ===================================================
+       INDEX PAGE STYLES
+       =================================================== */
+
+    /* ── HERO ── */
+    .hero-section {
+      width: 100%; padding-top: var(--nav-h);
+      position: relative; overflow: hidden; min-height: 100vh;
+      display: flex; flex-direction: column; justify-content: center;
+    }
+    .hero-bg {
+      position: absolute; inset: 0; z-index: 0;
+      background: #0d1e2c;
+    }
+    .hero-bg-img {
+      position: absolute; inset: 0;
+      /* ✅ Vercel対応: 相対パスで画像を参照 */
+      background-image: url('images/hero-hoodie.jpg');
+      background-size: cover;
+      background-position: center 20%;
+      opacity: 1; z-index: 1;
+    }
+    .hero-bg-overlay {
+      position: absolute; inset: 0; z-index: 2;
+      /* パーカー画像が見えるよう左側を透過、右側にグラデーション */
+      background: linear-gradient(
+        105deg,
+        rgba(12,28,42,0.35) 0%,
+        rgba(12,28,42,0.55) 40%,
+        rgba(12,28,42,0.82) 70%,
+        rgba(12,28,42,0.95) 100%
+      );
+    }
+    .hero-inner {
+      position: relative; z-index: 3;
+      max-width: var(--max-w); margin: 0 auto;
+      padding: 140px 40px 180px;
+      display: flex; flex-direction: column; gap: 0;
+    }
+    .hero-eyebrow {
+      font-family: var(--font-en);
+      font-size: 11px; font-weight: 700; letter-spacing: 0.24em;
+      color: rgba(255,255,255,0.55); text-transform: uppercase;
+      margin-bottom: 28px;
+      animation: fadeUp 0.7s 0.1s both;
+    }
+    /* ── HERO LOGO BLOCK ── */
+    .hero-logo-block {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+      margin-bottom: 32px;
+      animation: fadeUp 0.7s 0.2s both;
+    }
+    .hero-logo-main {
+      font-family: var(--font-en);
+      font-size: clamp(3.2rem, 7vw, 5.6rem);
+      font-weight: 900;
+      color: var(--white);
+      letter-spacing: 0.18em;
+      line-height: 1;
+      text-shadow: 0 2px 24px rgba(0,0,0,0.18);
+    }
+    .hero-logo-tagline {
+      font-size: clamp(0.78rem, 1.4vw, 1rem);
+      font-weight: 500;
+      color: rgba(255,255,255,0.88);
+      letter-spacing: 0.22em;
+      border-left: 3px solid rgba(255,255,255,0.7);
+      padding-left: 12px;
+      display: block;
+    }
+    .hero-sub {
+      font-size: clamp(0.9rem, 1.6vw, 1.05rem); font-weight: 400;
+      color: rgba(255,255,255,0.72); line-height: 1.9;
+      max-width: 480px; margin-bottom: 40px;
+      animation: fadeUp 0.7s 0.35s both;
+    }
+    .hero-btns {
+      display: flex; gap: 14px; flex-wrap: wrap;
+      animation: fadeUp 0.7s 0.5s both;
+    }
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(18px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .hero-scroll {
+      position: absolute; bottom: 36px; left: 50%; transform: translateX(-50%);
+      z-index: 3;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      font-size: 10px; letter-spacing: 0.18em; color: rgba(255,255,255,0.45);
+      text-transform: uppercase; font-weight: 700;
+      animation: bounceScroll 2.5s ease-in-out infinite;
+    }
+    @keyframes bounceScroll {
+      0%,100% { transform: translateX(-50%) translateY(0); }
+      50%      { transform: translateX(-50%) translateY(8px); }
+    }
+
+    /* ── TICKER ── */
+    .ticker-section {
+      background: var(--white); overflow: hidden;
+      padding: 44px 0; border-top: 1px solid var(--border-light);
+      border-bottom: 1px solid var(--border-light);
+    }
+    .ticker-track {
+      display: flex; white-space: nowrap;
+      animation: scrollTicker 22s linear infinite;
+    }
+    .ticker-track:hover { animation-play-state: paused; }
+    @keyframes scrollTicker {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .ticker-item {
+      font-family: var(--font-en); flex-shrink: 0;
+      font-size: clamp(2rem, 4.5vw, 3.5rem); font-weight: 900;
+      color: var(--navy); padding: 0 36px; letter-spacing: 0.05em;
+      line-height: 1; opacity: 0.07; user-select: none;
+    }
+    .ticker-item.accent { color: var(--navy); opacity: 0.18; }
+
+    /* ── ABOUT (Gray BG) ── */
+    .about-section {
+      background: var(--bg-gray); padding: 120px 40px 60px;
+    }
+    .about-inner {
+      max-width: var(--max-w); margin: 0 auto;
+      display: flex; flex-direction: column; gap: 72px;
+    }
+    .about-label {
+      font-size: 11px; font-weight: 800; letter-spacing: 0.24em;
+      color: var(--navy); text-transform: uppercase;
+      border-bottom: 2px solid var(--navy); display: inline-block; padding-bottom: 5px;
+      margin-bottom: 10px;
+    }
+    .about-h2 {
+      font-family: var(--font-en);
+      font-size: clamp(2.2rem, 4.5vw, 3.8rem); font-weight: 700; line-height: 1.3;
+      color: var(--navy); letter-spacing: -0.01em;
+    }
+
+    /* ── BIG STAT ── */
+    .big-stat-section {
+      background: var(--white); padding: 60px 0;
+      text-align: center; overflow: hidden;
+    }
+    .big-stat-label {
+      font-family: var(--font-en); font-style: italic;
+      font-size: clamp(1rem, 2.5vw, 1.5rem); font-weight: 700;
+      color: var(--navy); letter-spacing: 0.08em;
+      margin-bottom: 8px; opacity: 0.7;
+    }
+    .big-stat-num {
+      font-family: var(--font-en);
+      font-size: clamp(6rem, 16vw, 14rem);
+      font-weight: 900; color: var(--navy);
+      line-height: 1; letter-spacing: 0.05em;
+      opacity: 0.07; display: block;
+    }
+
+    /* ── FEATURE SECTIONS ── */
+    .feature-section { background: var(--white); padding: 80px 0; }
+    .feature-section-inner {
+      max-width: var(--max-w); margin: 0 auto; padding: 0 72px;
+      display: flex; align-items: center; gap: 0;
+    }
+    .feature-section-inner.reverse { flex-direction: row-reverse; }
+    .feature-img-block {
+      flex: none; width: 560px; height: 380px;
+      border-radius: var(--r); overflow: hidden; position: relative;
+      box-shadow: var(--shadow-lg);
+    }
+    .feature-img-placeholder {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 6.5rem;
+    }
+    .feature-img-placeholder img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .f-img-1 { background: linear-gradient(135deg, var(--navy) 0%, #2a5070 100%); }
+    .f-img-2 { background: linear-gradient(135deg, #1e3a2f 0%, #1c3f5c 100%); }
+    .f-img-3 { background: linear-gradient(135deg, #0d2035 0%, #1c3f5c 100%); }
+    .feature-num-label {
+      position: absolute; top: 24px; left: 24px;
+      font-family: var(--font-en); font-size: 13px; font-weight: 700;
+      color: rgba(255,255,255,0.6); letter-spacing: 0.2em;
+      writing-mode: vertical-rl; line-height: 1.4; text-transform: uppercase;
+    }
+    .feature-text-block {
+      flex: 1; padding: 0 56px;
+      display: flex; flex-direction: column; gap: 28px;
+    }
+    .feature-eyebrow {
+      font-size: 10px; font-weight: 800; letter-spacing: 0.22em;
+      color: var(--text-muted); text-transform: uppercase;
+    }
+    .feature-h3 {
+      font-family: var(--font-en);
+      font-size: clamp(1.6rem, 2.8vw, 2.4rem); font-weight: 900;
+      color: var(--navy); letter-spacing: 0.06em; line-height: 1.3;
+    }
+    .feature-desc {
+      font-size: 1rem; font-weight: 400; color: var(--text-mid);
+      line-height: 1.85; letter-spacing: 0.04em;
+    }
+
+    /* ── QUOTE / DARK SECTION ── */
+    .quote-section {
+      background: var(--navy); position: relative;
+      padding: 140px 48px; overflow: hidden;
+    }
+    .quote-section::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 80% 20%, rgba(255,255,255,0.04) 0%, transparent 60%);
+    }
+    .quote-inner {
+      position: relative; z-index: 1;
+      max-width: 720px; margin: 0 auto;
+    }
+    .quote-num {
+      position: absolute; top: -20px; left: -52px;
+      font-family: var(--font-en); font-size: 11px; font-weight: 800;
+      color: rgba(255,255,255,0.35); letter-spacing: 0.22em;
+      writing-mode: vertical-rl; text-transform: uppercase;
+    }
+    .quote-h2 {
+      font-family: var(--font-en);
+      font-size: clamp(1.6rem, 3.5vw, 2.6rem); font-weight: 900;
+      color: var(--white); letter-spacing: 0.05em; line-height: 1.35;
+      margin-bottom: 24px;
+    }
+    .quote-body {
+      font-size: clamp(1rem, 2vw, 1.3rem); font-weight: 700;
+      color: rgba(255,255,255,0.9); letter-spacing: 0.08em; line-height: 1.65;
+    }
+    .quote-sub {
+      font-size: 0.9rem; font-weight: 400; color: rgba(255,255,255,0.6);
+      letter-spacing: 0.06em; line-height: 1.75; margin-top: 16px;
+    }
+
+    /* ── GALLERY SLIDES ── */
+    .gallery-section {
+      background: var(--navy); height: 640px;
+      position: relative; overflow: hidden;
+    }
+    .gallery-slides { position: relative; height: 100%; }
+    .gallery-slide {
+      position: absolute; inset: 0; opacity: 0;
+      transition: opacity 0.9s ease;
+    }
+    .gallery-slide.active { opacity: 1; }
+    .slide-bg {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11rem;
+      background-size: cover; background-position: center;
+    }
+    .slide-bg img {
+      position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+    }
+    .slide-bg::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(13,32,53,0.88) 0%, rgba(13,32,53,0.35) 60%, transparent 100%);
+    }
+    .slide-bg-1 { background: linear-gradient(145deg, #0c1f33 0%, #1b4060 100%); }
+    .slide-bg-2 { background: linear-gradient(145deg, #0d2035 0%, #1c3f5c 100%); }
+    .slide-bg-3 { background: linear-gradient(145deg, #0d2035 0%, #14314A 100%); }
+    .slide-content {
+      position: absolute; bottom: 100px; left: 56px; right: 80px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .slide-tag {
+      font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.65);
+      letter-spacing: 0.12em; text-transform: uppercase;
+    }
+    .slide-title {
+      font-family: var(--font-en);
+      font-size: clamp(1.8rem, 3.5vw, 2.6rem); font-weight: 900;
+      color: var(--white); line-height: 1.2;
+    }
+    .slide-desc {
+      font-size: 14px; font-weight: 400; color: rgba(255,255,255,0.75);
+      line-height: 1.65; max-width: 500px;
+    }
+    .slide-controls {
+      position: absolute; bottom: 0; left: 0; right: 0; height: 90px;
+      display: flex; align-items: center; justify-content: center; gap: 16px;
+      z-index: 10;
+    }
+    .slide-dot {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: rgba(255,255,255,0.25); border: 1.5px solid rgba(255,255,255,0.4);
+      cursor: pointer; transition: background 0.25s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .slide-dot:hover, .slide-dot.active { background: rgba(255,255,255,0.65); }
+    .slide-arrow {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.3);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 14px; transition: background 0.25s;
+    }
+    .slide-arrow:hover { background: rgba(255,255,255,0.3); }
+
+    /* ── NEW LISTINGS ── */
+    .new-listings { background: var(--white); padding: 80px 40px; }
+    .new-listings-inner { max-width: var(--max-w); margin: 0 auto; }
+    .nl-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 36px; }
+    .nl-title {
+      font-family: var(--font-en);
+      font-size: clamp(1.5rem, 3vw, 2.2rem); font-weight: 900;
+      color: var(--navy); letter-spacing: 0.06em;
+    }
+    .nl-see-all {
+      font-size: 12px; font-weight: 800; color: var(--navy);
+      display: flex; align-items: center; gap: 7px;
+      border-bottom: 1.5px solid var(--navy); padding-bottom: 2px;
+      transition: all 0.2s; letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .nl-see-all:hover { color: var(--navy-mid); gap: 12px; border-color: var(--navy-mid); }
+
+    /* ── FAQ ── */
+    .faq-section {
+      background: var(--navy); padding: 130px 80px;
+      position: relative;
+    }
+    .faq-section-inner { max-width: var(--max-w); margin: 0 auto; }
+    .faq-num {
+      position: absolute; top: 24px; left: 24px;
+      font-size: 11px; font-weight: 800; color: rgba(255,255,255,0.3);
+      letter-spacing: 0.22em; writing-mode: vertical-rl; text-transform: uppercase;
+    }
+    .faq-h2 {
+      font-family: var(--font-en);
+      font-size: clamp(1.8rem, 3vw, 2.5rem); font-weight: 900;
+      color: var(--white); letter-spacing: 0.08em; line-height: 1.35;
+      margin-bottom: 56px; text-align: center;
+    }
+    .faq-items { display: flex; flex-direction: column; max-width: 760px; margin: 0 auto; }
+    .faq-item {
+      background: var(--white); border-radius: var(--r);
+      margin-bottom: 20px; padding: 18px 24px;
+      font-family: var(--font-en); font-size: 14px; font-weight: 700;
+      color: var(--navy); line-height: 1.65; letter-spacing: 0.01em;
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: default;
+    }
+    .faq-item:hover { transform: translateX(5px); box-shadow: -3px 0 0 rgba(255,255,255,0.5); }
+    .faq-item:last-child { margin-bottom: 0; }
+    .faq-q { font-weight: 800; margin-bottom: 8px; font-size: 15px; }
+    .faq-a { font-weight: 400; color: var(--text-mid); font-size: 13px; }
+
+    /* ── CTA FINAL ── */
+    .cta-final {
+      background: var(--bg-gray); padding: 100px 72px;
+      position: relative;
+    }
+    .cta-final-inner { max-width: var(--max-w); margin: 0 auto; }
+    .cta-final-label {
+      font-size: 11px; font-weight: 800; letter-spacing: 0.22em;
+      color: var(--text-muted); text-transform: uppercase;
+      margin-bottom: 52px; text-align: center;
+    }
+    .cta-items { display: flex; flex-direction: column; gap: 44px; }
+    .cta-item {
+      display: flex; align-items: stretch; gap: 0;
+      background: var(--white); border-radius: var(--r-lg);
+      overflow: hidden; box-shadow: var(--shadow-lg);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .cta-item:hover { transform: translateY(-4px); box-shadow: var(--shadow-xl); }
+    .cta-item-img {
+      width: 260px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 5rem;
+    }
+    .cta-img-sell { background: linear-gradient(145deg, var(--navy) 0%, #2a5070 100%); }
+    .cta-img-buy  { background: linear-gradient(145deg, #1c3f5c 0%, #0d2035 100%); }
+    .cta-item-text { flex: 1; padding: 32px 36px; display: flex; flex-direction: column; justify-content: center; gap: 12px; }
+    .cta-item-text h3 {
+      font-family: var(--font-en);
+      font-size: 1.6rem; font-weight: 900; color: var(--navy);
+      letter-spacing: 0.06em;
+    }
+    .cta-item-text p { font-size: 14px; color: var(--text-mid); line-height: 1.8; font-weight: 400; }
+
+    /* ── RESPONSIVE INDEX ── */
+    @media (max-width: 1024px) {
+      .feature-section-inner { padding: 0 32px; }
+      .feature-img-block { width: 100%; height: 300px; }
+      .feature-section-inner,
+      .feature-section-inner.reverse { flex-direction: column; }
+      .feature-text-block { padding: 32px 0 0; }
+      .quote-num { display: none; }
+    }
+    @media (max-width: 768px) {
+      .about-section { padding: 80px 24px 48px; }
+      .faq-section { padding: 80px 24px; }
+      .cta-final { padding: 72px 24px; }
+      .cta-item { flex-direction: column; }
+      .cta-item-img { width: 100%; height: 160px; }
+      .gallery-section { height: 500px; }
+      .slide-content { left: 28px; right: 28px; }
+      .hero-inner { padding: 100px 24px 140px; }
+      .new-listings { padding: 64px 24px; }
+    }
+    @media (max-width: 480px) {
+      .hero-inner { padding: 80px 16px 120px; }
+      .hero-h1 { font-size: 2rem; }
+      .hero-btns { flex-direction: column; }
+      .about-section { padding: 60px 16px 40px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== SIDE TABS ===== -->
+<div class="side-tab" aria-hidden="true">
+  <a href="sell.html">出品する</a>
+  <a href="listings.html">教科書を探す</a>
+</div>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <a href="index.html" class="nav-logo" aria-label="TETOMI Home">
+      <div class="nav-logo-badge">
+        <span class="logo-main">TETOMI</span>
+        <span class="logo-sub">手から手へ、教科書とつながりを</span>
+      </div>
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="#about" class="nav-link-item">
+        <span class="link-en">About</span>
+        <span class="link-ja">サービスとは</span>
+      </a>
+      <a href="#service" class="nav-link-item">
+        <span class="link-en">Service</span>
+        <span class="link-ja">特徴</span>
+      </a>
+      <a href="listings.html" class="nav-link-item">
+        <span class="link-en">Books</span>
+        <span class="link-ja">教科書一覧</span>
+      </a>
+      <a href="#faq" class="nav-link-item">
+        <span class="link-en">FAQ</span>
+        <span class="link-ja">よくある質問</span>
+      </a>
+      <button class="btn-login-nav" id="navLoginBtn" onclick="openModal('loginModal')">ログイン</button>
+      <a href="chat.html" class="nav-link-item">
+        <span class="link-en">Chat</span>
+        <span class="link-ja">メッセージ</span>
+      </a>
+      <a href="sell.html" class="nav-cta">
+        <i class="fas fa-plus"></i> 出品する
+      </a>
+      <a href="mypage.html" class="nav-user-badge hidden" id="navAvatar">
+        <i class="fas fa-user-circle"></i>
+        <span id="navUserName"></span>
+      </a>
+    </div>
+    <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="メニュー">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section class="hero-section">
+  <div class="hero-bg"></div>
+  <div class="hero-bg-img"></div>
+  <div class="hero-bg-overlay"></div>
+  <div class="hero-inner">
+    <p class="hero-eyebrow">【GLOMAC専用】教科書取引サービス</p>
+    <div class="hero-logo-block" aria-label="TETOMI">
+      <span class="hero-logo-main">TETOMI</span>
+      <span class="hero-logo-tagline">手から手へ、教科書とつながりを</span>
+    </div>
+    <p class="hero-sub">
+      同じ学部の先輩・同期から直接教科書を手渡しで受け取るサービス。<br />
+      送料ゼロ・手数料ゼロで、安く・簡単に。
+    </p>
+    <div class="hero-btns">
+      <a href="listings.html" class="btn-white btn-lg">
+        <i class="fas fa-search"></i> 教科書を探す
+      </a>
+      <a href="sell.html" class="btn-ghost btn-lg">
+        <i class="fas fa-book-open"></i> 今すぐ出品する
+      </a>
+    </div>
+  </div>
+  <div class="hero-scroll" aria-hidden="true">
+    <span>Scroll</span>
+    <i class="fas fa-chevron-down"></i>
+  </div>
+</section>
+
+<!-- ===== TICKER ===== -->
+<div class="ticker-section" aria-hidden="true">
+  <div class="ticker-track">
+    <span class="ticker-item">TEXTBOOK</span>
+    <span class="ticker-item accent">×</span>
+    <span class="ticker-item">CONNECT</span>
+    <span class="ticker-item accent">×</span>
+    <span class="ticker-item">TETOMI</span>
+    <span class="ticker-item accent">×</span>
+    <span class="ticker-item">GLOMAC</span>
+    <span class="ticker-item accent">×</span>
+    <span class="ticker-item">FREE</span>
+    <span class="ticker-item accent">×</span>
+    <span class="ticker-item">HAND TO HAND</span>
+    <span class="ticker-item accent">×</span>
+    <span class="ticker-item">TEXTBOOK</span>
+    <span class="ticker-item accent">×</span>
+    <span class="ticker-item">CONNECT</span>
+    <span class="ticker-item accent">×</span>
+    <span class="ticker-item">TETOMI</span>
+    <span class="ticker-item accent">×</span>
+    <span class="ticker-item">GLOMAC</span>
+    <span class="ticker-item accent">×</span>
+    <span class="ticker-item">FREE</span>
+    <span class="ticker-item accent">×</span>
+    <span class="ticker-item">HAND TO HAND</span>
+    <span class="ticker-item accent">×</span>
+  </div>
+</div>
+
+<!-- ===== ABOUT ===== -->
+<section class="about-section" id="about">
+  <div class="about-inner">
+    <div class="fade-in">
+      <p class="about-label">About TETOMI</p>
+      <h2 class="about-h2">
+        教科書の<br />
+        新しい流通を、<br />
+        学部内に。
+      </h2>
+    </div>
+  </div>
+</section>
+
+<!-- ===== BIG STAT ===== -->
+<div class="big-stat-section">
+  <div style="max-width:var(--max-w);margin:0 auto;padding:0 40px;text-align:center;">
+    <p class="big-stat-label" id="bigStatLabel">現在の出品数</p>
+    <span class="big-stat-num" id="statListings">0</span>
+  </div>
+</div>
+
+<!-- ===== FEATURE 1 ===== -->
+<section class="feature-section" id="service">
+  <div class="feature-section-inner fade-in">
+    <div class="feature-img-block">
+      <div class="feature-img-placeholder f-img-1">
+        <img src="images/feature-books.jpg" alt="教科書スタック" loading="lazy" />
+      </div>
+      <span class="feature-num-label">01 — Free</span>
+    </div>
+    <div class="feature-text-block">
+      <p class="feature-eyebrow">Zero Fee</p>
+      <h3 class="feature-h3">手数料ゼロ。<br />送料ゼロ。</h3>
+      <p class="feature-desc">
+        メルカリと違い、販売手数料は一切かかりません。対面での手渡しだから送料も不要。売値がそのままあなたの利益になります。
+      </p>
+      <div>
+        <a href="listings.html" class="btn-navy">
+          <i class="fas fa-search"></i> 教科書を探す
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== QUOTE 1 ===== -->
+<section class="quote-section">
+  <div class="quote-inner">
+    <span class="quote-num">01 — TETOMI</span>
+    <h2 class="quote-h2">
+      GLOMACの学部内で<br />完結するマッチング
+    </h2>
+    <p class="quote-body">同じ授業を受けた先輩から直接買える。</p>
+    <p class="quote-sub">
+      授業に合った教科書が確実に見つかります。<br />
+      キャンパス内・駅前での手渡しで即日入手も。
+    </p>
+  </div>
+</section>
+
+<!-- ===== FEATURE 2 ===== -->
+<section class="feature-section">
+  <div class="feature-section-inner reverse fade-in">
+    <div class="feature-img-block">
+      <div class="feature-img-placeholder f-img-2">
+        <img src="images/feature-handover.jpg" alt="教科書の手渡し" loading="lazy" />
+      </div>
+      <span class="feature-num-label">02 — Meet</span>
+    </div>
+    <div class="feature-text-block">
+      <p class="feature-eyebrow">Direct Meeting</p>
+      <h3 class="feature-h3">キャンパスで<br />直接手渡し。</h3>
+      <p class="feature-desc">
+        授業の合間にキャンパス内で受け渡し。重い教科書を運ぶ手間もなく、その場で中身を確認してから購入できます。
+      </p>
+      <div>
+        <a href="sell.html" class="btn-navy">
+          <i class="fas fa-book-open"></i> 今すぐ出品する
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== QUOTE 2 ===== -->
+<section class="quote-section">
+  <div class="quote-inner">
+    <span class="quote-num">02 — TETOMI</span>
+    <h2 class="quote-h2">
+      3分で出品完了。<br />最短翌日に手渡し。
+    </h2>
+    <p class="quote-body">写真を撮って、価格と場所を入力するだけ。</p>
+    <p class="quote-sub">
+      購入希望が届いたらメッセージで日時を調整。<br />
+      シンプルな流れで誰でも使いこなせます。
+    </p>
+  </div>
+</section>
+
+<!-- ===== FEATURE 3 ===== -->
+<section class="feature-section">
+  <div class="feature-section-inner fade-in">
+    <div class="feature-img-block">
+      <div class="feature-img-placeholder f-img-3">
+        <img src="images/feature-study.jpg" alt="教科書で勉強" loading="lazy" />
+      </div>
+      <span class="feature-num-label">03 — Fast</span>
+    </div>
+    <div class="feature-text-block">
+      <p class="feature-eyebrow">Simple &amp; Fast</p>
+      <h3 class="feature-h3">シンプルに、<br />スピーディーに。</h3>
+      <p class="feature-desc">
+        TallyとNotionにまたがっていた煩雑な流れを一本化。出品・検索・予約まで、すべてこのサービスで完結します。
+      </p>
+      <div>
+        <a href="listings.html" class="btn-coral">
+          <i class="fas fa-rocket"></i> 今すぐ使ってみる
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== GALLERY SLIDES ===== -->
+<section class="gallery-section" aria-label="利用シーン">
+  <div class="gallery-slides" id="gallerySlides">
+    <div class="gallery-slide active">
+      <div class="slide-bg slide-bg-1">
+        <img src="images/gallery-science.jpg" alt="理系教科書" loading="lazy" />
+      </div>
+      <div class="slide-content">
+        <p class="slide-tag">理工学部</p>
+        <h3 class="slide-title">数学・物理の<br />教科書も充実</h3>
+        <p class="slide-desc">線形代数・微積分・物理学など理系必須教科書が多数出品中。先輩の書き込みが予習の参考に。</p>
+      </div>
+    </div>
+    <div class="gallery-slide">
+      <div class="slide-bg slide-bg-2">
+        <img src="images/gallery-economics.jpg" alt="経済系テキスト" loading="lazy" />
+      </div>
+      <div class="slide-content">
+        <p class="slide-tag">経済・社会学部</p>
+        <h3 class="slide-title">ミクロ・マクロ<br />経済学テキスト</h3>
+        <p class="slide-desc">経済学部の定番テキストから専門書まで。授業で実際に使った本を出品・入手できます。</p>
+      </div>
+    </div>
+    <div class="gallery-slide">
+      <div class="slide-bg slide-bg-3">
+        <img src="images/gallery-language.jpg" alt="語学テキスト" loading="lazy" />
+      </div>
+      <div class="slide-content">
+        <p class="slide-tag">文学・語学</p>
+        <h3 class="slide-title">英語・語学<br />テキストも多数</h3>
+        <p class="slide-desc">語学テキストは年度によって変わることも。出品者に確認しながら安心して取引できます。</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-controls">
+    <button class="slide-arrow" onclick="changeSlide(-1)" aria-label="前へ"><i class="fas fa-chevron-left"></i></button>
+    <button class="slide-dot active" onclick="goSlide(0)" aria-label="スライド1"></button>
+    <button class="slide-dot" onclick="goSlide(1)" aria-label="スライド2"></button>
+    <button class="slide-dot" onclick="goSlide(2)" aria-label="スライド3"></button>
+    <button class="slide-arrow" onclick="changeSlide(1)" aria-label="次へ"><i class="fas fa-chevron-right"></i></button>
+  </div>
+</section>
+
+<!-- ===== NEW LISTINGS ===== -->
+<section class="new-listings" id="listings">
+  <div class="new-listings-inner">
+    <div class="nl-header">
+      <h2 class="nl-title">New Listings</h2>
+      <a href="listings.html" class="nl-see-all">すべて見る <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="listings-grid" id="homeListings">
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FAQ ===== -->
+<section class="faq-section" id="faq">
+  <span class="faq-num">FAQ</span>
+  <div class="faq-section-inner">
+    <h2 class="faq-h2">よくある質問</h2>
+    <div class="faq-items">
+      <div class="faq-item">
+        <div class="faq-q">Q. 利用料・手数料はかかりますか？</div>
+        <div class="faq-a">A. 一切かかりません。出品も購入希望の送信も完全無料です。</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Q. 配送はできますか？</div>
+        <div class="faq-a">A. TETOMIは対面手渡しに特化したサービスです。配送には対応しておりません。</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Q. 誰でも利用できますか？</div>
+        <div class="faq-a">A. 現在はGLOMACの学生を対象としています。今後拡張予定です。</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Q. 支払い方法は？</div>
+        <div class="faq-a">A. 受け渡し時の現金手渡しが基本です。事前にメッセージで確認してください。</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Q. 予約後にキャンセルできますか？</div>
+        <div class="faq-a">A. 相手に連絡したうえでマイページからキャンセル可能です。無断キャンセルはご遠慮ください。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CTA FINAL ===== -->
+<section class="cta-final">
+  <div class="cta-final-inner">
+    <p class="cta-final-label">Get Started</p>
+    <div class="cta-items">
+      <div class="cta-item">
+        <div class="cta-item-img cta-img-sell">📤</div>
+        <div class="cta-item-text">
+          <h3>教科書を出品する</h3>
+          <p>不要になった教科書を出品して、後輩や同期の役に立てましょう。写真を撮って情報を入力するだけ、3分で完了。</p>
+          <a href="sell.html" class="btn-navy" style="align-self:flex-start;">
+            <i class="fas fa-plus"></i> 出品する
+          </a>
+        </div>
+      </div>
+      <div class="cta-item">
+        <div class="cta-item-img cta-img-buy">🔍</div>
+        <div class="cta-item-text">
+          <h3>教科書を探す</h3>
+          <p>授業名や教科書タイトルで検索。価格や状態でフィルターして、欲しい本を最短で見つけよう。</p>
+          <a href="listings.html" class="btn-coral" style="align-self:flex-start;">
+            <i class="fas fa-search"></i> 教科書を探す
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <div class="footer-top">
+    <div>
+      <div class="footer-brand-name">TETOMI</div>
+      <p class="footer-brand-tagline">
+        手から手へ、教科書とつながりを。<br />
+        GLOMAC専用 教科書手渡し取引サービス<br />
+        送料ゼロ・手数料ゼロ
+      </p>
+    </div>
+    <div class="footer-col">
+      <h4>Service</h4>
+      <a href="listings.html">教科書を探す</a>
+      <a href="sell.html">出品する</a>
+      <a href="mypage.html">マイページ</a>
+    </div>
+    <div class="footer-col">
+      <h4>Info</h4>
+      <a href="#about">TETOMIとは</a>
+      <a href="#faq">よくある質問</a>
+      <a href="#service">使い方</a>
+    </div>
+  </div>
+  <div class="footer-bottom" style="max-width:var(--max-w);margin:0 auto;">
+    <p>© 2025 TETOMI for GLOMAC. All rights reserved.</p>
+    <div class="footer-policies">
+      <a href="#">利用規約</a>
+      <a href="#">プライバシーポリシー</a>
+    </div>
+  </div>
+</footer>
+
+<!-- ===== LOGIN MODAL ===== -->
+<div class="modal-overlay hidden" id="loginModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('loginModal')" aria-label="閉じる">
+      <i class="fas fa-times"></i>
+    </button>
+    <div class="modal-logo">TETOMI</div>
+    <h2 class="modal-title">ログイン / 新規登録</h2>
+    <p class="modal-sub">大学メールアドレスでログインしてください</p>
+    <form onsubmit="handleLogin(event)">
+      <div class="form-group required">
+        <label>お名前</label>
+        <input type="text" id="loginName" placeholder="山田 太郎" required />
+      </div>
+      <div class="form-group required">
+        <label>メールアドレス</label>
+        <input type="email" id="loginEmail" placeholder="example@glomac.ac.jp" required />
+      </div>
+      <div class="form-group">
+        <label>大学名</label>
+        <input type="text" id="loginUniversity" placeholder="GLOMAC大学" />
+      </div>
+      <div class="form-group">
+        <label>学部</label>
+        <input type="text" id="loginFaculty" placeholder="工学部" />
+      </div>
+      <div class="form-group">
+        <label>学年</label>
+        <select id="loginGrade">
+          <option value="1年">1年</option>
+          <option value="2年">2年</option>
+          <option value="3年" selected>3年</option>
+          <option value="4年">4年</option>
+          <option value="院生">院生</option>
+        </select>
+      </div>
+      <button type="submit" class="btn-navy btn-full" style="margin-top:10px;">
+        <i class="fas fa-sign-in-alt"></i> ログイン / 登録
+      </button>
+    </form>
+    <div class="modal-demo">
+      <p class="modal-demo-title">— デモユーザーで試す —</p>
+      <div class="demo-btns">
+        <button onclick="loginAsDemo('user_001')" class="demo-btn">
+          <i class="fas fa-user" style="margin-right:6px;opacity:0.5;"></i>田中 蓮（工学部 3年）
+        </button>
+        <button onclick="loginAsDemo('user_002')" class="demo-btn">
+          <i class="fas fa-user" style="margin-right:6px;opacity:0.5;"></i>佐藤 葵（経済学部 2年）
+        </button>
+        <button onclick="loginAsDemo('user_003')" class="demo-btn">
+          <i class="fas fa-user" style="margin-right:6px;opacity:0.5;"></i>山本 海斗（文学部 4年）
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+
+<!-- FLOATING CHAT BUTTON -->
+<a href="chat.html?support=1" id="floatingChat"
+   title="運営サポートに相談する"
+   style="position:fixed;bottom:28px;right:28px;z-index:400;
+          width:56px;height:56px;border-radius:50%;
+          background:var(--navy);color:white;
+          display:flex;align-items:center;justify-content:center;
+          font-size:1.4rem;box-shadow:0 6px 24px rgba(20,49,74,0.4);
+          transition:all 0.25s;text-decoration:none;"
+   onmouseover="this.style.transform='scale(1.1)';this.style.boxShadow='0 8px 32px rgba(20,49,74,0.5)'"
+   onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 6px 24px rgba(20,49,74,0.4)'">
+  <i class="fas fa-comment-dots"></i>
+</a>
+
+<script src="js/app.js"></script>
+<script>
+/* ===== index.html ===== */
+
+// ── Gallery slider ──
+let currentSlide = 0;
+const slides     = document.querySelectorAll('.gallery-slide');
+const dots       = document.querySelectorAll('.slide-dot');
+let slideTimer   = setInterval(() => changeSlide(1), 5000);
+
+function goSlide(n) {
+  slides[currentSlide].classList.remove('active');
+  dots[currentSlide].classList.remove('active');
+  currentSlide = (n + slides.length) % slides.length;
+  slides[currentSlide].classList.add('active');
+  dots[currentSlide].classList.add('active');
+  clearInterval(slideTimer);
+  slideTimer = setInterval(() => changeSlide(1), 5000);
+}
+function changeSlide(dir) { goSlide(currentSlide + dir); }
+
+// ── Scroll fade-in ──
+const fadeEls = document.querySelectorAll('.fade-in');
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
+}, { threshold: 0.12 });
+fadeEls.forEach(el => io.observe(el));
+
+// ── Load home listings ──
+async function loadHomeListings() {
+  try {
+    const res  = await fetch('tables/listings?limit=200');
+    const data = await res.json();
+    const all  = (data.data || []);
+    const active = all.filter(l => l.status === '出品中');
+
+    // Update big stat
+    const num = active.length;
+    document.getElementById('statListings').textContent   = num;
+    document.getElementById('bigStatLabel').textContent   = num === 0 ? '出品数' : `${num} 冊出品中`;
+
+    const grid = document.getElementById('homeListings');
+    grid.innerHTML = '';
+    const show = active.slice(0, 4);
+    if (show.length === 0) {
+      grid.innerHTML = '<p class="empty-text">現在出品中の教科書はありません。<br /><a href="sell.html" style="color:var(--navy);font-weight:700;text-decoration:underline;">最初の出品者になる</a></p>';
+      return;
+    }
+    show.forEach(item => grid.appendChild(createListingCard(item)));
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+loadHomeListings();
+</script>
+</body>
+</html>

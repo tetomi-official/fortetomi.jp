@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>出品する | TETOMI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,700&family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .sell-page { background: var(--bg-gray); min-height: 100vh; }
+
+    /* ── STEP INDICATOR ── */
+    .step-indicator {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0; margin-bottom: 32px;
+    }
+    .step {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; font-weight: 800; color: var(--text-muted);
+      letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .step.active { color: var(--navy); }
+    .step.done { color: #10b981; }
+    .step-num {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--border); color: var(--text-muted);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 900; transition: all 0.3s;
+    }
+    .step.active .step-num { background: var(--navy); color: var(--white); }
+    .step.done .step-num { background: #10b981; color: var(--white); }
+    .step-line {
+      width: 48px; height: 2px; background: var(--border); margin: 0 8px;
+    }
+    .step-line.done { background: #10b981; }
+
+    /* ── PRICE PREVIEW ── */
+    .price-preview {
+      background: var(--bg-light); border-radius: var(--r-sm); padding: 14px 16px;
+      border: 1px solid var(--border-light); margin-top: 10px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .price-preview-label { font-size: 12px; color: var(--text-muted); }
+    .price-preview-val {
+      font-family: var(--font-en); font-size: 1.5rem; font-weight: 900; color: var(--navy);
+    }
+    .price-note { font-size: 11px; color: #10b981; font-weight: 700; }
+
+    /* ── PREVIEW CARD ── */
+    .preview-card-wrap {
+      background: var(--white); border-radius: var(--r-lg); padding: 28px 32px;
+      box-shadow: var(--shadow); border: 1px solid var(--border-light);
+      margin-bottom: 20px;
+    }
+    .preview-card-wrap h2 {
+      font-family: var(--font-en); font-size: 1.05rem; font-weight: 900;
+      color: var(--navy); margin-bottom: 20px; padding-bottom: 14px;
+      border-bottom: 2px solid var(--navy); letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .live-preview {
+      background: var(--bg-gray); border-radius: var(--r-lg); padding: 20px;
+      display: flex; gap: 16px; align-items: flex-start;
+    }
+    .preview-img-box {
+      width: 90px; height: 90px; flex-shrink: 0; border-radius: var(--r);
+      background: linear-gradient(135deg, #d8dfe5 0%, #e6e9ec 100%);
+      display: flex; align-items: center; justify-content: center; font-size: 2.5rem;
+      overflow: hidden;
+    }
+    .preview-img-box img { width: 100%; height: 100%; object-fit: cover; }
+    .preview-info { flex: 1; }
+    .preview-title { font-size: 15px; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+    .preview-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+    .preview-price { font-family: var(--font-en); font-size: 1.3rem; font-weight: 900; color: var(--navy); }
+    .preview-cond { font-size: 11px; font-weight: 700; }
+
+    /* ── IMAGE UPLOAD AREA ── */
+    .img-upload-area {
+      border: 2px dashed var(--border); border-radius: var(--r-lg);
+      padding: 44px 24px; text-align: center; cursor: pointer;
+      transition: all 0.25s; background: var(--bg-light);
+      position: relative;
+    }
+    .img-upload-area:hover,
+    .img-upload-area.drag-over { border-color: var(--navy); background: rgba(20,49,74,0.03); }
+    .img-upload-area .upload-icon { font-size: 2.8rem; color: var(--navy); opacity: 0.3; margin-bottom: 12px; display: block; }
+    .img-upload-area p { font-size: 13px; color: var(--text-muted); }
+    .img-upload-area input[type=file] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer;
+      width: 100%; height: 100%;
+    }
+
+    @media (max-width: 768px) {
+      .step-line { width: 24px; }
+      .step span:last-child { display: none; }
+    }
+  </style>
+</head>
+<body class="sell-page">
+
+<!-- SIDE TABS -->
+<div class="side-tab" aria-hidden="true">
+  <a href="sell.html">出品する</a>
+  <a href="listings.html">教科書を探す</a>
+</div>
+
+<!-- NAVBAR -->
+<nav class="navbar scrolled" id="navbar">
+  <div class="nav-container">
+    <a href="index.html" class="nav-logo" aria-label="TETOMI Home">
+      <div class="nav-logo-badge">
+        <span class="logo-main">TETOMI</span>
+        <span class="logo-sub">手から手へ、教科書とつながりを</span>
+      </div>
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="index.html" class="nav-link-item">
+        <span class="link-en">Home</span>
+        <span class="link-ja">トップ</span>
+      </a>
+      <a href="listings.html" class="nav-link-item">
+        <span class="link-en">Books</span>
+        <span class="link-ja">教科書一覧</span>
+      </a>
+      <button class="btn-login-nav" id="navLoginBtn" onclick="openModal('loginModal')">ログイン</button>
+      <a href="chat.html" class="nav-link-item">
+        <span class="link-en">Chat</span>
+        <span class="link-ja">メッセージ</span>
+      </a>
+      <a href="sell.html" class="nav-cta">
+        <i class="fas fa-plus"></i> 出品する
+      </a>
+      <a href="mypage.html" class="nav-user-badge hidden" id="navAvatar">
+        <i class="fas fa-user-circle"></i>
+        <span id="navUserName"></span>
+      </a>
+    </div>
+    <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="メニュー">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="page-header-inner">
+    <div class="breadcrumb">
+      <a href="index.html">Home</a>
+      <i class="fas fa-chevron-right" style="font-size:9px;"></i>
+      <span id="pageHeaderLabel">出品する</span>
+    </div>
+    <h1 id="pageHeaderH1">教科書を出品する</h1>
+    <p>不要になった教科書を出品して、後輩・同期に繋げましょう</p>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main class="page-main" style="background:var(--bg-gray);">
+  <div class="sell-container">
+
+    <!-- LOGIN REQUIRED -->
+    <div id="loginRequired" class="hidden">
+      <div class="form-card" style="text-align:center;padding:48px 32px;">
+        <div style="font-size:3rem;margin-bottom:16px;">🔐</div>
+        <h3 style="font-size:1.3rem;font-weight:800;color:var(--navy);margin-bottom:12px;">ログインが必要です</h3>
+        <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">出品するにはログイン・ユーザー登録が必要です。</p>
+        <button onclick="openModal('loginModal')" class="btn-navy">
+          <i class="fas fa-sign-in-alt"></i> ログイン / 登録
+        </button>
+      </div>
+    </div>
+
+    <!-- SELL FORM -->
+    <div id="sellForm">
+      <!-- Step indicator -->
+      <div class="step-indicator">
+        <div class="step active" id="step1">
+          <div class="step-num">1</div>
+          <span>基本情報</span>
+        </div>
+        <div class="step-line" id="line12"></div>
+        <div class="step" id="step2">
+          <div class="step-num">2</div>
+          <span>状態・価格</span>
+        </div>
+        <div class="step-line" id="line23"></div>
+        <div class="step" id="step3">
+          <div class="step-num">3</div>
+          <span>確認・出品</span>
+        </div>
+      </div>
+
+      <!-- STEP 1: Basic Info -->
+      <div id="stepPanel1">
+        <div class="form-card">
+          <h2>01 — 基本情報</h2>
+
+          <div class="form-group required">
+            <label>教科書タイトル</label>
+            <input type="text" id="bookTitle" placeholder="例：線形代数入門 第3版"
+                   oninput="updatePreview()" required />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group required">
+              <label>授業名</label>
+              <input type="text" id="bookSubject" placeholder="例：線形代数学"
+                     oninput="updatePreview()" required />
+            </div>
+            <div class="form-group">
+              <label>著者名</label>
+              <input type="text" id="bookAuthor" placeholder="例：田中一郎" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>ISBN</label>
+              <input type="text" id="bookIsbn" placeholder="978-4-XXXXXXXX" />
+            </div>
+            <div class="form-group">
+              <label>出版年</label>
+              <input type="text" id="bookYear" placeholder="例：2022" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>コメント</label>
+            <textarea id="bookDesc" rows="3"
+                      placeholder="書き込みの程度・付属品の有無など自由に記載してください"></textarea>
+          </div>
+        </div>
+
+        <!-- Image Upload -->
+        <div class="form-card">
+          <h2>02 — 写真（任意）</h2>
+          <div class="img-upload-area" id="uploadArea"
+               ondragover="handleDragOver(event)"
+               ondragleave="this.classList.remove('drag-over')"
+               ondrop="handleDrop(event)">
+            <input type="file" id="imgInput" accept="image/*" multiple
+                   onchange="handleImageSelect(event)" />
+            <i class="fas fa-camera upload-icon"></i>
+            <p>クリックまたはドラッグして画像を追加<br />
+              <small style="font-size:11px;opacity:0.7;">JPG・PNG・WEBP 最大5枚</small></p>
+          </div>
+          <div class="preview-grid" id="previewGrid"></div>
+        </div>
+
+        <div style="text-align:right;">
+          <button onclick="goStep(2)" class="btn-navy">
+            次へ <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 2: Condition & Price -->
+      <div id="stepPanel2" class="hidden">
+        <div class="form-card">
+          <h2>03 — 状態</h2>
+          <div class="condition-selector" id="condSelector">
+            <div class="condition-opt" data-val="新品・未使用" onclick="selectCond(this)">
+              <div style="font-size:1.4rem;margin-bottom:6px;"><i class="fas fa-star" style="color:var(--navy);"></i></div>
+              <div>新品・未使用</div>
+              <div style="font-size:11px;color:var(--text-muted);font-weight:400;margin-top:3px;">書き込み・使用感なし</div>
+            </div>
+            <div class="condition-opt" data-val="書き込みなし" onclick="selectCond(this)">
+              <div style="font-size:1.4rem;margin-bottom:6px;"><i class="fas fa-book" style="color:var(--navy);"></i></div>
+              <div>書き込みなし</div>
+              <div style="font-size:11px;color:var(--text-muted);font-weight:400;margin-top:3px;">きれいな状態</div>
+            </div>
+            <div class="condition-opt" data-val="書き込み少し" onclick="selectCond(this)">
+              <div style="font-size:1.4rem;margin-bottom:6px;"><i class="fas fa-pencil-alt" style="color:var(--navy);"></i></div>
+              <div>書き込み少し</div>
+              <div style="font-size:11px;color:var(--text-muted);font-weight:400;margin-top:3px;">メモ・マーカーあり</div>
+            </div>
+            <div class="condition-opt" data-val="汚れ・ダメージあり" onclick="selectCond(this)">
+              <div style="font-size:1.4rem;margin-bottom:6px;"><i class="fas fa-exclamation-triangle" style="color:var(--navy);opacity:0.7;"></i></div>
+              <div>汚れ・ダメージあり</div>
+              <div style="font-size:11px;color:var(--text-muted);font-weight:400;margin-top:3px;">目立つ汚れ・折れあり</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <h2>04 — 価格・場所</h2>
+          <div class="form-row">
+            <div class="form-group required">
+              <label>価格（円）</label>
+              <input type="number" id="bookPrice" min="0" max="99999"
+                     placeholder="例：800" oninput="updatePreview()" required />
+              <p class="form-hint">手数料ゼロ。この金額がそのままあなたの利益です。</p>
+            </div>
+            <div class="form-group required">
+              <label>受け渡し希望場所</label>
+              <input type="text" id="bookLocation" placeholder="例：キャンパス正門前" required />
+            </div>
+          </div>
+
+          <!-- Price preview -->
+          <div class="price-preview">
+            <div>
+              <div class="price-preview-label">出品価格</div>
+              <div class="price-preview-val" id="pricePreviewVal">¥ —</div>
+            </div>
+            <div style="text-align:right;">
+              <div class="price-note"><i class="fas fa-check-circle"></i> 手数料ゼロ</div>
+              <div class="price-note"><i class="fas fa-check-circle"></i> 送料ゼロ</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;gap:12px;">
+          <button onclick="goStep(1)" class="btn-outline">
+            <i class="fas fa-arrow-left"></i> 戻る
+          </button>
+          <button onclick="goStep(3)" class="btn-navy">
+            確認へ <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 3: Preview & Submit -->
+      <div id="stepPanel3" class="hidden">
+        <div class="preview-card-wrap">
+          <h2>05 — 出品内容の確認</h2>
+          <div class="live-preview" id="livePreview">
+            <div class="preview-img-box" id="previewBox" style="overflow:hidden;border-radius:var(--r-sm);">
+              <img src="images/book-placeholder.jpg" alt="プレビュー" style="width:100%;height:100%;object-fit:cover;" />
+            </div>
+            <div class="preview-info">
+              <div class="preview-title" id="previewTitleFinal">—</div>
+              <div class="preview-sub" id="previewSubFinal">—</div>
+              <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+                <div class="preview-price" id="previewPriceFinal">¥—</div>
+                <span class="preview-cond card-condition" id="previewCondFinal"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <h2>06 — 出品者情報</h2>
+          <div style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg-light);border-radius:var(--r);">
+            <div style="width:48px;height:48px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;color:white;font-size:1.2rem;font-weight:900;flex-shrink:0;" id="sellerAvFinal">?</div>
+            <div>
+              <div style="font-size:15px;font-weight:700;color:var(--navy);" id="sellerNameFinal">—</div>
+              <div style="font-size:12px;color:var(--text-muted);" id="sellerFacultyFinal"></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <button onclick="submitListing()" class="btn-navy btn-full" id="submitBtn" style="padding:16px;font-size:16px;">
+            <i class="fas fa-plus-circle"></i> 出品する
+          </button>
+          <button onclick="goStep(2)" class="btn-outline btn-full">
+            <i class="fas fa-arrow-left"></i> 修正する
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUCCESS STATE -->
+    <div id="successState" class="hidden">
+      <div class="form-card" style="text-align:center;padding:56px 32px;">
+        <div style="font-size:2.2rem;margin-bottom:20px;color:var(--navy);"><i class="fas fa-check-circle"></i></div>
+        <h2 style="font-size:1.5rem;font-weight:900;color:var(--navy);margin-bottom:12px;border:none;padding:0;">出品が完了しました！</h2>
+        <p style="color:var(--text-muted);font-size:14px;line-height:1.8;margin-bottom:32px;">
+          出品が正常に登録されました。<br />購入希望が届き次第、マイページに通知されます。
+        </p>
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+          <a href="listings.html" class="btn-navy">
+            <i class="fas fa-list"></i> 一覧を見る
+          </a>
+          <a href="mypage.html" class="btn-outline">
+            <i class="fas fa-user"></i> マイページ
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-top">
+    <div>
+      <div class="footer-brand-name">TETOMI</div>
+      <p class="footer-brand-tagline">手から手へ、教科書とつながりを。<br />送料ゼロ・手数料ゼロ</p>
+    </div>
+    <div class="footer-col">
+      <h4>Service</h4>
+      <a href="listings.html">教科書を探す</a>
+      <a href="sell.html">出品する</a>
+      <a href="mypage.html">マイページ</a>
+    </div>
+    <div class="footer-col">
+      <h4>Info</h4>
+      <a href="index.html#about">TETOMIとは</a>
+      <a href="index.html#faq">よくある質問</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 TETOMI for GLOMAC.</p>
+    <div class="footer-policies">
+      <a href="#">利用規約</a>
+      <a href="#">プライバシーポリシー</a>
+    </div>
+  </div>
+</footer>
+
+<!-- LOGIN MODAL -->
+<div class="modal-overlay hidden" id="loginModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('loginModal')"><i class="fas fa-times"></i></button>
+    <div class="modal-logo">TETOMI</div>
+    <h2 class="modal-title">ログイン / 新規登録</h2>
+    <p class="modal-sub">出品するにはログインが必要です</p>
+    <form onsubmit="handleLogin(event)">
+      <div class="form-group required"><label>お名前</label><input type="text" id="loginName" placeholder="山田 太郎" required /></div>
+      <div class="form-group required"><label>メールアドレス</label><input type="email" id="loginEmail" placeholder="example@glomac.ac.jp" required /></div>
+      <div class="form-group"><label>大学名</label><input type="text" id="loginUniversity" placeholder="GLOMAC大学" /></div>
+      <div class="form-group"><label>学部</label><input type="text" id="loginFaculty" placeholder="工学部" /></div>
+      <div class="form-group"><label>学年</label>
+        <select id="loginGrade">
+          <option value="1年">1年</option><option value="2年">2年</option>
+          <option value="3年" selected>3年</option><option value="4年">4年</option><option value="院生">院生</option>
+        </select>
+      </div>
+      <button type="submit" class="btn-navy btn-full" style="margin-top:10px;"><i class="fas fa-sign-in-alt"></i> ログイン / 登録</button>
+    </form>
+    <div class="modal-demo">
+      <p class="modal-demo-title">— デモユーザーで試す —</p>
+      <div class="demo-btns">
+        <button onclick="loginAsDemo('user_001')" class="demo-btn">田中 蓮（工学部 3年）</button>
+        <button onclick="loginAsDemo('user_002')" class="demo-btn">佐藤 葵（経済学部 2年）</button>
+        <button onclick="loginAsDemo('user_003')" class="demo-btn">山本 海斗（文学部 4年）</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+<script src="js/app.js"></script>
+<script>
+/* ===== sell.html ===== */
+
+let currentStep    = 1;
+let selectedCondition = '';
+let uploadedImages = [];
+let editId         = getParam('edit');
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', () => {
+  const user = getUser();
+  if (!user) {
+    document.getElementById('loginRequired').classList.remove('hidden');
+    document.getElementById('sellForm').classList.add('hidden');
+  } else {
+    document.getElementById('loginRequired').classList.add('hidden');
+    document.getElementById('sellForm').classList.remove('hidden');
+    initSeller(user);
+    if (editId) loadEditData();
+  }
+});
+
+function initSeller(user) {
+  document.getElementById('sellerAvFinal').textContent  = (user.name || '?').charAt(0);
+  document.getElementById('sellerNameFinal').textContent  = user.name || '—';
+  document.getElementById('sellerFacultyFinal').textContent = `${user.faculty || ''} ${user.grade || ''}`.trim() || 'GLOMAC学生';
+}
+
+// ── STEP NAVIGATION ──
+function goStep(n) {
+  if (n > 1) {
+    const title = document.getElementById('bookTitle').value.trim();
+    const subj  = document.getElementById('bookSubject').value.trim();
+    if (!title || !subj) {
+      showToast('タイトルと授業名を入力してください', 'error'); return;
+    }
+  }
+  if (n > 2) {
+    if (!selectedCondition) {
+      showToast('教科書の状態を選択してください', 'error'); return;
+    }
+    const price = document.getElementById('bookPrice').value;
+    const loc   = document.getElementById('bookLocation').value.trim();
+    if (!price || Number(price) < 0) {
+      showToast('価格を入力してください', 'error'); return;
+    }
+    if (!loc) {
+      showToast('受け渡し場所を入力してください', 'error'); return;
+    }
+    buildFinalPreview();
+  }
+
+  currentStep = n;
+  [1,2,3].forEach(i => {
+    document.getElementById(`stepPanel${i}`).classList.toggle('hidden', i !== n);
+    const stepEl = document.getElementById(`step${i}`);
+    stepEl.classList.remove('active','done');
+    if (i === n) stepEl.classList.add('active');
+    if (i < n)  stepEl.classList.add('done');
+    if (i < 3) {
+      document.getElementById(`line${i}${i+1}`).classList.toggle('done', i < n);
+    }
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function buildFinalPreview() {
+  const title = document.getElementById('bookTitle').value;
+  const subj  = document.getElementById('bookSubject').value;
+  const price = document.getElementById('bookPrice').value;
+  const condMap2 = {
+    '新品・未使用': { label: '新品', cls: 'cond-new' },
+    '書き込みなし': { label: '書き込みなし', cls: 'cond-good' },
+    '書き込み少し': { label: '書き込み少し', cls: 'cond-few' },
+    '汚れ・ダメージあり': { label: '汚れあり', cls: 'cond-worn' },
+  };
+  const c = condMap2[selectedCondition] || { label: selectedCondition, cls: 'cond-good' };
+  document.getElementById('previewTitleFinal').textContent = title;
+  document.getElementById('previewSubFinal').textContent   = subj;
+  document.getElementById('previewPriceFinal').textContent = `¥${Number(price).toLocaleString()}`;
+  document.getElementById('previewCondFinal').textContent  = c.label;
+  document.getElementById('previewCondFinal').className    = `preview-cond card-condition ${c.cls}`;
+  if (uploadedImages.length > 0) {
+    const boxEl = document.getElementById('previewBox');
+    boxEl.innerHTML = `<img src="${uploadedImages[0]}" alt="preview" />`;
+  } else {
+    document.getElementById('previewBox').textContent = getBookEmoji(title);
+  }
+}
+
+// ── CONDITION SELECT ──
+function selectCond(el) {
+  document.querySelectorAll('.condition-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedCondition = el.dataset.val;
+  updatePreview();
+}
+
+// ── PRICE PREVIEW ──
+function updatePreview() {
+  const p = document.getElementById('bookPrice');
+  if (p) {
+    const val = Number(p.value);
+    document.getElementById('pricePreviewVal').textContent =
+      p.value ? `¥${val.toLocaleString()}` : '¥ —';
+  }
+}
+
+// ── IMAGE UPLOAD ──
+function handleDragOver(e) {
+  e.preventDefault();
+  document.getElementById('uploadArea').classList.add('drag-over');
+}
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('uploadArea').classList.remove('drag-over');
+  handleFiles(e.dataTransfer.files);
+}
+function handleImageSelect(e) { handleFiles(e.target.files); }
+function handleFiles(files) {
+  const remaining = 5 - uploadedImages.length;
+  if (remaining <= 0) { showToast('画像は最大5枚です', 'warning'); return; }
+  Array.from(files).slice(0, remaining).forEach(file => {
+    if (!file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      uploadedImages.push(e.target.result);
+      renderPreviews();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function renderPreviews() {
+  const grid = document.getElementById('previewGrid');
+  grid.innerHTML = '';
+  uploadedImages.forEach((src, i) => {
+    const div = document.createElement('div');
+    div.className = 'preview-thumb';
+    div.innerHTML = `
+      <img src="${src}" alt="preview ${i+1}" />
+      <button type="button" onclick="removeImage(${i})" title="削除">
+        <i class="fas fa-times"></i>
+      </button>`;
+    grid.appendChild(div);
+  });
+}
+function removeImage(i) {
+  uploadedImages.splice(i, 1);
+  renderPreviews();
+}
+
+// ── SUBMIT ──
+async function submitListing() {
+  const user = getUser();
+  if (!user) { openModal('loginModal'); return; }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 出品中…';
+
+  const payload = {
+    title:      document.getElementById('bookTitle').value.trim(),
+    subject:    document.getElementById('bookSubject').value.trim(),
+    author:     document.getElementById('bookAuthor').value.trim(),
+    isbn:       document.getElementById('bookIsbn').value.trim(),
+    publication_year: document.getElementById('bookYear').value.trim(),
+    description: document.getElementById('bookDesc').value.trim(),
+    condition:  selectedCondition,
+    price:      Number(document.getElementById('bookPrice').value),
+    location:   document.getElementById('bookLocation').value.trim(),
+    image_url:  uploadedImages[0] || '',
+    seller_id:  user.id,
+    seller_name: user.name,
+    status:     '出品中',
+    views:      0,
+    likes:      0,
+  };
+
+  try {
+    if (editId) {
+      await fetch(`tables/listings/${editId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      showToast('出品情報を更新しました', 'success');
+    } else {
+      await fetch('tables/listings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      showToast('出品が完了しました！', 'success');
+    }
+    document.getElementById('sellForm').classList.add('hidden');
+    document.getElementById('successState').classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch {
+    showToast('出品に失敗しました', 'error');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-plus-circle"></i> 出品する';
+  }
+}
+
+// ── EDIT MODE ──
+async function loadEditData() {
+  try {
+    const res  = await fetch(`tables/listings/${editId}`);
+    if (!res.ok) return;
+    const item = await res.json();
+    document.getElementById('pageHeaderLabel').textContent = '出品を編集';
+    document.getElementById('pageHeaderH1').textContent    = '出品を編集する';
+    document.getElementById('bookTitle').value   = item.title || '';
+    document.getElementById('bookSubject').value = item.subject || '';
+    document.getElementById('bookAuthor').value  = item.author || '';
+    document.getElementById('bookIsbn').value    = item.isbn || '';
+    document.getElementById('bookYear').value    = item.publication_year || '';
+    document.getElementById('bookDesc').value    = item.description || '';
+    document.getElementById('bookPrice').value   = item.price || '';
+    document.getElementById('bookLocation').value = item.location || '';
+    if (item.condition) {
+      selectedCondition = item.condition;
+      document.querySelectorAll('.condition-opt').forEach(el => {
+        if (el.dataset.val === item.condition) el.classList.add('selected');
+      });
+    }
+    if (item.image_url) uploadedImages = [item.image_url];
+    updatePreview();
+  } catch {}
+}
+</script>
+</body>
+</html>

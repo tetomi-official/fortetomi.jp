@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>教科書一覧 | TETOMI</title>
+  <meta name="description" content="TETOMI – GLOMAC専用教科書マーケット。教科書を検索・フィルターして見つけよう。" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,700&family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .listings-page { background: var(--bg-gray); min-height: 100vh; }
+
+    /* ── SORT BAR ── */
+    .sort-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px; gap: 12px; flex-wrap: wrap;
+    }
+    .sort-bar .result-count { margin: 0; }
+    .view-toggle { display: flex; gap: 4px; }
+    .view-btn {
+      width: 36px; height: 36px; border-radius: var(--r-sm);
+      border: 1.5px solid var(--border); background: var(--white);
+      color: var(--text-muted); display: flex; align-items: center; justify-content: center;
+      font-size: 14px; transition: all 0.2s;
+    }
+    .view-btn.active { background: var(--navy); border-color: var(--navy); color: var(--white); }
+
+    /* ── LIST VIEW ── */
+    .listings-list { display: flex; flex-direction: column; gap: 12px; }
+    .listing-row {
+      background: var(--white); border-radius: var(--r-lg);
+      border: 1px solid var(--border-light); box-shadow: var(--shadow-sm);
+      display: flex; align-items: center; gap: 16px; padding: 14px 20px;
+      cursor: pointer; transition: all 0.25s;
+    }
+    .listing-row:hover { transform: translateX(4px); box-shadow: var(--shadow); border-color: rgba(20,49,74,0.2); }
+    .listing-row-img {
+      width: 64px; height: 64px; border-radius: var(--r-sm); flex-shrink: 0;
+      background: linear-gradient(135deg, #d8dfe5 0%, #e6e9ec 100%);
+      display: flex; align-items: center; justify-content: center; font-size: 1.8rem;
+      overflow: hidden;
+    }
+    .listing-row-img img { width: 100%; height: 100%; object-fit: cover; }
+    .listing-row-info { flex: 1; min-width: 0; }
+    .listing-row-title { font-size: 14px; font-weight: 700; color: var(--navy); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .listing-row-sub { font-size: 12px; color: var(--text-muted); }
+    .listing-row-price { font-size: 1.2rem; font-weight: 900; color: var(--navy); flex-shrink: 0; }
+    .listing-row-badges { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+    /* ── PAGINATION ── */
+    .pagination {
+      display: flex; align-items: center; justify-content: center;
+      gap: 6px; margin-top: 36px;
+    }
+    .page-btn {
+      min-width: 38px; height: 38px; padding: 0 8px;
+      border-radius: var(--r-sm); border: 1.5px solid var(--border);
+      background: var(--white); color: var(--text-mid); font-size: 13px; font-weight: 700;
+      transition: all 0.2s; font-family: var(--font-en);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .page-btn:hover { border-color: var(--navy); color: var(--navy); }
+    .page-btn.active { background: var(--navy); border-color: var(--navy); color: var(--white); }
+    .page-btn:disabled { opacity: 0.35; pointer-events: none; }
+
+    @media (max-width: 480px) {
+      .listing-row { gap: 12px; padding: 12px 14px; }
+      .listing-row-img { width: 52px; height: 52px; font-size: 1.4rem; }
+      .listing-row-title { font-size: 13px; }
+      .listing-row-price { font-size: 1rem; }
+    }
+  </style>
+</head>
+<body class="listings-page">
+
+<!-- SIDE TABS -->
+<div class="side-tab" aria-hidden="true">
+  <a href="sell.html">出品する</a>
+  <a href="listings.html">教科書を探す</a>
+</div>
+
+<!-- NAVBAR -->
+<nav class="navbar scrolled" id="navbar">
+  <div class="nav-container">
+    <a href="index.html" class="nav-logo" aria-label="TETOMI Home">
+      <div class="nav-logo-badge">
+        <span class="logo-main">TETOMI</span>
+        <span class="logo-sub">手から手へ、教科書とつながりを</span>
+      </div>
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="index.html" class="nav-link-item">
+        <span class="link-en">Home</span>
+        <span class="link-ja">トップ</span>
+      </a>
+      <a href="listings.html" class="nav-link-item">
+        <span class="link-en">Books</span>
+        <span class="link-ja">教科書一覧</span>
+      </a>
+      <a href="index.html#faq" class="nav-link-item">
+        <span class="link-en">FAQ</span>
+        <span class="link-ja">よくある質問</span>
+      </a>
+      <button class="btn-login-nav" id="navLoginBtn" onclick="openModal('loginModal')">ログイン</button>
+      <a href="chat.html" class="nav-link-item">
+        <span class="link-en">Chat</span>
+        <span class="link-ja">メッセージ</span>
+      </a>
+      <a href="sell.html" class="nav-cta">
+        <i class="fas fa-plus"></i> 出品する
+      </a>
+      <a href="mypage.html" class="nav-user-badge hidden" id="navAvatar">
+        <i class="fas fa-user-circle"></i>
+        <span id="navUserName"></span>
+      </a>
+    </div>
+    <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="メニュー">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="page-header-inner">
+    <div class="breadcrumb">
+      <a href="index.html">Home</a>
+      <i class="fas fa-chevron-right" style="font-size:9px;"></i>
+      <span>Books</span>
+    </div>
+    <h1>教科書一覧</h1>
+    <p>GLOMAC内の出品教科書を検索・フィルター</p>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<main class="page-main" style="background:var(--bg-gray);">
+  <div class="container">
+
+    <!-- SEARCH & FILTER -->
+    <div class="search-filter-bar">
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="タイトル・授業名で検索…"
+               oninput="debounceSearch()" />
+        <button onclick="applyFilters()">
+          <i class="fas fa-search"></i> 検索
+        </button>
+      </div>
+      <div class="filter-row">
+        <select class="filter-select" id="filterCondition" onchange="applyFilters()">
+          <option value="">すべての状態</option>
+          <option value="新品・未使用">新品・未使用</option>
+          <option value="書き込みなし">書き込みなし</option>
+          <option value="書き込み少し">書き込み少し</option>
+          <option value="汚れ・ダメージあり">汚れ・ダメージあり</option>
+        </select>
+        <select class="filter-select" id="filterPrice" onchange="applyFilters()">
+          <option value="">すべての価格</option>
+          <option value="0-500">〜¥500</option>
+          <option value="500-1000">¥500〜¥1,000</option>
+          <option value="1000-2000">¥1,000〜¥2,000</option>
+          <option value="2000-5000">¥2,000〜¥5,000</option>
+          <option value="5000-">¥5,000〜</option>
+        </select>
+        <select class="filter-select" id="filterSort" onchange="applyFilters()">
+          <option value="newest">新着順</option>
+          <option value="price_asc">価格：安い順</option>
+          <option value="price_desc">価格：高い順</option>
+        </select>
+        <button class="filter-reset" onclick="resetFilters()">
+          <i class="fas fa-undo" style="margin-right:4px;font-size:11px;"></i>リセット
+        </button>
+      </div>
+    </div>
+
+    <!-- SORT BAR -->
+    <div class="sort-bar">
+      <p class="result-count" id="resultCount"><strong>0</strong> 件</p>
+      <div class="view-toggle">
+        <button class="view-btn active" id="viewGrid" onclick="setView('grid')" title="グリッド表示">
+          <i class="fas fa-th-large"></i>
+        </button>
+        <button class="view-btn" id="viewList" onclick="setView('list')" title="リスト表示">
+          <i class="fas fa-list"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- LISTINGS -->
+    <div id="listingsContainer" class="listings-grid">
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+    </div>
+
+    <!-- PAGINATION -->
+    <div class="pagination" id="pagination"></div>
+
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-top">
+    <div>
+      <div class="footer-brand-name">TETOMI</div>
+      <p class="footer-brand-tagline">手から手へ、教科書とつながりを。<br />GLOMAC専用 送料ゼロ・手数料ゼロ</p>
+    </div>
+    <div class="footer-col">
+      <h4>Service</h4>
+      <a href="listings.html">教科書を探す</a>
+      <a href="sell.html">出品する</a>
+      <a href="mypage.html">マイページ</a>
+    </div>
+    <div class="footer-col">
+      <h4>Info</h4>
+      <a href="index.html#about">TETOMIとは</a>
+      <a href="index.html#faq">よくある質問</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 TETOMI for GLOMAC.</p>
+    <div class="footer-policies">
+      <a href="#">利用規約</a>
+      <a href="#">プライバシーポリシー</a>
+    </div>
+  </div>
+</footer>
+
+<!-- LOGIN MODAL -->
+<div class="modal-overlay hidden" id="loginModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('loginModal')"><i class="fas fa-times"></i></button>
+    <div class="modal-logo">TETOMI</div>
+    <h2 class="modal-title">ログイン / 新規登録</h2>
+    <p class="modal-sub">大学メールアドレスでログインしてください</p>
+    <form onsubmit="handleLogin(event)">
+      <div class="form-group required"><label>お名前</label><input type="text" id="loginName" placeholder="山田 太郎" required /></div>
+      <div class="form-group required"><label>メールアドレス</label><input type="email" id="loginEmail" placeholder="example@glomac.ac.jp" required /></div>
+      <div class="form-group"><label>大学名</label><input type="text" id="loginUniversity" placeholder="GLOMAC大学" /></div>
+      <div class="form-group"><label>学部</label><input type="text" id="loginFaculty" placeholder="工学部" /></div>
+      <div class="form-group"><label>学年</label>
+        <select id="loginGrade">
+          <option value="1年">1年</option><option value="2年">2年</option>
+          <option value="3年" selected>3年</option><option value="4年">4年</option><option value="院生">院生</option>
+        </select>
+      </div>
+      <button type="submit" class="btn-navy btn-full" style="margin-top:10px;"><i class="fas fa-sign-in-alt"></i> ログイン / 登録</button>
+    </form>
+    <div class="modal-demo">
+      <p class="modal-demo-title">— デモユーザーで試す —</p>
+      <div class="demo-btns">
+        <button onclick="loginAsDemo('user_001')" class="demo-btn">田中 蓮（工学部 3年）</button>
+        <button onclick="loginAsDemo('user_002')" class="demo-btn">佐藤 葵（経済学部 2年）</button>
+        <button onclick="loginAsDemo('user_003')" class="demo-btn">山本 海斗（文学部 4年）</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+<script src="js/app.js"></script>
+<script>
+/* ===== listings.html ===== */
+
+const PAGE_SIZE = 12;
+let allListings  = [];
+let filtered     = [];
+let currentPage  = 1;
+let currentView  = 'grid';
+let searchTimer;
+
+// Debounce search
+function debounceSearch() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(applyFilters, 300);
+}
+
+// Fetch all
+async function fetchListings() {
+  try {
+    const res  = await fetch('tables/listings?limit=200');
+    const data = await res.json();
+    allListings = (data.data || []).filter(l => l.status === '出品中');
+    applyFilters();
+  } catch(e) {
+    console.error(e);
+    document.getElementById('listingsContainer').innerHTML =
+      '<p class="empty-text">データの読み込みに失敗しました。</p>';
+  }
+}
+
+function applyFilters() {
+  const query   = document.getElementById('searchInput').value.trim().toLowerCase();
+  const cond    = document.getElementById('filterCondition').value;
+  const price   = document.getElementById('filterPrice').value;
+  const sortBy  = document.getElementById('filterSort').value;
+
+  filtered = allListings.filter(item => {
+    if (query && !`${item.title}${item.subject}`.toLowerCase().includes(query)) return false;
+    if (cond && item.condition !== cond) return false;
+    if (price) {
+      const p = Number(item.price);
+      const [lo, hi] = price.split('-').map(Number);
+      if (!isNaN(lo) && !isNaN(hi) && hi) { if (p < lo || p > hi) return false; }
+      else if (!isNaN(lo) && isNaN(hi))   { if (p < lo) return false; }
+    }
+    return true;
+  });
+
+  // Sort
+  if (sortBy === 'price_asc')  filtered.sort((a,b) => Number(a.price) - Number(b.price));
+  if (sortBy === 'price_desc') filtered.sort((a,b) => Number(b.price) - Number(a.price));
+  if (sortBy === 'newest')     filtered.sort((a,b) => Number(b.created_at) - Number(a.created_at));
+
+  currentPage = 1;
+  render();
+}
+
+function resetFilters() {
+  document.getElementById('searchInput').value   = '';
+  document.getElementById('filterCondition').value = '';
+  document.getElementById('filterPrice').value   = '';
+  document.getElementById('filterSort').value    = 'newest';
+  applyFilters();
+}
+
+function setView(v) {
+  currentView = v;
+  document.getElementById('viewGrid').classList.toggle('active', v === 'grid');
+  document.getElementById('viewList').classList.toggle('active', v === 'list');
+  render();
+}
+
+function render() {
+  const total = filtered.length;
+  document.getElementById('resultCount').innerHTML = `<strong>${total}</strong> 件`;
+
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const page  = filtered.slice(start, start + PAGE_SIZE);
+
+  const container = document.getElementById('listingsContainer');
+  container.innerHTML = '';
+
+  if (currentView === 'grid') {
+    container.className = 'listings-grid';
+    if (page.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1;">
+          <div class="empty-icon"><i class="fas fa-book-open" style="font-size:3rem;color:var(--navy);opacity:0.25;"></i></div>
+          <h3>該当する教科書がありません</h3>
+          <p>条件を変えて検索してみてください。</p>
+        </div>`;
+      document.getElementById('pagination').innerHTML = '';
+      return;
+    }
+    page.forEach(item => container.appendChild(createListingCard(item)));
+  } else {
+    container.className = 'listings-list';
+    if (page.length === 0) {
+      container.innerHTML = `<div class="empty-state"><div class="empty-icon"><i class="fas fa-book-open" style="font-size:3rem;color:var(--navy);opacity:0.25;"></i></div><h3>該当する教科書がありません</h3></div>`;
+      document.getElementById('pagination').innerHTML = '';
+      return;
+    }
+    page.forEach(item => container.appendChild(createListRow(item)));
+  }
+
+  renderPagination(total);
+}
+
+function createListRow(item) {
+  const c   = conditionLabel(item.condition);
+  const row = document.createElement('div');
+  row.className = 'listing-row';
+  row.innerHTML = `
+    <div class="listing-row-img">${getBookEmoji(item.title)}</div>
+    <div class="listing-row-info">
+      <div class="listing-row-title">${escHtml(item.title)}</div>
+      <div class="listing-row-sub">${escHtml(item.subject || '')} ／ ${escHtml(item.seller_name || '不明')}</div>
+    </div>
+    <div class="listing-row-badges">
+      <span class="card-condition ${c.cls}">${c.label}</span>
+    </div>
+    <div class="listing-row-price">¥${Number(item.price).toLocaleString()}</div>
+  `;
+  row.addEventListener('click', () => location.href = `detail.html?id=${item.id}`);
+  return row;
+}
+
+function renderPagination(total) {
+  const pages = Math.ceil(total / PAGE_SIZE);
+  const pg    = document.getElementById('pagination');
+  if (pages <= 1) { pg.innerHTML = ''; return; }
+
+  let html = `<button class="page-btn" ${currentPage===1?'disabled':''} onclick="goPage(${currentPage-1})"><i class="fas fa-chevron-left"></i></button>`;
+  for (let i = 1; i <= pages; i++) {
+    if (i === 1 || i === pages || Math.abs(i - currentPage) <= 1) {
+      html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+    } else if (i === 2 || i === pages - 1) {
+      html += `<span style="color:var(--text-muted);padding:0 4px;">…</span>`;
+    }
+  }
+  html += `<button class="page-btn" ${currentPage===pages?'disabled':''} onclick="goPage(${currentPage+1})"><i class="fas fa-chevron-right"></i></button>`;
+  pg.innerHTML = html;
+}
+
+function goPage(n) {
+  currentPage = n;
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+fetchListings();
+</script>
+</body>
+</html>

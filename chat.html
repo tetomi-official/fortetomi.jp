@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>チャット | TETOMI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,400;0,600;0,700;0,800;0,900&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    /* ─────────────────────────────────────────
+       CHAT PAGE  —  TETOMI
+       ───────────────────────────────────────── */
+    :root {
+      --chat-sidebar-w: 320px;
+      --chat-header-h: 64px;
+      --chat-input-h: 80px;
+    }
+
+    body { overflow: hidden; }
+    .chat-page {
+      display: flex; flex-direction: column;
+      height: 100vh; background: var(--bg-gray);
+    }
+
+    /* ── TOP NAV (slim) ── */
+    .chat-topbar {
+      height: var(--nav-h); background: var(--navy);
+      display: flex; align-items: center;
+      padding: 0 24px; gap: 16px; flex-shrink: 0;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+      position: relative; z-index: 100;
+    }
+    .chat-topbar-logo {
+      font-family: var(--font-en); font-size: 1.3rem; font-weight: 900;
+      color: var(--white); letter-spacing: 0.12em; text-decoration: none;
+    }
+    .chat-logo-badge {
+      display: inline-flex;
+      align-items: center;
+      background: var(--navy);
+      border-left: 3px solid rgba(255,255,255,0.6);
+      padding: 5px 14px 5px 10px;
+      border-radius: 5px;
+    }
+    .chat-logo-badge strong {
+      font-family: var(--font-en); font-size: 1.1rem; font-weight: 900;
+      color: var(--white); letter-spacing: 0.18em;
+    }
+    .chat-topbar-sep { color: rgba(255,255,255,0.25); font-size: 20px; }
+    .chat-topbar-title {
+      font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.8);
+      letter-spacing: 0.04em;
+    }
+    .chat-topbar-actions { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+    .chat-topbar-user {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; color: rgba(255,255,255,0.75); font-weight: 600;
+    }
+    .chat-topbar-user .av {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 900; color: white;
+    }
+    .admin-badge {
+      background: var(--navy-dark); color: white;
+      font-size: 10px; font-weight: 800; padding: 2px 8px;
+      border-radius: var(--r-full); letter-spacing: 0.05em;
+    }
+
+    /* ── MAIN LAYOUT ── */
+    .chat-layout {
+      display: flex; flex: 1; overflow: hidden;
+    }
+
+    /* ── SIDEBAR ── */
+    .chat-sidebar {
+      width: var(--chat-sidebar-w); flex-shrink: 0;
+      background: var(--white); border-right: 1px solid var(--border-light);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .sidebar-head {
+      padding: 16px 20px; border-bottom: 1px solid var(--border-light);
+      background: var(--bg-light); flex-shrink: 0;
+    }
+    .sidebar-head h2 {
+      font-family: var(--font-en); font-size: 12px; font-weight: 900;
+      color: var(--navy); letter-spacing: 0.14em; text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .sidebar-search {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--white); border: 1.5px solid var(--border);
+      border-radius: var(--r-sm); padding: 8px 12px;
+    }
+    .sidebar-search i { color: var(--text-muted); font-size: 12px; flex-shrink: 0; }
+    .sidebar-search input {
+      border: none; outline: none; font-size: 13px; color: var(--text-dark);
+      background: transparent; width: 100%; font-family: var(--font-en);
+    }
+
+    .chat-room-list { flex: 1; overflow-y: auto; }
+    .room-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 20px; cursor: pointer; transition: background 0.15s;
+      border-bottom: 1px solid var(--border-light);
+      position: relative;
+    }
+    .room-item:hover { background: var(--bg-light); }
+    .room-item.active { background: rgba(20,49,74,0.06); border-left: 3px solid var(--navy); }
+    .room-item.active .room-avatar { background: var(--navy); }
+    .room-avatar {
+      width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+      background: var(--bg-gray);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; font-weight: 900; color: var(--white);
+      font-family: var(--font-en);
+    }
+    .room-avatar.support-av { background: var(--navy-mid); }
+    .room-meta { flex: 1; min-width: 0; }
+    .room-name {
+      font-size: 13px; font-weight: 700; color: var(--navy);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .room-last {
+      font-size: 11px; color: var(--text-muted);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-top: 3px;
+    }
+    .room-time { font-size: 10px; color: var(--text-muted); flex-shrink: 0; align-self: flex-start; margin-top: 2px; }
+    .unread-dot {
+      position: absolute; top: 14px; right: 16px;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--navy-mid); color: white;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ── CHAT AREA ── */
+    .chat-area {
+      flex: 1; display: flex; flex-direction: column; overflow: hidden;
+      background: var(--bg-gray);
+    }
+
+    /* Chat header */
+    .chat-header {
+      height: var(--chat-header-h); background: var(--white);
+      border-bottom: 1px solid var(--border-light); flex-shrink: 0;
+      display: flex; align-items: center; padding: 0 24px; gap: 14px;
+      box-shadow: var(--shadow-sm);
+    }
+    .chat-header-av {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--navy);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; font-weight: 900; color: white;
+      font-family: var(--font-en); flex-shrink: 0;
+    }
+    .chat-header-av.support-av { background: var(--navy-mid); }
+    .chat-header-info { flex: 1; }
+    .chat-header-info h3 { font-size: 14px; font-weight: 700; color: var(--navy); }
+    .chat-header-info p  { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+    .online-dot {
+      display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+      background: #10b981; margin-right: 5px;
+    }
+    .chat-header-acts { display: flex; gap: 8px; }
+    .chat-act-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      border: 1.5px solid var(--border); background: var(--white);
+      color: var(--text-muted); display: flex; align-items: center;
+      justify-content: center; font-size: 14px; transition: all 0.2s;
+    }
+    .chat-act-btn:hover { border-color: var(--navy); color: var(--navy); }
+
+    /* Messages area */
+    .messages-wrap {
+      flex: 1; overflow-y: auto; padding: 24px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .messages-wrap::-webkit-scrollbar { width: 4px; }
+    .messages-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* Date separator */
+    .msg-date-sep {
+      text-align: center; font-size: 11px; color: var(--text-muted);
+      font-weight: 700; letter-spacing: 0.08em; position: relative;
+      display: flex; align-items: center; gap: 12px; margin: 8px 0;
+    }
+    .msg-date-sep::before, .msg-date-sep::after {
+      content: ''; flex: 1; height: 1px; background: var(--border-light);
+    }
+
+    /* Message bubble */
+    .msg-row {
+      display: flex; gap: 10px; align-items: flex-end;
+      max-width: 72%;
+    }
+    .msg-row.mine { flex-direction: row-reverse; align-self: flex-end; }
+    .msg-row.other { align-self: flex-start; }
+
+    .msg-av {
+      width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 900; color: white;
+      font-family: var(--font-en);
+    }
+    .msg-av.admin-av { background: var(--navy-dark); }
+    .msg-av.user-av  { background: var(--navy); }
+
+    .msg-content { display: flex; flex-direction: column; gap: 4px; }
+    .msg-row.mine .msg-content { align-items: flex-end; }
+
+    .msg-name {
+      font-size: 10px; font-weight: 700; color: var(--text-muted);
+      letter-spacing: 0.04em; padding: 0 4px;
+    }
+    .msg-bubble {
+      padding: 11px 16px; border-radius: 18px;
+      font-size: 14px; line-height: 1.65; word-break: break-word;
+      max-width: 400px; position: relative;
+    }
+    .msg-row.other .msg-bubble {
+      background: var(--white); color: var(--text-dark);
+      border-bottom-left-radius: 4px;
+      box-shadow: var(--shadow-sm); border: 1px solid var(--border-light);
+    }
+    .msg-row.mine .msg-bubble {
+      background: var(--navy); color: var(--white);
+      border-bottom-right-radius: 4px;
+    }
+    .msg-row.mine.admin .msg-bubble {
+      background: var(--navy-dark);
+    }
+    .msg-time {
+      font-size: 10px; color: var(--text-muted);
+      padding: 0 4px; display: flex; align-items: center; gap: 4px;
+    }
+    .msg-read { color: var(--navy); font-size: 11px; }
+
+    /* System message */
+    .msg-system {
+      text-align: center; font-size: 12px; color: var(--text-muted);
+      background: rgba(255,255,255,0.7); border-radius: var(--r-full);
+      padding: 6px 16px; align-self: center;
+      border: 1px solid var(--border-light);
+    }
+
+    /* ── INPUT AREA ── */
+    .chat-input-area {
+      background: var(--white); border-top: 1px solid var(--border-light);
+      padding: 14px 20px; flex-shrink: 0;
+      display: flex; align-items: flex-end; gap: 10px;
+    }
+    .chat-input-wrap {
+      flex: 1; background: var(--bg-light); border-radius: 24px;
+      border: 1.5px solid var(--border); display: flex; align-items: flex-end;
+      padding: 10px 16px; gap: 10px; transition: border-color 0.2s;
+    }
+    .chat-input-wrap:focus-within { border-color: var(--navy); background: var(--white); }
+    .chat-textarea {
+      flex: 1; border: none; outline: none; background: transparent;
+      font-size: 14px; color: var(--text-dark); font-family: var(--font-en);
+      resize: none; max-height: 120px; min-height: 22px;
+      line-height: 1.5; overflow-y: auto;
+    }
+    .chat-attach-btn {
+      color: var(--text-muted); font-size: 16px; transition: color 0.2s;
+      padding: 2px; flex-shrink: 0;
+    }
+    .chat-attach-btn:hover { color: var(--navy); }
+    .chat-send-btn {
+      width: 46px; height: 46px; border-radius: 50%;
+      background: var(--navy); color: var(--white);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; transition: all 0.2s; flex-shrink: 0;
+    }
+    .chat-send-btn:hover { background: var(--navy-dark); transform: scale(1.05); }
+    .chat-send-btn:disabled { background: var(--border); transform: none; cursor: not-allowed; }
+
+    /* ── EMPTY CHAT ── */
+    .chat-empty {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 16px; color: var(--text-muted); padding: 40px;
+    }
+    .chat-empty i { font-size: 3rem; opacity: 0.3; }
+    .chat-empty h3 { font-size: 1.1rem; font-weight: 700; color: var(--navy); opacity: 0.5; }
+    .chat-empty p  { font-size: 13px; text-align: center; line-height: 1.7; max-width: 280px; }
+
+    /* ── LOGIN REQUIRED OVERLAY ── */
+    .chat-login-overlay {
+      position: absolute; inset: 0; z-index: 200;
+      background: rgba(20,49,74,0.7); backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .chat-login-card {
+      background: var(--white); border-radius: var(--r-xl);
+      padding: 40px 36px; max-width: 400px; width: 90%;
+      text-align: center;
+    }
+    .chat-login-card h2 { font-size: 1.3rem; font-weight: 900; color: var(--navy); margin-bottom: 12px; }
+    .chat-login-card p  { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.7; }
+
+    /* ── MOBILE ── */
+    .sidebar-toggle-btn {
+      display: none; align-items: center; justify-content: center;
+      width: 36px; height: 36px; border-radius: var(--r-sm);
+      border: 1.5px solid rgba(255,255,255,0.3);
+      color: white; font-size: 14px; margin-right: 4px;
+    }
+    @media (max-width: 768px) {
+      :root { --chat-sidebar-w: 100vw; }
+      .chat-sidebar {
+        position: absolute; left: 0; top: var(--nav-h); bottom: 0; z-index: 50;
+        transform: translateX(-100%); transition: transform 0.3s ease;
+        box-shadow: var(--shadow-xl);
+      }
+      .chat-sidebar.open { transform: translateX(0); }
+      .sidebar-toggle-btn { display: flex; }
+      .messages-wrap { padding: 16px; }
+      .msg-row { max-width: 88%; }
+    }
+  </style>
+</head>
+<body>
+<div class="chat-page" style="position:relative;">
+
+  <!-- ── TOP BAR ── -->
+  <div class="chat-topbar">
+    <button class="sidebar-toggle-btn" onclick="toggleSidebar()" aria-label="チャット一覧">
+      <i class="fas fa-bars"></i>
+    </button>
+    <a href="index.html" class="chat-topbar-logo">
+      <span class="chat-logo-badge">
+        <strong>TETOMI</strong>
+      </span>
+    </a>
+    <span class="chat-topbar-sep">|</span>
+    <span class="chat-topbar-title">メッセージ</span>
+    <div class="chat-topbar-actions">
+      <div class="chat-topbar-user" id="topbarUser">
+        <div class="av" id="topbarAv">?</div>
+        <span id="topbarName">ゲスト</span>
+        <span class="admin-badge hidden" id="adminBadge">ADMIN</span>
+      </div>
+      <a href="index.html" style="color:rgba(255,255,255,0.6);font-size:13px;padding:6px 12px;border:1px solid rgba(255,255,255,0.2);border-radius:var(--r-sm);transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background=''">
+        <i class="fas fa-home"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- ── MAIN LAYOUT ── -->
+  <div class="chat-layout">
+
+    <!-- ── SIDEBAR ── -->
+    <aside class="chat-sidebar" id="chatSidebar">
+      <div class="sidebar-head">
+        <h2>チャット一覧</h2>
+        <div class="sidebar-search">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="ユーザー・キーワードで検索…"
+                 id="roomSearch" oninput="filterRooms()" />
+        </div>
+      </div>
+      <div class="chat-room-list" id="roomList">
+        <div style="padding:32px 20px;text-align:center;color:var(--text-muted);font-size:13px;">
+          <div class="spinner" style="margin:0 auto 12px;"></div>
+          読み込み中…
+        </div>
+      </div>
+    </aside>
+
+    <!-- ── CHAT AREA ── -->
+    <div class="chat-area" id="chatArea">
+      <!-- EMPTY STATE -->
+      <div class="chat-empty" id="chatEmpty">
+        <i class="fas fa-comments"></i>
+        <h3>チャットを選択してください</h3>
+        <p>左のリストからチャットを選ぶか、<br />「運営サポート」からお気軽にご相談ください。</p>
+        <button onclick="openSupportChat()" class="btn-navy" style="margin-top:8px;">
+          <i class="fas fa-headset"></i> 運営に相談する
+        </button>
+      </div>
+
+      <!-- CHAT CONTENT (hidden until room selected) -->
+      <div id="chatContent" class="hidden" style="display:flex;flex-direction:column;height:100%;overflow:hidden;">
+        <!-- Header -->
+        <div class="chat-header">
+          <div class="chat-header-av" id="chatHeaderAv">?</div>
+          <div class="chat-header-info">
+            <h3 id="chatHeaderName">—</h3>
+            <p id="chatHeaderSub"><span class="online-dot"></span>オンライン</p>
+          </div>
+          <div class="chat-header-acts">
+            <button class="chat-act-btn" onclick="refreshMessages()" title="更新">
+              <i class="fas fa-sync-alt"></i>
+            </button>
+            <button class="chat-act-btn" onclick="closeChatContent()" title="閉じる">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="messages-wrap" id="messagesWrap"></div>
+
+        <!-- Input -->
+        <div class="chat-input-area">
+          <div class="chat-input-wrap">
+            <button class="chat-attach-btn" title="絵文字" onclick="insertEmoji()">
+              <i class="fas fa-smile"></i>
+            </button>
+            <textarea class="chat-textarea" id="msgInput" rows="1"
+              placeholder="メッセージを入力…"
+              onkeydown="handleKeyDown(event)"
+              oninput="autoResize(this)"></textarea>
+          </div>
+          <button class="chat-send-btn" id="sendBtn" onclick="sendMessage()" title="送信">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOGIN REQUIRED OVERLAY -->
+  <div class="chat-login-overlay hidden" id="loginOverlay">
+    <div class="chat-login-card">
+      <div style="font-size:1.8rem;margin-bottom:16px;color:var(--navy);"><i class="fas fa-comment-alt"></i></div>
+      <h2>ログインが必要です</h2>
+      <p>チャットを利用するには<br />ログイン・ユーザー登録が必要です。</p>
+      <button onclick="showLoginFromChat()" class="btn-navy btn-full">
+        <i class="fas fa-sign-in-alt"></i> ログイン / 登録
+      </button>
+      <a href="index.html" style="display:block;margin-top:12px;font-size:13px;color:var(--text-muted);">
+        トップに戻る
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN MODAL -->
+<div class="modal-overlay hidden" id="loginModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('loginModal')"><i class="fas fa-times"></i></button>
+    <div class="modal-logo">TETOMI</div>
+    <h2 class="modal-title">ログイン / 新規登録</h2>
+    <p class="modal-sub">大学メールアドレスでログインしてください</p>
+    <form onsubmit="handleLogin(event)">
+      <div class="form-group required"><label>お名前</label><input type="text" id="loginName" placeholder="山田 太郎" required /></div>
+      <div class="form-group required"><label>メールアドレス</label><input type="email" id="loginEmail" placeholder="example@glomac.ac.jp" required /></div>
+      <div class="form-group"><label>大学名</label><input type="text" id="loginUniversity" placeholder="GLOMAC大学" /></div>
+      <div class="form-group"><label>学部</label><input type="text" id="loginFaculty" placeholder="工学部" /></div>
+      <div class="form-group"><label>学年</label>
+        <select id="loginGrade">
+          <option value="1年">1年</option><option value="2年">2年</option>
+          <option value="3年" selected>3年</option><option value="4年">4年</option><option value="院生">院生</option>
+        </select>
+      </div>
+      <button type="submit" class="btn-navy btn-full" style="margin-top:10px;">
+        <i class="fas fa-sign-in-alt"></i> ログイン / 登録
+      </button>
+    </form>
+    <div class="modal-demo">
+      <p class="modal-demo-title">— デモユーザーで試す —</p>
+      <div class="demo-btns">
+        <button onclick="loginAsDemo('user_001')" class="demo-btn">田中 蓮（工学部 3年）</button>
+        <button onclick="loginAsDemo('user_002')" class="demo-btn">佐藤 葵（経済学部 2年）</button>
+        <button onclick="loginAsDemo('user_003')" class="demo-btn">山本 海斗（文学部 4年）</button>
+        <button onclick="loginAsDemo('admin_001')" class="demo-btn" style="background:rgba(20,49,74,0.08);border-color:var(--navy);color:var(--navy);">
+          <i class="fas fa-shield-alt"></i> 運営スタッフとしてログイン
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+<script src="js/app.js"></script>
+<script>
+/* ═══════════════════════════════════════
+   chat.html — TETOMI Chat System
+   ═══════════════════════════════════════ */
+
+// ── ADMIN CONFIG ──
+// 管理者ユーザーID一覧（実運用では環境変数/DBで管理）
+const ADMIN_IDS  = ['admin_001'];
+const ADMIN_NAME = 'TETOMI 運営';
+const SUPPORT_ROOM_ID = 'support';
+
+let currentUser   = null;
+let isAdmin       = false;
+let currentRoomId = null;
+let currentRoomMeta = {};
+let pollTimer     = null;
+let allRooms      = [];
+
+// ═══════════════ INIT ═══════════════
+document.addEventListener('DOMContentLoaded', async () => {
+  currentUser = getUser();
+
+  if (!currentUser) {
+    document.getElementById('loginOverlay').classList.remove('hidden');
+    return;
+  }
+
+  isAdmin = ADMIN_IDS.includes(currentUser.id);
+  renderTopbar();
+  await loadRooms();
+
+  // URLパラメータで部屋を自動オープン
+  const roomParam = getParam('room');
+  if (roomParam) openRoom(roomParam);
+
+  // サポートルームを自動オープン
+  if (getParam('support') === '1') openSupportChat();
+});
+
+// ═══════════════ TOPBAR ═══════════════
+function renderTopbar() {
+  document.getElementById('topbarAv').textContent   = (currentUser.name||'?').charAt(0);
+  document.getElementById('topbarName').textContent = currentUser.name || 'ゲスト';
+  if (isAdmin) document.getElementById('adminBadge').classList.remove('hidden');
+}
+
+// ═══════════════ LOAD ROOMS ═══════════════
+async function loadRooms() {
+  try {
+    let rooms = [];
+
+    if (isAdmin) {
+      // 管理者: 全サポートチャット + 全取引チャットが見える
+      const res  = await fetch('tables/chat_messages?limit=500');
+      const data = await res.json();
+      const msgs = data.data || [];
+
+      // room_idでグルーピング
+      const roomMap = {};
+      msgs.forEach(m => {
+        if (!roomMap[m.room_id]) {
+          roomMap[m.room_id] = { room_id: m.room_id, room_type: m.room_type, messages: [] };
+        }
+        roomMap[m.room_id].messages.push(m);
+      });
+
+      // サポートルームを先頭に
+      rooms = Object.values(roomMap).sort((a,b) => {
+        const la = a.messages[a.messages.length-1]?.created_at || 0;
+        const lb = b.messages[b.messages.length-1]?.created_at || 0;
+        return Number(lb) - Number(la);
+      });
+
+    } else {
+      // 一般ユーザー: 自分が参加している部屋
+      const res  = await fetch('tables/chat_messages?limit=500');
+      const data = await res.json();
+      const msgs = (data.data || []).filter(m =>
+        m.sender_id === currentUser.id ||
+        m.room_id === `support_${currentUser.id}` ||
+        m.room_id === SUPPORT_ROOM_ID
+      );
+      const roomMap = {};
+      msgs.forEach(m => {
+        if (!roomMap[m.room_id]) {
+          roomMap[m.room_id] = { room_id: m.room_id, room_type: m.room_type, messages: [] };
+        }
+        roomMap[m.room_id].messages.push(m);
+      });
+
+      // サポートルームは常に表示
+      const supportId = `support_${currentUser.id}`;
+      if (!roomMap[supportId]) {
+        roomMap[supportId] = { room_id: supportId, room_type: 'support', messages: [] };
+      }
+      rooms = Object.values(roomMap);
+    }
+
+    allRooms = rooms;
+    renderRoomList(rooms);
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+// ═══════════════ RENDER ROOM LIST ═══════════════
+function renderRoomList(rooms) {
+  const list = document.getElementById('roomList');
+  list.innerHTML = '';
+
+  if (rooms.length === 0) {
+    list.innerHTML = `<div style="padding:32px 20px;text-align:center;color:var(--text-muted);font-size:13px;">
+      <i class="fas fa-comments" style="font-size:2rem;opacity:0.3;display:block;margin-bottom:12px;"></i>
+      チャットはまだありません
+    </div>`;
+    return;
+  }
+
+  rooms.forEach(room => {
+    const lastMsg = room.messages[room.messages.length - 1];
+    const unread  = room.messages.filter(m => !m.is_read && m.sender_id !== currentUser.id).length;
+    const isSupport = room.room_type === 'support';
+
+    // 表示名を決定
+    let displayName, avatarText, isAdminRoom;
+    if (isSupport) {
+      if (isAdmin) {
+        // 管理者目線: ユーザー名を表示
+        const userMsg = room.messages.find(m => !ADMIN_IDS.includes(m.sender_id));
+        displayName = userMsg ? `${userMsg.sender_name}（サポート）` : 'サポート相談';
+        avatarText  = userMsg ? userMsg.sender_name.charAt(0) : '?';
+        isAdminRoom = false;
+      } else {
+        displayName = '📢 運営サポート';
+        avatarText  = '運';
+        isAdminRoom = true;
+      }
+    } else {
+      displayName = room.room_id;
+      avatarText  = room.room_id.charAt(0);
+      isAdminRoom = false;
+    }
+
+    const el = document.createElement('div');
+    el.className = `room-item ${currentRoomId === room.room_id ? 'active' : ''}`;
+    el.id = `room_${room.room_id}`;
+    el.onclick = () => openRoom(room.room_id, { name: displayName, isSupport, isAdminRoom });
+    el.innerHTML = `
+      <div class="room-avatar ${isAdminRoom ? 'support-av' : ''}" style="font-size:${isSupport&&!isAdmin?'0.7rem':'1.1rem'};">
+        ${isAdminRoom ? '<i class="fas fa-headset" style="color:white;font-size:1rem;"></i>' : avatarText}
+      </div>
+      <div class="room-meta">
+        <div class="room-name">${displayName}</div>
+        <div class="room-last">${lastMsg ? escHtml(lastMsg.message.substring(0,30)) + (lastMsg.message.length>30?'…':'') : 'まだメッセージはありません'}</div>
+      </div>
+      <div class="room-time">${lastMsg ? formatTimeShort(lastMsg.created_at) : ''}</div>
+      ${unread > 0 ? `<div class="unread-dot">${unread}</div>` : ''}
+    `;
+    list.appendChild(el);
+  });
+}
+
+// ═══════════════ OPEN ROOM ═══════════════
+function openRoom(roomId, meta = {}) {
+  currentRoomId   = roomId;
+  currentRoomMeta = meta;
+
+  // アクティブ状態更新
+  document.querySelectorAll('.room-item').forEach(el => el.classList.remove('active'));
+  const roomEl = document.getElementById(`room_${roomId}`);
+  if (roomEl) roomEl.classList.add('active');
+
+  // サイドバーを閉じる（モバイル）
+  document.getElementById('chatSidebar').classList.remove('open');
+
+  // ヘッダー設定
+  const isSupport  = meta.isSupport || roomId.startsWith('support');
+  const isAdminRoom = meta.isAdminRoom || false;
+  const headerName = meta.name || (isSupport ? (isAdmin ? 'サポート相談' : '運営サポート') : roomId);
+
+  const headerAv = document.getElementById('chatHeaderAv');
+  headerAv.className = `chat-header-av ${isAdminRoom || (isSupport&&!isAdmin) ? 'support-av' : ''}`;
+  headerAv.innerHTML = isAdminRoom
+    ? '<i class="fas fa-headset"></i>'
+    : (isSupport && isAdmin ? '<i class="fas fa-user"></i>' : headerName.charAt(0));
+
+  document.getElementById('chatHeaderName').textContent = headerName;
+  document.getElementById('chatHeaderSub').innerHTML    =
+    `<span class="online-dot"></span>${isSupport ? 'サポートチャット' : '取引チャット'}`;
+
+  // 表示切替
+  document.getElementById('chatEmpty').classList.add('hidden');
+  const chatContent = document.getElementById('chatContent');
+  chatContent.classList.remove('hidden');
+  chatContent.style.display = 'flex';
+
+  loadMessages();
+
+  // ポーリング（5秒ごとに更新）
+  clearInterval(pollTimer);
+  pollTimer = setInterval(loadMessages, 5000);
+}
+
+function closeChatContent() {
+  clearInterval(pollTimer);
+  currentRoomId = null;
+  document.getElementById('chatContent').style.display = 'none';
+  document.getElementById('chatEmpty').classList.remove('hidden');
+  document.querySelectorAll('.room-item').forEach(el => el.classList.remove('active'));
+}
+
+// ═══════════════ SUPPORT CHAT ═══════════════
+function openSupportChat() {
+  if (!currentUser) { document.getElementById('loginOverlay').classList.remove('hidden'); return; }
+  const roomId = `support_${currentUser.id}`;
+
+  // ルームがなければリストに追加
+  if (!allRooms.find(r => r.room_id === roomId)) {
+    allRooms.push({ room_id: roomId, room_type: 'support', messages: [] });
+    renderRoomList(allRooms);
+  }
+
+  openRoom(roomId, { name: '📢 運営サポート', isSupport: true, isAdminRoom: true });
+}
+
+// ═══════════════ LOAD MESSAGES ═══════════════
+async function loadMessages() {
+  if (!currentRoomId) return;
+  try {
+    const res  = await fetch('tables/chat_messages?limit=200');
+    const data = await res.json();
+    const msgs = (data.data || [])
+      .filter(m => m.room_id === currentRoomId)
+      .sort((a,b) => Number(a.created_at) - Number(b.created_at));
+
+    renderMessages(msgs);
+
+    // 既読にする（自分以外のメッセージ）
+    msgs.filter(m => !m.is_read && m.sender_id !== currentUser.id).forEach(m => {
+      fetch(`tables/chat_messages/${m.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_read: true }),
+      });
+    });
+
+    // サイドバーの未読を更新（バックグラウンド）
+    loadRooms();
+  } catch(e) { console.error(e); }
+}
+
+// ═══════════════ RENDER MESSAGES ═══════════════
+function renderMessages(msgs) {
+  const wrap = document.getElementById('messagesWrap');
+  const wasAtBottom = wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 80;
+
+  wrap.innerHTML = '';
+
+  if (msgs.length === 0) {
+    wrap.innerHTML = `
+      <div class="msg-system" style="margin:auto;">
+        <span style="margin-right:4px;"><i class="fas fa-paper-plane" style="font-size:0.85rem;"></i></span> チャットを開始しましょう！
+      </div>
+      <div class="msg-system">
+        ${currentRoomMeta.isAdminRoom
+          ? '運営スタッフが対応いたします。気軽にご相談ください。'
+          : '取引に関するご相談はこちらからどうぞ。'}
+      </div>`;
+    return;
+  }
+
+  let lastDate = '';
+  msgs.forEach(m => {
+    const msgDate = formatDateSimple(m.created_at);
+    if (msgDate !== lastDate) {
+      const sep = document.createElement('div');
+      sep.className = 'msg-date-sep';
+      sep.textContent = msgDate;
+      wrap.appendChild(sep);
+      lastDate = msgDate;
+    }
+
+    const isMine   = m.sender_id === currentUser.id;
+    const isAdminMsg = ADMIN_IDS.includes(m.sender_id) || m.sender_role === 'admin';
+
+    const row = document.createElement('div');
+    row.className = `msg-row ${isMine ? 'mine' : 'other'} ${isAdminMsg && isMine ? 'admin' : ''}`;
+
+    const avLetter = (m.sender_name || '?').charAt(0);
+    const avClass  = isAdminMsg ? 'admin-av' : 'user-av';
+
+    row.innerHTML = `
+      ${!isMine ? `<div class="msg-av ${avClass}">${isAdminMsg ? '<i class="fas fa-headset" style="font-size:0.9rem;"></i>' : avLetter}</div>` : ''}
+      <div class="msg-content">
+        ${!isMine ? `<div class="msg-name">${escHtml(m.sender_name || '?')}${isAdminMsg ? ' <span class="admin-badge">ADMIN</span>' : ''}</div>` : ''}
+        <div class="msg-bubble">${escHtml(m.message).replace(/\n/g,'<br/>')}</div>
+        <div class="msg-time">
+          ${formatTimeFull(m.created_at)}
+          ${isMine ? `<span class="msg-read">${m.is_read ? '既読' : '未読'}</span>` : ''}
+        </div>
+      </div>
+      ${isMine ? `<div class="msg-av ${avClass}" style="background:${isAdminMsg?'var(--coral)':'var(--navy)'};">${avLetter}</div>` : ''}
+    `;
+    wrap.appendChild(row);
+  });
+
+  // 新着メッセージがあれば下にスクロール
+  if (wasAtBottom) {
+    wrap.scrollTop = wrap.scrollHeight;
+  }
+}
+
+// ═══════════════ SEND MESSAGE ═══════════════
+async function sendMessage() {
+  if (!currentUser || !currentRoomId) return;
+  const input = document.getElementById('msgInput');
+  const text  = input.value.trim();
+  if (!text) return;
+
+  const btn   = document.getElementById('sendBtn');
+  btn.disabled = true;
+
+  const payload = {
+    room_id:     currentRoomId,
+    room_type:   currentRoomMeta.isSupport ? 'support' : 'trade',
+    sender_id:   currentUser.id,
+    sender_name: currentUser.name,
+    sender_role: isAdmin ? 'admin' : 'user',
+    message:     text,
+    is_read:     false,
+    listing_id:  '',
+  };
+
+  try {
+    await fetch('tables/chat_messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    input.value = '';
+    input.style.height = 'auto';
+    await loadMessages();
+    // サポートルームがリストにない場合は追加
+    if (!allRooms.find(r => r.room_id === currentRoomId)) {
+      allRooms.push({ room_id: currentRoomId, room_type: payload.room_type, messages: [payload] });
+    }
+    loadRooms();
+  } catch {
+    showToast('送信に失敗しました', 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ═══════════════ UI HELPERS ═══════════════
+function handleKeyDown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function insertEmoji() {
+  const emojis = ['😊','👋','📚','✅','🙏','💡','📌','👍','❓','⚡'];
+  const input  = document.getElementById('msgInput');
+  input.value += emojis[Math.floor(Math.random() * emojis.length)];
+  input.focus();
+}
+
+function toggleSidebar() {
+  document.getElementById('chatSidebar').classList.toggle('open');
+}
+
+function filterRooms() {
+  const q = document.getElementById('roomSearch').value.toLowerCase();
+  if (!q) { renderRoomList(allRooms); return; }
+  const filtered = allRooms.filter(r =>
+    r.room_id.toLowerCase().includes(q) ||
+    r.messages.some(m => m.message.toLowerCase().includes(q) || m.sender_name.toLowerCase().includes(q))
+  );
+  renderRoomList(filtered);
+}
+
+function refreshMessages() {
+  loadMessages();
+  showToast('更新しました');
+}
+
+function showLoginFromChat() {
+  document.getElementById('loginOverlay').classList.add('hidden');
+  openModal('loginModal');
+}
+
+// フォーマット関数
+function formatTimeShort(ts) {
+  if (!ts) return '';
+  const d = new Date(Number(ts));
+  const now = new Date();
+  if (d.toDateString() === now.toDateString()) {
+    return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+  }
+  return `${d.getMonth()+1}/${d.getDate()}`;
+}
+function formatTimeFull(ts) {
+  if (!ts) return '';
+  const d = new Date(Number(ts));
+  return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+}
+function formatDateSimple(ts) {
+  if (!ts) return '';
+  const d = new Date(Number(ts));
+  const now = new Date();
+  if (d.toDateString() === now.toDateString()) return '今日';
+  const yesterday = new Date(now); yesterday.setDate(now.getDate()-1);
+  if (d.toDateString() === yesterday.toDateString()) return '昨日';
+  return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+}
+
+// ログイン後リロード
+const _origLogin = window.handleLogin;
+</script>
+</body>
+</html>
