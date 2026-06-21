@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getListingById, getUserById } from "@/lib/mock-data";
+import { fetchListingById, fetchSellerProfile, type SellerProfile } from "@/lib/listings";
 import { conditionLabel, yen, formatDate } from "@/lib/labels";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/Toast";
+import type { Listing } from "@/lib/types";
 
 const LIKE_KEY = "tetomi_likes";
 const condTagMap: Record<string, { label: string; cls: string }> = {
@@ -27,8 +28,9 @@ export default function DetailPage() {
   const { user } = useAuth();
   const { showToast } = useToast();
 
-  const listing = getListingById(params.id);
-  const seller = listing ? getUserById(listing.seller_id) : undefined;
+  const [listing, setListing] = useState<Listing | null>(null);
+  const [seller, setSeller] = useState<SellerProfile | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const [liked, setLiked] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -42,6 +44,35 @@ export default function DetailPage() {
       /* noop */
     }
   }, [params.id]);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    fetchListingById(params.id).then(async (l) => {
+      if (!active) return;
+      setListing(l);
+      if (l) setSeller(await fetchSellerProfile(l.seller_id));
+      if (active) setLoading(false);
+    });
+    return () => {
+      active = false;
+    };
+  }, [params.id]);
+
+  if (loading) {
+    return (
+      <main className="page-main" style={{ background: "var(--bg-gray)", minHeight: "100vh" }}>
+        <div className="container">
+          <div className="empty-state">
+            <div className="empty-icon">
+              <i className="fas fa-spinner fa-spin" style={{ fontSize: "3rem", color: "var(--navy)", opacity: 0.4 }} />
+            </div>
+            <h3>読み込み中…</h3>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   if (!listing) {
     return (

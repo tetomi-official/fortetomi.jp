@@ -24,7 +24,6 @@ export default function Footer() {
           <h4>Info</h4>
           <Link href="/#about">TETOMIとは</Link>
           <Link href="/#faq">よくある質問</Link>
-          <Link href="/#service">使い方</Link>
         </div>
       </div>
       <div className="footer-bottom" style={{ maxWidth: "var(--max-w)", margin: "0 auto" }}>

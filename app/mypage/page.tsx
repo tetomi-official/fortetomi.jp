@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/Toast";
-import { getListings, mockReservations } from "@/lib/mock-data";
+import { mockReservations } from "@/lib/mock-data";
+import { fetchListings } from "@/lib/listings";
 import { reservationBadgeClass, yen } from "@/lib/labels";
+import type { Listing } from "@/lib/types";
 
 type Tab = "dashboard" | "myListings" | "sentRes" | "receivedRes" | "profile";
 const GRADES = ["1年", "2年", "3年", "4年", "院生"];
@@ -17,9 +19,19 @@ export default function MyPage() {
   const { showToast } = useToast();
   const [tab, setTab] = useState<Tab>("dashboard");
 
+  const [allListings, setAllListings] = useState<Listing[]>([]);
+  useEffect(() => {
+    let active = true;
+    fetchListings().then((data) => {
+      if (active) setAllListings(data);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
   const myListings = useMemo(
-    () => (user ? getListings().filter((l) => l.seller_id === user.id) : []),
-    [user],
+    () => (user ? allListings.filter((l) => l.seller_id === user.id) : []),
+    [user, allListings],
   );
   const sent = useMemo(
     () => (user ? mockReservations.filter((r) => r.buyer_id === user.id) : []),

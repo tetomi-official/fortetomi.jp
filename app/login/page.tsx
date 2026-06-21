@@ -9,28 +9,33 @@ import { mockUsers } from "@/lib/mock-data";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { loginOrCreate, loginAsDemo } = useAuth();
+  const { signIn, loginAsDemo } = useAuth();
   const { showToast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       showToast("メールアドレスとパスワードを入力してください", "error");
       return;
     }
-    // モック: 既存ユーザーがいればログイン。なければ仮ユーザーで通す。
-    const name = mockUsers.find((u) => u.email === email)?.name ?? email.split("@")[0];
-    loginOrCreate({ name, email });
+    setSubmitting(true);
+    const { error } = await signIn(email, password);
+    setSubmitting(false);
+    if (error) {
+      showToast("メールアドレスまたはパスワードが正しくありません", "error");
+      return;
+    }
     showToast("ログインしました", "success");
-    router.push("/listings");
+    router.push("/");
   };
 
   const demo = (id: string) => {
     loginAsDemo(id);
     showToast("デモユーザーでログインしました", "success");
-    router.push("/listings");
+    router.push("/");
   };
 
   return (
@@ -63,8 +68,13 @@ export default function LoginPage() {
               required
             />
           </div>
-          <button type="submit" className="btn-navy btn-full" style={{ marginTop: 6 }}>
-            <i className="fas fa-sign-in-alt" /> ログイン
+          <button
+            type="submit"
+            className="btn-navy btn-full"
+            style={{ marginTop: 6 }}
+            disabled={submitting}
+          >
+            <i className="fas fa-sign-in-alt" /> {submitting ? "ログイン中…" : "ログイン"}
           </button>
         </form>
 

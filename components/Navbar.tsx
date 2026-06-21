@@ -38,6 +38,10 @@ export default function Navbar() {
             <span className="link-en">Home</span>
             <span className="link-ja">トップ</span>
           </Link>
+          <Link href="/#about" className="nav-link-item">
+            <span className="link-en">About</span>
+            <span className="link-ja">TETOMIとは</span>
+          </Link>
           <Link href="/listings" className="nav-link-item">
             <span className="link-en">Books</span>
             <span className="link-ja">教科書一覧</span>
