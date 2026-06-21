@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { getListings } from "@/lib/mock-data";
+import { useEffect, useMemo, useState } from "react";
+import { fetchListings } from "@/lib/listings";
 import { conditionLabel, yen, CONDITION_OPTIONS } from "@/lib/labels";
 import ListingCard from "@/components/ListingCard";
+import { useAuth } from "@/lib/auth";
 import type { Listing } from "@/lib/types";
 
 const PAGE_SIZE = 12;
@@ -19,13 +20,29 @@ const PRICE_RANGES = [
 ];
 
 export default function ListingsPage() {
-  const all = useMemo(() => getListings().filter((l) => l.status === "出品中"), []);
+  const { user, ready } = useAuth();
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [loading, setLoading] = useState(true);
+  const all = useMemo(() => listings.filter((l) => l.status === "出品中"), [listings]);
   const [query, setQuery] = useState("");
   const [cond, setCond] = useState("");
   const [price, setPrice] = useState("");
   const [sort, setSort] = useState("newest");
   const [view, setView] = useState<"grid" | "list">("grid");
   const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    let active = true;
+    fetchListings().then((data) => {
+      if (active) {
+        setListings(data);
+        setLoading(false);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const filtered = useMemo(() => {
     let list = all.filter((item) => {
@@ -85,6 +102,42 @@ export default function ListingsPage() {
           </div>
           <h1>教科書一覧</h1>
           <p>GLOMAC内の出品教科書を検索・フィルター</p>
+          {ready &&
+            (user ? (
+              <p
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  marginTop: 12,
+                  padding: "6px 14px",
+                  borderRadius: 999,
+                  background: "rgba(255,255,255,0.12)",
+                  fontSize: 14,
+                  fontWeight: 600,
+                }}
+              >
+                <i className="fas fa-graduation-cap" /> {user.university} {user.faculty}
+              </p>
+            ) : (
+              <p
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  marginTop: 12,
+                  padding: "6px 14px",
+                  borderRadius: 999,
+                  background: "rgba(255,255,255,0.12)",
+                  fontSize: 14,
+                }}
+              >
+                <i className="fas fa-graduation-cap" /> ログインすると所属学部が表示されます{" "}
+                <Link href="/login" style={{ textDecoration: "underline", fontWeight: 600 }}>
+                  ログイン
+                </Link>
+              </p>
+            ))}
         </div>
       </div>
 
@@ -172,7 +225,14 @@ export default function ListingsPage() {
           </div>
 
           {/* LISTINGS */}
-          {pageItems.length === 0 ? (
+          {loading ? (
+            <div className="empty-state">
+              <div className="empty-icon">
+                <i className="fas fa-spinner fa-spin" style={{ fontSize: "3rem", color: "var(--navy)", opacity: 0.4 }} />
+              </div>
+              <h3>読み込み中…</h3>
+            </div>
+          ) : pageItems.length === 0 ? (
             <div className="empty-state">
               <div className="empty-icon">
                 <i className="fas fa-book-open" style={{ fontSize: "3rem", color: "var(--navy)", opacity: 0.25 }} />

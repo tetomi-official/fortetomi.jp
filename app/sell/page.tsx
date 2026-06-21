@@ -1,11 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/Toast";
 import { conditionLabel, yen, CONDITION_OPTIONS } from "@/lib/labels";
+import { createListing, uploadListingImages } from "@/lib/listings";
+import { lookupBook } from "@/lib/booklookup";
+import BarcodeScanner from "@/components/BarcodeScanner";
 import type { Condition } from "@/lib/types";
+
+const MIN_IMAGES = 2;
+const MAX_IMAGES = 5;
 
 const condIcon: Record<Condition, string> = {
   "新品・未使用": "fa-star",
@@ -26,18 +32,32 @@ export default function SellPage() {
 
   const [step, setStep] = useState(1);
   const [done, setDone] = useState(false);
-  const [images, setImages] = useState<string[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [looking, setLooking] = useState(false);
+  const [scanOpen, setScanOpen] = useState(false);
+  // 公式書影（参考表示。出品写真とは別物）。
+  const [coverRef, setCoverRef] = useState<string | null>(null);
+  // アップロード用に File を保持。プレビューは下の useEffect で生成。
+  const [files, setFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
   const [condition, setCondition] = useState<Condition | "">("");
   const [form, setForm] = useState({
     title: "",
     subject: "",
     author: "",
+    publisher: "",
     isbn: "",
     year: "",
     desc: "",
     price: "",
     location: "",
   });
+
+  useEffect(() => {
+    const urls = files.map((f) => URL.createObjectURL(f));
+    setPreviews(urls);
+    return () => urls.forEach((u) => URL.revokeObjectURL(u));
+  }, [files]);
 
   if (!ready) return <main className="page-main" style={{ background: "var(--bg-gray)" }} />;
 
@@ -68,26 +88,57 @@ export default function SellPage() {
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
 
-  const onFiles = (files: FileList | null) => {
-    if (!files) return;
-    const remaining = 5 - images.length;
+  const onFiles = (list: FileList | null) => {
+    if (!list) return;
+    const remaining = MAX_IMAGES - files.length;
     if (remaining <= 0) {
-      showToast("画像は最大5枚です", "warning");
+      showToast(`画像は最大${MAX_IMAGES}枚です`, "warning");
       return;
     }
-    Array.from(files)
-      .slice(0, remaining)
-      .forEach((file) => {
-        if (!file.type.startsWith("image/")) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => setImages((prev) => [...prev, ev.target?.result as string]);
-        reader.readAsDataURL(file);
-      });
+    const picked = Array.from(list)
+      .filter((f) => f.type.startsWith("image/"))
+      .slice(0, remaining);
+    if (picked.length) setFiles((prev) => [...prev, ...picked]);
+  };
+
+  // ISBN から書誌情報（書名・著者・出版社・出版年・公式書影）を自動入力する（PB-018 ①）。
+  // isbnArg を渡すとその値で検索（バーコード読取からの即時呼び出し用。state 反映を待たない）。
+  const lookupIsbn = async (isbnArg?: string) => {
+    const isbn = (isbnArg ?? form.isbn).trim();
+    if (!isbn) {
+      showToast("ISBNを入力してください", "error");
+      return;
+    }
+    setLooking(true);
+    try {
+      const meta = await lookupBook(isbn);
+      if (!meta) {
+        showToast("該当する書籍が見つかりませんでした。手入力してください。", "warning");
+        return;
+      }
+      setForm((f) => ({
+        ...f,
+        title: meta.title ?? f.title,
+        author: meta.author ?? f.author,
+        publisher: meta.publisher ?? f.publisher,
+        year: meta.publication_year ?? f.year,
+      }));
+      setCoverRef(meta.cover_url ?? null);
+      showToast("書誌情報を自動入力しました。内容をご確認ください。", "success");
+    } catch {
+      showToast("取得に失敗しました。時間をおいて再度お試しください。", "error");
+    } finally {
+      setLooking(false);
+    }
   };
 
   const goStep = (n: number) => {
     if (n > 1 && (!form.title.trim() || !form.subject.trim())) {
       showToast("タイトルと授業名を入力してください", "error");
+      return;
+    }
+    if (n > 1 && files.length < MIN_IMAGES) {
+      showToast(`写真を${MIN_IMAGES}枚以上（表紙・裏表紙）追加してください`, "error");
       return;
     }
     if (n > 2) {
@@ -108,10 +159,47 @@ export default function SellPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const submit = () => {
-    setDone(true);
-    showToast("出品が完了しました！", "success");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  const submit = async () => {
+    if (submitting) return;
+    if (!condition) {
+      showToast("教科書の状態を選択してください", "error");
+      return;
+    }
+    if (files.length < MIN_IMAGES) {
+      showToast(`写真を${MIN_IMAGES}枚以上追加してください`, "error");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const imageUrls = await uploadListingImages(files, user.id);
+      const { error } = await createListing(
+        {
+          title: form.title.trim(),
+          subject: form.subject.trim(),
+          author: form.author.trim(),
+          publisher: form.publisher.trim(),
+          isbn: form.isbn.trim(),
+          publication_year: form.year.trim(),
+          description: form.desc.trim(),
+          condition,
+          price: Number(form.price),
+          location: form.location.trim(),
+          image_urls: imageUrls,
+        },
+        user.id,
+      );
+      if (error) {
+        showToast("出品に失敗しました。時間をおいて再度お試しください。", "error");
+        return;
+      }
+      setDone(true);
+      showToast("出品が完了しました！", "success");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "出品に失敗しました", "error");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const previewCond = condition ? conditionLabel(condition) : null;
@@ -184,14 +272,71 @@ export default function SellPage() {
                     </div>
                     <div className="form-row">
                       <div className="form-group">
+                        <label>出版社</label>
+                        <input type="text" placeholder="例：〇〇出版" value={form.publisher} onChange={set("publisher")} />
+                      </div>
+                      <div className="form-group">
+                        <label>カテゴリ</label>
+                        <input type="text" value="教科書" disabled readOnly />
+                        <p className="form-hint">現在は「教科書」のみ対応しています。</p>
+                      </div>
+                    </div>
+                    <div className="form-row">
+                      <div className="form-group">
                         <label>ISBN</label>
-                        <input type="text" placeholder="978-4-XXXXXXXX" value={form.isbn} onChange={set("isbn")} />
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <input
+                            type="text"
+                            placeholder="978-4-XXXXXXXX"
+                            value={form.isbn}
+                            onChange={set("isbn")}
+                            style={{ flex: 1 }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setScanOpen(true)}
+                            className="btn-outline"
+                            style={{ whiteSpace: "nowrap", flexShrink: 0 }}
+                            title="カメラでバーコードを読み取る"
+                          >
+                            <i className="fas fa-barcode" /> スキャン
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => lookupIsbn()}
+                            disabled={looking}
+                            className="btn-outline"
+                            style={{ whiteSpace: "nowrap", flexShrink: 0 }}
+                          >
+                            {looking ? (
+                              <>
+                                <i className="fas fa-spinner fa-spin" /> 取得中…
+                              </>
+                            ) : (
+                              <>
+                                <i className="fas fa-magic" /> 自動入力
+                              </>
+                            )}
+                          </button>
+                        </div>
+                        <p className="form-hint">バーコードをスキャン、またはISBNを入力して書誌情報を自動入力します。</p>
                       </div>
                       <div className="form-group">
                         <label>出版年</label>
                         <input type="text" placeholder="例：2022" value={form.year} onChange={set("year")} />
                       </div>
                     </div>
+                    {coverRef && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: 12, background: "var(--bg-light)", borderRadius: "var(--r)", marginBottom: 4 }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={coverRef} alt="公式書影" style={{ width: 44, height: 60, objectFit: "cover", borderRadius: 4, flexShrink: 0 }} />
+                        <div style={{ fontSize: 12, color: "var(--text-muted)", lineHeight: 1.6 }}>
+                          参考：自動取得した公式書影です。
+                          <br />
+                          出品写真には実物の写真を別途アップロードしてください。
+                        </div>
+                      </div>
+                    )}
                     <div className="form-group">
                       <label>コメント</label>
                       <textarea
@@ -204,25 +349,27 @@ export default function SellPage() {
                   </div>
 
                   <div className="form-card">
-                    <h2>02 — 写真（任意）</h2>
+                    <h2>02 — 写真（必須・2枚以上）</h2>
                     <div className="img-upload-area">
                       <input type="file" accept="image/*" multiple onChange={(e) => onFiles(e.target.files)} />
                       <i className="fas fa-camera upload-icon" />
                       <p>
                         クリックまたはドラッグして画像を追加
                         <br />
-                        <small style={{ fontSize: 11, opacity: 0.7 }}>JPG・PNG・WEBP 最大5枚</small>
+                        <small style={{ fontSize: 11, opacity: 0.7 }}>
+                          表紙・裏表紙を含め{MIN_IMAGES}枚以上（最大{MAX_IMAGES}枚）／ JPG・PNG・WEBP
+                        </small>
                       </p>
                     </div>
-                    {images.length > 0 && (
+                    {previews.length > 0 && (
                       <div className="preview-grid">
-                        {images.map((src, i) => (
+                        {previews.map((src, i) => (
                           <div className="preview-thumb" key={i}>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={src} alt={`preview ${i + 1}`} />
                             <button
                               type="button"
-                              onClick={() => setImages((p) => p.filter((_, idx) => idx !== i))}
+                              onClick={() => setFiles((p) => p.filter((_, idx) => idx !== i))}
                               title="削除"
                             >
                               <i className="fas fa-times" />
@@ -312,9 +459,9 @@ export default function SellPage() {
                     <h2>05 — 出品内容の確認</h2>
                     <div className="live-preview">
                       <div className="preview-img-box">
-                        {images[0] ? (
+                        {previews[0] ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={images[0]} alt="プレビュー" />
+                          <img src={previews[0]} alt="プレビュー" />
                         ) : (
                           <i className="fas fa-book" style={{ color: "var(--navy)", opacity: 0.3 }} />
                         )}
@@ -362,10 +509,18 @@ export default function SellPage() {
                   </div>
 
                   <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                    <button onClick={submit} className="btn-navy btn-full" style={{ padding: 16, fontSize: 16 }}>
-                      <i className="fas fa-plus-circle" /> 出品する
+                    <button onClick={submit} disabled={submitting} className="btn-navy btn-full" style={{ padding: 16, fontSize: 16 }}>
+                      {submitting ? (
+                        <>
+                          <i className="fas fa-spinner fa-spin" /> 出品中…
+                        </>
+                      ) : (
+                        <>
+                          <i className="fas fa-plus-circle" /> 出品する
+                        </>
+                      )}
                     </button>
-                    <button onClick={() => goStep(2)} className="btn-outline btn-full">
+                    <button onClick={() => goStep(2)} disabled={submitting} className="btn-outline btn-full">
                       <i className="fas fa-arrow-left" /> 修正する
                     </button>
                   </div>
@@ -375,6 +530,17 @@ export default function SellPage() {
           )}
         </div>
       </main>
+
+      {scanOpen && (
+        <BarcodeScanner
+          onClose={() => setScanOpen(false)}
+          onDetected={(isbn) => {
+            setScanOpen(false);
+            setForm((f) => ({ ...f, isbn }));
+            void lookupIsbn(isbn);
+          }}
+        />
+      )}
     </>
   );
 }

@@ -1,52 +1,121 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/Toast";
-
-const GRADES = ["1年", "2年", "3年", "4年", "院生"];
+import {
+  ALLOWED_EMAIL_DOMAIN,
+  FACULTIES,
+  GENDERS,
+  GRADES,
+  UNIVERSITY_NAME,
+  isAllowedEmail,
+  isValidEmail,
+} from "@/lib/constants";
 
 export default function SignupPage() {
-  const router = useRouter();
-  const { loginOrCreate } = useAuth();
+  const { signUp } = useAuth();
   const { showToast } = useToast();
 
   const [form, setForm] = useState({
     name: "",
-    email: "",
+    universityEmail: "",
+    personalEmail: "",
     password: "",
-    university: "GLOMAC大学",
+    passwordConfirm: "",
     faculty: "",
     grade: "3年",
+    gender: "",
   });
   const [agree, setAgree] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [sentTo, setSentTo] = useState<string | null>(null);
 
-  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-    setForm((f) => ({ ...f, [k]: e.target.value }));
+  const set =
+    (k: keyof typeof form) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+      setForm((f) => ({ ...f, [k]: e.target.value }));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.password) {
+    if (
+      !form.name ||
+      !form.universityEmail ||
+      !form.personalEmail ||
+      !form.password ||
+      !form.faculty ||
+      !form.gender
+    ) {
       showToast("必須項目を入力してください", "error");
+      return;
+    }
+    if (!isAllowedEmail(form.universityEmail)) {
+      showToast(`大学メールは @${ALLOWED_EMAIL_DOMAIN} のアドレスのみ登録できます`, "error");
+      return;
+    }
+    if (!isValidEmail(form.personalEmail)) {
+      showToast("個人メールアドレスの形式が正しくありません", "error");
+      return;
+    }
+    if (form.password.length < 8) {
+      showToast("パスワードは8文字以上にしてください", "error");
+      return;
+    }
+    if (form.password !== form.passwordConfirm) {
+      showToast("パスワードが一致しません", "error");
       return;
     }
     if (!agree) {
       showToast("利用規約への同意が必要です", "error");
       return;
     }
-    // モック: 在籍確認メール送信は要件フェーズで Supabase Auth に委譲予定。
-    loginOrCreate({
+
+    setSubmitting(true);
+    const { error, needsConfirm } = await signUp({
       name: form.name,
-      email: form.email,
-      university: form.university,
+      universityEmail: form.universityEmail,
+      personalEmail: form.personalEmail,
+      password: form.password,
+      university: UNIVERSITY_NAME,
       faculty: form.faculty,
       grade: form.grade,
+      gender: form.gender,
     });
-    showToast(`登録完了！ようこそ ${form.name} さん`, "success");
-    router.push("/listings");
+    setSubmitting(false);
+    if (error) {
+      showToast(error, "error");
+      return;
+    }
+    if (needsConfirm) {
+      setSentTo(form.universityEmail);
+      return;
+    }
+    showToast(`登録を受け付けました`, "success");
   };
+
+  // 確認メール送信後（大学メール宛）の画面
+  if (sentTo) {
+    return (
+      <main className="auth-page">
+        <div className="auth-card">
+          <div className="auth-logo">TETOMI</div>
+          <h1 className="auth-title">大学メールを確認してください</h1>
+          <p className="auth-sub">
+            在籍確認のため、<strong>{sentTo}</strong> 宛に確認メールを送りました。
+            <br />
+            メール内のリンクを開くと、次に個人メールの登録に進みます。
+          </p>
+          <p className="auth-note">
+            メールが届かない場合は迷惑メールフォルダをご確認ください。リンクの有効期限が切れた場合は、お手数ですが再度登録してください。
+          </p>
+          <div className="auth-switch">
+            すでに登録済みの方は <Link href="/login">ログイン</Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="auth-page">
@@ -54,9 +123,9 @@ export default function SignupPage() {
         <div className="auth-logo">TETOMI</div>
         <h1 className="auth-title">新規登録</h1>
         <p className="auth-sub">
-          GLOMACの大学メールアドレスで登録してください。
+          {UNIVERSITY_NAME}の在学生向けサービスです。
           <br />
-          在籍確認のため確認メールを送信します（予定）。
+          在籍確認のため、大学メール宛に確認メールを送信します。
         </p>
 
         <form onSubmit={handleSubmit}>
@@ -71,17 +140,31 @@ export default function SignupPage() {
               required
             />
           </div>
+
           <div className="form-group required">
-            <label>大学メールアドレス</label>
+            <label>大学メールアドレス（在籍確認用）</label>
             <input
               type="email"
-              autoComplete="email"
-              placeholder="example@glomac.ac.jp"
-              value={form.email}
-              onChange={set("email")}
+              autoComplete="off"
+              placeholder={`example@${ALLOWED_EMAIL_DOMAIN}`}
+              value={form.universityEmail}
+              onChange={set("universityEmail")}
               required
             />
           </div>
+
+          <div className="form-group required">
+            <label>個人メールアドレス（ログイン用）</label>
+            <input
+              type="email"
+              autoComplete="email"
+              placeholder="example@gmail.com"
+              value={form.personalEmail}
+              onChange={set("personalEmail")}
+              required
+            />
+          </div>
+
           <div className="form-group required">
             <label>パスワード</label>
             <input
@@ -93,14 +176,40 @@ export default function SignupPage() {
               required
             />
           </div>
+          <div className="form-group required">
+            <label>パスワード（確認）</label>
+            <input
+              type="password"
+              autoComplete="new-password"
+              placeholder="もう一度入力"
+              value={form.passwordConfirm}
+              onChange={set("passwordConfirm")}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label>大学名</label>
+            <input type="text" value={UNIVERSITY_NAME} readOnly disabled />
+          </div>
+
           <div className="form-row">
-            <div className="form-group">
+            <div className="form-group required">
               <label>学部</label>
-              <input type="text" placeholder="工学部" value={form.faculty} onChange={set("faculty")} />
+              <select value={form.faculty} onChange={set("faculty")} required>
+                <option value="" disabled>
+                  選択してください
+                </option>
+                {FACULTIES.map((f) => (
+                  <option key={f} value={f}>
+                    {f}
+                  </option>
+                ))}
+              </select>
             </div>
-            <div className="form-group">
+            <div className="form-group required">
               <label>学年</label>
-              <select value={form.grade} onChange={set("grade")}>
+              <select value={form.grade} onChange={set("grade")} required>
                 {GRADES.map((g) => (
                   <option key={g} value={g}>
                     {g}
@@ -108,6 +217,20 @@ export default function SignupPage() {
                 ))}
               </select>
             </div>
+          </div>
+
+          <div className="form-group required">
+            <label>性別</label>
+            <select value={form.gender} onChange={set("gender")} required>
+              <option value="" disabled>
+                選択してください
+              </option>
+              {GENDERS.map((g) => (
+                <option key={g} value={g}>
+                  {g}
+                </option>
+              ))}
+            </select>
           </div>
 
           <label className="checkbox-row">
@@ -124,13 +247,13 @@ export default function SignupPage() {
             </span>
           </label>
 
-          <button type="submit" className="btn-navy btn-full">
-            <i className="fas fa-user-plus" /> 登録する
+          <button type="submit" className="btn-navy btn-full" disabled={submitting}>
+            <i className="fas fa-user-plus" /> {submitting ? "送信中…" : "登録する"}
           </button>
         </form>
 
         <p className="auth-note">
-          在籍担保を最優先とし、許可された大学ドメイン（@xxx.ac.jp）のみ受け付ける設計方針です。新規登録パスワード欄は autocomplete=&quot;new-password&quot; を付与しています。
+          大学メールは在籍確認のためだけに使用します。確認後はログイン用の個人メールに切り替わります。許可ドメイン（@{ALLOWED_EMAIL_DOMAIN}）のみ受け付けます。
         </p>
 
         <div className="auth-switch">
