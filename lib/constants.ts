@@ -18,6 +18,22 @@ export const FACULTIES = [
   "国際情報学部",
 ] as const;
 
+/**
+ * 受け渡し場所（PB-025）。学部ごとの受け渡し場所を自動表示する。
+ * 現状は学部別マスタが未確定のため、全学部 Forest Gateway 3F に固定。
+ * 学部別に分ける際は PICKUP_LOCATIONS に { 学部名: 場所 } を追加する。
+ */
+export const DEFAULT_PICKUP_LOCATION = "Forest Gateway 3F";
+export const PICKUP_LOCATIONS: Record<string, string> = {
+  // 例) "経済学部": "○○棟 1F", "理工学部": "△△ホール"
+};
+
+/** ユーザーの学部から受け渡し場所を解決（未定義の学部は既定値）。 */
+export function pickupLocationForFaculty(faculty?: string | null): string {
+  if (faculty && PICKUP_LOCATIONS[faculty]) return PICKUP_LOCATIONS[faculty];
+  return DEFAULT_PICKUP_LOCATION;
+}
+
 /** 学年 */
 export const GRADES = ["1年", "2年", "3年", "4年", "院生"] as const;
 

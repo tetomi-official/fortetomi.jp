@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   countActiveListings,
   countActiveListingsByFaculty,
-  fetchListings,
+  fetchNewestListings,
 } from "@/lib/listings";
 import { useAuth } from "@/lib/auth";
 import type { Listing } from "@/lib/types";
@@ -75,9 +75,9 @@ export default function HomePage() {
   // 新着4件（出品中のみ）
   useEffect(() => {
     let active = true;
-    fetchListings().then((data) => {
-      if (!active) return;
-      setNewest(data.filter((l) => l.status === "出品中").slice(0, 4));
+    // 未ログインでも数字・新着を出すため RPC 経由（出品中＆在籍有効を上位4件）。
+    fetchNewestListings(4).then((data) => {
+      if (active) setNewest(data);
     });
     return () => {
       active = false;
@@ -282,37 +282,6 @@ export default function HomePage() {
                 <div className="faq-a">{f.a}</div>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA FINAL */}
-      <section className="cta-final">
-        <div className="cta-final-inner">
-          <p className="cta-final-label">Get Started</p>
-          <div className="cta-items">
-            <div className="cta-item">
-              <div className="cta-item-img cta-img-sell">📤</div>
-              <div className="cta-item-text">
-                <h3>教科書を出品する</h3>
-                <p>
-                  不要になった教科書を出品して、後輩や同期の役に立てましょう。写真を撮って情報を入力するだけ、3分で完了。
-                </p>
-                <Link href="/sell" className="btn-navy" style={{ alignSelf: "flex-start" }}>
-                  <i className="fas fa-plus" /> 出品する
-                </Link>
-              </div>
-            </div>
-            <div className="cta-item">
-              <div className="cta-item-img cta-img-buy">🔍</div>
-              <div className="cta-item-text">
-                <h3>教科書を探す</h3>
-                <p>授業名や教科書タイトルで検索。価格や状態でフィルターして、欲しい本を最短で見つけよう。</p>
-                <Link href="/listings" className="btn-coral" style={{ alignSelf: "flex-start" }}>
-                  <i className="fas fa-search" /> 教科書を探す
-                </Link>
-              </div>
-            </div>
           </div>
         </div>
       </section>

@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/Toast";
 import { conditionLabel, yen, CONDITION_OPTIONS } from "@/lib/labels";
-import { createListing, uploadListingImages } from "@/lib/listings";
+import { createListing, updateListing, uploadListingImages, fetchListingById } from "@/lib/listings";
 import { lookupBook } from "@/lib/booklookup";
 import BarcodeScanner from "@/components/BarcodeScanner";
 import type { Condition } from "@/lib/types";
@@ -27,7 +27,7 @@ const condDesc: Record<Condition, string> = {
 };
 
 export default function SellPage() {
-  const { user, ready } = useAuth();
+  const { user, ready, enrollmentActive } = useAuth();
   const { showToast } = useToast();
 
   const [step, setStep] = useState(1);
@@ -40,6 +40,10 @@ export default function SellPage() {
   // アップロード用に File を保持。プレビューは下の useEffect で生成。
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
+  // 編集モード：?edit=ID。既存の画像は URL で保持し、追加分だけ File をアップロードする。
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editLoading, setEditLoading] = useState(false);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
   const [condition, setCondition] = useState<Condition | "">("");
   const [form, setForm] = useState({
     title: "",
@@ -58,6 +62,36 @@ export default function SellPage() {
     setPreviews(urls);
     return () => urls.forEach((u) => URL.revokeObjectURL(u));
   }, [files]);
+
+  // 編集モード：?edit=ID があれば既存出品を読み込みフォームへプリフィルする。
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("edit");
+    if (!id) return;
+    setEditId(id);
+    setEditLoading(true);
+    fetchListingById(id).then((l) => {
+      if (!l) {
+        setEditLoading(false);
+        showToast("編集対象の出品が見つかりませんでした", "error");
+        return;
+      }
+      setForm({
+        title: l.title,
+        subject: l.subject,
+        author: l.author ?? "",
+        publisher: l.publisher ?? "",
+        isbn: l.isbn ?? "",
+        year: l.publication_year ?? "",
+        desc: l.description ?? "",
+        price: String(l.price),
+        location: l.location,
+      });
+      setCondition(l.condition);
+      setExistingImages(l.image_urls ?? []);
+      setEditLoading(false);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!ready) return <main className="page-main" style={{ background: "var(--bg-gray)" }} />;
 
@@ -85,12 +119,39 @@ export default function SellPage() {
     );
   }
 
+  // ログイン済みでも在籍が失効していれば出品不可。再認証へ誘導する。
+  if (!enrollmentActive) {
+    return (
+      <>
+        <SellHeader />
+        <main className="page-main" style={{ background: "var(--bg-gray)" }}>
+          <div className="sell-container">
+            <div className="form-card" style={{ textAlign: "center", padding: "48px 32px" }}>
+              <div style={{ fontSize: "3rem", marginBottom: 16 }}>📧</div>
+              <h3 style={{ fontSize: "1.3rem", fontWeight: 800, color: "var(--navy)", marginBottom: 12 }}>
+                大学メールの再認証が必要です
+              </h3>
+              <p style={{ color: "var(--text-muted)", fontSize: 14, lineHeight: 1.9, marginBottom: 24 }}>
+                新年度の在籍確認のため、大学メールでの再認証が必要です。
+                <br />
+                再認証が完了すると出品できるようになります。
+              </p>
+              <Link href="/reverify" className="btn-navy">
+                <i className="fas fa-paper-plane" /> 再認証する
+              </Link>
+            </div>
+          </div>
+        </main>
+      </>
+    );
+  }
+
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
 
   const onFiles = (list: FileList | null) => {
     if (!list) return;
-    const remaining = MAX_IMAGES - files.length;
+    const remaining = MAX_IMAGES - existingImages.length - files.length;
     if (remaining <= 0) {
       showToast(`画像は最大${MAX_IMAGES}枚です`, "warning");
       return;
@@ -137,7 +198,7 @@ export default function SellPage() {
       showToast("タイトルと授業名を入力してください", "error");
       return;
     }
-    if (n > 1 && files.length < MIN_IMAGES) {
+    if (n > 1 && existingImages.length + files.length < MIN_IMAGES) {
       showToast(`写真を${MIN_IMAGES}枚以上（表紙・裏表紙）追加してください`, "error");
       return;
     }
@@ -165,38 +226,43 @@ export default function SellPage() {
       showToast("教科書の状態を選択してください", "error");
       return;
     }
-    if (files.length < MIN_IMAGES) {
+    if (existingImages.length + files.length < MIN_IMAGES) {
       showToast(`写真を${MIN_IMAGES}枚以上追加してください`, "error");
       return;
     }
     setSubmitting(true);
     try {
-      const imageUrls = await uploadListingImages(files, user.id);
-      const { error } = await createListing(
-        {
-          title: form.title.trim(),
-          subject: form.subject.trim(),
-          author: form.author.trim(),
-          publisher: form.publisher.trim(),
-          isbn: form.isbn.trim(),
-          publication_year: form.year.trim(),
-          description: form.desc.trim(),
-          condition,
-          price: Number(form.price),
-          location: form.location.trim(),
-          image_urls: imageUrls,
-        },
-        user.id,
-      );
+      // 追加された File だけアップロードし、残した既存画像URLと結合する。
+      const uploaded = files.length ? await uploadListingImages(files) : [];
+      const imageUrls = [...existingImages, ...uploaded];
+      const payload = {
+        title: form.title.trim(),
+        subject: form.subject.trim(),
+        author: form.author.trim(),
+        publisher: form.publisher.trim(),
+        isbn: form.isbn.trim(),
+        publication_year: form.year.trim(),
+        description: form.desc.trim(),
+        condition,
+        price: Number(form.price),
+        location: form.location.trim(),
+        image_urls: imageUrls,
+      };
+      const { error } = editId
+        ? await updateListing(editId, payload)
+        : await createListing(payload, user.id);
       if (error) {
-        showToast("出品に失敗しました。時間をおいて再度お試しください。", "error");
+        showToast(
+          editId ? "更新に失敗しました。時間をおいて再度お試しください。" : "出品に失敗しました。時間をおいて再度お試しください。",
+          "error",
+        );
         return;
       }
       setDone(true);
-      showToast("出品が完了しました！", "success");
+      showToast(editId ? "出品を更新しました！" : "出品が完了しました！", "success");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e) {
-      showToast(e instanceof Error ? e.message : "出品に失敗しました", "error");
+      showToast(e instanceof Error ? e.message : editId ? "更新に失敗しました" : "出品に失敗しました", "error");
     } finally {
       setSubmitting(false);
     }
@@ -206,7 +272,7 @@ export default function SellPage() {
 
   return (
     <>
-      <SellHeader />
+      <SellHeader editing={!!editId} />
       <main className="page-main" style={{ background: "var(--bg-gray)" }}>
         <div className="sell-container">
           {done ? (
@@ -215,10 +281,10 @@ export default function SellPage() {
                 <i className="fas fa-check-circle" />
               </div>
               <h2 style={{ fontSize: "1.5rem", fontWeight: 900, color: "var(--navy)", marginBottom: 12, border: "none", padding: 0 }}>
-                出品が完了しました！
+                {editId ? "出品を更新しました！" : "出品が完了しました！"}
               </h2>
               <p style={{ color: "var(--text-muted)", fontSize: 14, lineHeight: 1.8, marginBottom: 32 }}>
-                出品が正常に登録されました。
+                {editId ? "変更内容が保存されました。" : "出品が正常に登録されました。"}
                 <br />
                 購入希望が届き次第、マイページに通知されます。
               </p>
@@ -230,6 +296,11 @@ export default function SellPage() {
                   <i className="fas fa-user" /> マイページ
                 </Link>
               </div>
+            </div>
+          ) : editLoading ? (
+            <div className="form-card" style={{ textAlign: "center", padding: "56px 32px" }}>
+              <i className="fas fa-spinner fa-spin" style={{ fontSize: "2rem", color: "var(--navy)", opacity: 0.5 }} />
+              <p style={{ color: "var(--text-muted)", fontSize: 14, marginTop: 16 }}>出品内容を読み込み中…</p>
             </div>
           ) : (
             <>
@@ -361,10 +432,23 @@ export default function SellPage() {
                         </small>
                       </p>
                     </div>
-                    {previews.length > 0 && (
+                    {(existingImages.length > 0 || previews.length > 0) && (
                       <div className="preview-grid">
+                        {existingImages.map((src, i) => (
+                          <div className="preview-thumb" key={`exist-${i}`}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={src} alt={`existing ${i + 1}`} />
+                            <button
+                              type="button"
+                              onClick={() => setExistingImages((p) => p.filter((_, idx) => idx !== i))}
+                              title="削除"
+                            >
+                              <i className="fas fa-times" />
+                            </button>
+                          </div>
+                        ))}
                         {previews.map((src, i) => (
-                          <div className="preview-thumb" key={i}>
+                          <div className="preview-thumb" key={`new-${i}`}>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={src} alt={`preview ${i + 1}`} />
                             <button
@@ -418,7 +502,7 @@ export default function SellPage() {
                       <div className="form-group required">
                         <label>価格（円）</label>
                         <input type="number" min={0} max={99999} placeholder="例：800" value={form.price} onChange={set("price")} />
-                        <p className="form-hint">手数料ゼロ。この金額がそのままあなたの利益です。</p>
+                        <p className="form-hint">販売価格の10%が手数料として差し引かれます。</p>
                       </div>
                       <div className="form-group required">
                         <label>受け渡し希望場所</label>
@@ -431,8 +515,9 @@ export default function SellPage() {
                         <div className="price-preview-val">{form.price ? yen(Number(form.price)) : "¥ —"}</div>
                       </div>
                       <div style={{ textAlign: "right" }}>
-                        <div className="price-note">
-                          <i className="fas fa-check-circle" /> 手数料ゼロ
+                        <div className="price-preview-label">受け取り額（手数料10%差引）</div>
+                        <div className="price-preview-val">
+                          {form.price ? yen(Math.floor(Number(form.price) * 0.9)) : "¥ —"}
                         </div>
                         <div className="price-note">
                           <i className="fas fa-check-circle" /> 送料ゼロ
@@ -459,9 +544,9 @@ export default function SellPage() {
                     <h2>05 — 出品内容の確認</h2>
                     <div className="live-preview">
                       <div className="preview-img-box">
-                        {previews[0] ? (
+                        {(previews[0] ?? existingImages[0]) ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={previews[0]} alt="プレビュー" />
+                          <img src={previews[0] ?? existingImages[0]} alt="プレビュー" />
                         ) : (
                           <i className="fas fa-book" style={{ color: "var(--navy)", opacity: 0.3 }} />
                         )}
@@ -512,11 +597,11 @@ export default function SellPage() {
                     <button onClick={submit} disabled={submitting} className="btn-navy btn-full" style={{ padding: 16, fontSize: 16 }}>
                       {submitting ? (
                         <>
-                          <i className="fas fa-spinner fa-spin" /> 出品中…
+                          <i className="fas fa-spinner fa-spin" /> {editId ? "更新中…" : "出品中…"}
                         </>
                       ) : (
                         <>
-                          <i className="fas fa-plus-circle" /> 出品する
+                          <i className={`fas ${editId ? "fa-save" : "fa-plus-circle"}`} /> {editId ? "更新する" : "出品する"}
                         </>
                       )}
                     </button>
@@ -545,17 +630,21 @@ export default function SellPage() {
   );
 }
 
-function SellHeader() {
+function SellHeader({ editing = false }: { editing?: boolean }) {
   return (
     <div className="page-header">
       <div className="page-header-inner">
         <div className="breadcrumb">
           <Link href="/">Home</Link>
           <i className="fas fa-chevron-right" style={{ fontSize: 9 }} />
-          <span>出品する</span>
+          <span>{editing ? "出品を編集する" : "出品する"}</span>
         </div>
-        <h1>教科書を出品する</h1>
-        <p>不要になった教科書を出品して、後輩・同期に繋げましょう</p>
+        <h1>{editing ? "出品内容を編集する" : "教科書を出品する"}</h1>
+        <p>
+          {editing
+            ? "登録済みの内容を編集できます。変更後「更新する」を押してください。"
+            : "不要になった教科書を出品して、後輩・同期に繋げましょう"}
+        </p>
       </div>
     </div>
   );

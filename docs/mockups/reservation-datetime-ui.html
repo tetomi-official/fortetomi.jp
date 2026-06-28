@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>購入希望 日時提示UI 比較モック（PO検討用）</title>
+<style>
+  /* ===========================================================
+     fortetomi.jp ブランドトークン（app/globals.css と同値）。
+     色やラベルを変えたいときはこの :root と、下の MOCK DATA を
+     いじれば見た目が即反映されます。PO が触りやすいよう全部
+     1 ファイルに収めています（ビルド不要・ブラウザで直接開けます）。
+     =========================================================== */
+  :root{
+    --navy:#14314A; --navy-mid:#1c3f5c; --navy-light:#1e4a6e; --navy-dark:#0d2035;
+    --coral:#1c3f5c; --bg-gray:#E6E7E9; --text-muted:#7a93a5;
+    --border:#d0d5d9; --border-light:#e8eaec; --white:#fff;
+    --ok:#10b981; --warn:#f59e0b; --bad:#ef4444;
+    --font:'Noto Sans JP',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --font-en:'Raleway','Noto Sans JP',sans-serif;
+    --radius:14px; --shadow:0 6px 24px rgba(20,49,74,.10);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg-gray);color:var(--navy);font-family:var(--font);line-height:1.6;}
+  .wrap{max-width:1180px;margin:0 auto;padding:32px 20px 80px;}
+  h1{font-size:1.7rem;margin:0 0 4px;}
+  h2{font-size:1.2rem;margin:40px 0 14px;padding-left:12px;border-left:5px solid var(--navy);}
+  .lead{color:var(--text-muted);font-size:.95rem;margin:0 0 8px;}
+  .pill{display:inline-block;font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--navy);color:#fff;margin-right:6px;}
+  .pill.alt{background:var(--ok);}
+
+  /* ---------- メリデメ比較 ---------- */
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  @media(max-width:760px){.compare{grid-template-columns:1fr;}}
+  .ccard{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;border-top:5px solid var(--navy);}
+  .ccard.b{border-top-color:var(--ok);}
+  .ccard h3{margin:0;padding:16px 18px 12px;font-size:1.05rem;}
+  .ccard .tag{font-size:.72rem;font-weight:700;color:#fff;background:var(--navy);padding:2px 8px;border-radius:6px;margin-left:6px;vertical-align:middle;}
+  .ccard.b .tag{background:var(--ok);}
+  .ccard .sect{padding:4px 18px 14px;}
+  .ccard .sect h4{margin:10px 0 6px;font-size:.82rem;letter-spacing:.04em;color:var(--text-muted);text-transform:uppercase;}
+  .ccard ul{margin:0;padding-left:20px;font-size:.88rem;}
+  .ccard li{margin-bottom:5px;}
+  .merit li::marker{content:"✅ ";}
+  .demerit li::marker{content:"⚠️ ";}
+  .effort{display:flex;gap:8px;flex-wrap:wrap;padding:0 18px 16px;font-size:.78rem;}
+  .effort span{background:var(--bg-gray);border-radius:8px;padding:4px 10px;}
+
+  /* ---------- コントロールパネル ---------- */
+  .panel{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px;margin:16px 0 24px;display:flex;flex-wrap:wrap;gap:18px 28px;align-items:flex-end;}
+  .panel .grp{display:flex;flex-direction:column;gap:6px;}
+  .panel label{font-size:.78rem;font-weight:700;color:var(--text-muted);}
+  .panel select,.panel input[type=range]{font-family:inherit;font-size:.9rem;padding:6px 8px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--navy);}
+  .seg{display:inline-flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+  .seg button{font-family:inherit;font-size:.85rem;font-weight:700;border:0;background:#fff;color:var(--text-muted);padding:8px 16px;cursor:pointer;}
+  .seg button.on{background:var(--navy);color:#fff;}
+  .panel .hint{flex-basis:100%;font-size:.78rem;color:var(--text-muted);margin:0;}
+
+  /* ---------- スマホ枠 ---------- */
+  .stage{display:grid;grid-template-columns:1fr 1fr;gap:28px;}
+  @media(max-width:760px){.stage{grid-template-columns:1fr;}}
+  .role{font-size:.85rem;font-weight:800;margin:0 0 10px;display:flex;align-items:center;gap:8px;}
+  .role .who{background:var(--navy);color:#fff;border-radius:8px;padding:3px 10px;font-size:.74rem;}
+  .role .who.seller{background:var(--coral);}
+  .phone{background:#fff;border-radius:22px;box-shadow:var(--shadow);padding:18px 16px 22px;border:1px solid var(--border-light);}
+  .modal-logo{font-weight:800;font-size:1.05rem;margin-bottom:2px;}
+  .modal-sub{font-size:.8rem;color:var(--text-muted);margin:0 0 14px;}
+  .book{display:flex;gap:12px;align-items:center;background:var(--bg-gray);border-radius:10px;padding:10px;margin-bottom:16px;}
+  .book .thumb{width:46px;height:60px;background:#fff;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--navy);opacity:.5;font-size:1.3rem;}
+  .book h5{margin:0;font-size:.9rem;}
+  .book p{margin:2px 0 0;font-weight:800;font-family:var(--font-en);}
+  .fld{margin-bottom:14px;}
+  .fld label{display:block;font-size:.8rem;font-weight:700;margin-bottom:5px;}
+  .fld input,.fld select,.fld textarea{width:100%;font-family:inherit;font-size:.88rem;padding:9px 10px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--navy);}
+  .req::after{content:" *";color:var(--bad);}
+  .btn{display:block;width:100%;text-align:center;font-family:inherit;font-weight:800;font-size:.92rem;border:0;border-radius:10px;padding:12px;cursor:pointer;margin-top:6px;}
+  .btn-navy{background:var(--navy);color:#fff;}
+  .btn-ok{background:var(--ok);color:#fff;}
+  .btn-out{background:#fff;color:var(--navy);border:1.5px solid var(--border);}
+  .row2{display:flex;gap:10px;}
+  .row2 .btn{margin-top:0;}
+
+  /* 候補スロット（買い手が複数提示） */
+  .slot{display:flex;gap:10px;align-items:center;border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:10px;}
+  .slot .n{flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--navy);color:#fff;font-size:.74rem;font-weight:800;display:flex;align-items:center;justify-content:center;}
+  .slot .grow{flex:1;display:flex;flex-direction:column;gap:6px;}
+  .slot input,.slot select{font-family:inherit;font-size:.82rem;padding:6px 8px;border:1px solid var(--border);border-radius:7px;}
+  .slot .del{border:0;background:none;color:var(--text-muted);cursor:pointer;font-size:1rem;}
+  .addslot{width:100%;border:1.5px dashed var(--border);background:#fafbfc;color:var(--navy);font-weight:700;border-radius:10px;padding:10px;cursor:pointer;font-family:inherit;font-size:.85rem;}
+  .addslot:disabled{opacity:.4;cursor:not-allowed;}
+
+  /* 出品者側で候補から1つ選ぶ */
+  .pickrow{display:flex;align-items:center;gap:10px;border:1.5px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;cursor:pointer;transition:.15s;}
+  .pickrow:hover{border-color:var(--navy);}
+  .pickrow.sel{border-color:var(--ok);background:#f0fdf8;}
+  .pickrow .radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);flex:0 0 auto;}
+  .pickrow.sel .radio{border-color:var(--ok);background:var(--ok);box-shadow:inset 0 0 0 3px #fff;}
+  .pickrow .info{flex:1;}
+  .pickrow .info .d{font-weight:800;font-size:.9rem;}
+  .pickrow .info .s{font-size:.78rem;color:var(--text-muted);}
+
+  .yn{font-size:.82rem;color:var(--text-muted);margin:10px 0;}
+  .summary{background:var(--bg-gray);border-radius:10px;padding:12px;font-size:.84rem;margin-bottom:6px;}
+  .summary b{font-weight:800;}
+  .note{font-size:.74rem;color:var(--text-muted);margin-top:12px;text-align:center;}
+  .reco{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:20px 22px;margin-top:18px;border-left:5px solid var(--ok);}
+  .reco h3{margin:0 0 8px;}
+  .reco p{margin:0 0 8px;font-size:.9rem;}
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>購入希望の「日時提示」UI 比較モック</h1>
+  <p class="lead">現状（案A：1日時を提示してYes/No）と、新案（案B：複数候補から選ぶ）のメリデメと画面イメージ。下のコントロールで候補数や時間粒度を変えて検討できます。<br>このファイルは単体で開けます（ビルド不要）。色やラベルは <code>&lt;style&gt;</code> の <code>:root</code> と HTML を直接編集してください。</p>
+
+  <!-- =================== メリデメ比較 =================== -->
+  <h2>1. メリット / デメリット比較</h2>
+  <div class="compare">
+    <div class="ccard">
+      <h3>案A：1日時を提示 → Yes/No<span class="tag">現状</span></h3>
+      <div class="sect">
+        <h4>買い手の体験</h4>
+        <ul class="merit"><li>入力が最速（1回で完了）。迷いが少ない</li></ul>
+        <ul class="demerit"><li>外すと「断る／別日程提案」の往復が発生</li></ul>
+        <h4>出品者の体験</h4>
+        <ul class="merit"><li>判断がシンプル（承認 or 断る）</li></ul>
+        <ul class="demerit"><li>都合が合わないと逆提案が必要＝1ターン増える</li></ul>
+        <h4>成約まで</h4>
+        <ul class="demerit"><li>初回でズレると往復が増え、離脱・放置が起きやすい</li></ul>
+      </div>
+      <div class="effort"><span>🛠 実装：<b>済（現状）</b></span><span>📦 DB変更：なし</span></div>
+    </div>
+
+    <div class="ccard b">
+      <h3>案B：複数候補を提示 → 1つ選ぶ<span class="tag">新案</span></h3>
+      <div class="sect">
+        <h4>買い手の体験</h4>
+        <ul class="merit"><li>都合の良い枠を先出し→合意しやすい</li></ul>
+        <ul class="demerit"><li>入力の手間が増える（最低2件は出す心理負担）</li></ul>
+        <h4>出品者の体験</h4>
+        <ul class="merit"><li>候補から選ぶだけで確定。逆提案が要らない</li><li>断る理由が「全部NG」のときだけに減る</li></ul>
+        <ul class="demerit"><li>選択肢が多いと一覧がやや長くなる</li></ul>
+        <h4>成約まで</h4>
+        <ul class="merit"><li>1往復で確定しやすい＝成約率↑・放置↓</li></ul>
+      </div>
+      <div class="effort"><span>🛠 実装：<b>中</b></span><span>📦 DB変更：候補をJSON/別表で保持</span></div>
+    </div>
+  </div>
+
+  <!-- =================== コントロール =================== -->
+  <h2>2. 画面イメージ（コントロールで切替・調整）</h2>
+  <div class="panel">
+    <div class="grp">
+      <label>表示する案</label>
+      <div class="seg" id="segCase">
+        <button data-case="A">案A（1日時 / Yes-No）</button>
+        <button data-case="B" class="on">案B（複数候補）</button>
+      </div>
+    </div>
+    <div class="grp" id="grpMax">
+      <label>候補の最大数（案B）：<b id="maxLbl">3</b></label>
+      <input type="range" id="maxSlots" min="2" max="5" value="3" />
+    </div>
+    <div class="grp">
+      <label>時間の粒度</label>
+      <div class="seg" id="segGran">
+        <button data-gran="band" class="on">時間帯（午前/午後…）</button>
+        <button data-gran="exact">時刻指定（10:00）</button>
+      </div>
+    </div>
+    <p class="hint">※ 左＝買い手が送る画面、右＝出品者が受け取る画面。クリックで動きます。</p>
+  </div>
+
+  <div class="stage">
+    <!-- ============ 買い手 ============ -->
+    <div>
+      <p class="role"><span class="who">買い手</span> 購入希望を送る</p>
+      <div class="phone">
+        <div class="modal-logo">購入希望を送る</div>
+        <p class="modal-sub" id="buyerSub"></p>
+        <div class="book">
+          <div class="thumb">📕</div>
+          <div><h5>マクロ経済学 第3版</h5><p>¥2,400</p></div>
+        </div>
+
+        <!-- 案A：単一入力 -->
+        <div id="buyerA" class="hidden">
+          <div class="fld"><label class="req">希望受け渡し日</label><input type="date" /></div>
+          <div class="fld timeband"><label class="req">希望時間帯</label>
+            <select><option>午前中（9:00〜12:00）</option><option>昼頃（12:00〜14:00）</option><option>午後（14:00〜18:00）</option><option>夕方以降（18:00〜）</option></select>
+          </div>
+          <div class="fld timeexact hidden"><label class="req">希望時刻</label><input type="time" value="10:00" /></div>
+          <div class="fld"><label class="req">希望場所</label><input type="text" value="中央図書館前" /></div>
+          <div class="fld"><label>メッセージ（任意）</label><textarea rows="2" placeholder="一言あると喜ばれます"></textarea></div>
+          <button class="btn btn-navy">確認へ進む</button>
+        </div>
+
+        <!-- 案B：複数候補 -->
+        <div id="buyerB">
+          <div class="fld"><label class="req">希望場所</label><input type="text" value="中央図書館前" /></div>
+          <label class="req" style="font-size:.8rem;font-weight:700;">受け渡し候補（都合の良い順に）</label>
+          <div id="slots" style="margin-top:6px;"></div>
+          <button class="addslot" id="addSlot">＋ 候補を追加</button>
+          <div class="fld" style="margin-top:14px;"><label>メッセージ（任意）</label><textarea rows="2" placeholder="この中ならいつでも大丈夫です 等"></textarea></div>
+          <button class="btn btn-navy">確認へ進む</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 出品者 ============ -->
+    <div>
+      <p class="role"><span class="who seller">出品者</span> 受け取った購入希望</p>
+      <div class="phone">
+        <div class="book">
+          <div class="thumb">📕</div>
+          <div><h5>マクロ経済学 第3版</h5><p>購入希望者：田中さん</p></div>
+        </div>
+
+        <!-- 案A：Yes/No -->
+        <div id="sellerA" class="hidden">
+          <div class="summary">
+            <div><b>希望日時：</b><span class="aDateLbl">6/30（月）</span> <span class="aTimeLbl">午前中（9:00〜12:00）</span></div>
+            <div><b>場所：</b>中央図書館前</div>
+          </div>
+          <p class="yn">この日時でよろしいですか？</p>
+          <div class="row2">
+            <button class="btn btn-ok">承認する</button>
+            <button class="btn btn-out">別日程を提案</button>
+          </div>
+          <button class="btn btn-out" style="margin-top:10px;color:var(--bad);border-color:#f3c2c2;">断る</button>
+          <p class="note">合わない場合は「別日程を提案」で逆オファー（=1往復追加）</p>
+        </div>
+
+        <!-- 案B：候補から選ぶ -->
+        <div id="sellerB">
+          <p class="yn">候補の中から都合の良い日時を1つ選んでください。</p>
+          <div id="picks"></div>
+          <button class="btn btn-ok" id="confirmPick">この日時で確定する</button>
+          <button class="btn btn-out" style="margin-top:10px;color:var(--bad);border-color:#f3c2c2;">全て都合が合わない（断る）</button>
+          <p class="note">逆提案なしで確定できる。「断る」は全候補NGのときだけ</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== 推奨 =================== -->
+  <div class="reco">
+    <h3>3. たたき台としての推奨</h3>
+    <p><b>案B（複数候補から選ぶ）を推奨。</b>ただし「最低1件・最大3件」「2件目以降は任意」にして買い手の入力負担を抑えるのが落としどころ。時間粒度は<b>時間帯（午前/午後）</b>がカジュアルで合意が速い（学生同士のキャンパス受け渡し前提）。</p>
+    <p>段階導入案：① まず案Bの買い手UIだけ出す → ② 出品者の「候補から選ぶ」を出す → ③ 全NG時のみ現状の逆提案フローへ合流。データは既存の <code>reservations</code> に候補配列（JSON列 or 子テーブル <code>reservation_slots</code>）を足す形で、確定時に <code>preferred_*</code> を埋める。</p>
+    <p style="color:var(--text-muted);font-size:.82rem;margin:0;">このモックで決めたいこと：候補の最大数 / 時間粒度（帯 or 時刻）/ 「全NG」時の動線（逆提案を残すか）。</p>
+  </div>
+
+</div>
+
+<script>
+/* =========================================================
+   MOCK DATA — PO はここを書き換えれば候補や初期値を変えられます
+   ========================================================= */
+const STATE = { case:'B', gran:'band', max:3 };
+const BANDS = ['午前中（9:00〜12:00）','昼頃（12:00〜14:00）','午後（14:00〜18:00）','夕方以降（18:00〜）'];
+// 買い手が初期提示する候補（日付ラベル＋時間帯/時刻）
+let CANDIDATES = [
+  { date:'6/30（月）', band:'午前中（9:00〜12:00）', time:'10:00' },
+  { date:'7/1（火）',  band:'午後（14:00〜18:00）',  time:'15:00' },
+  { date:'7/3（木）',  band:'昼頃（12:00〜14:00）',  time:'12:30' },
+];
+let picked = 0;
+
+/* ---------- レンダリング ---------- */
+function timeLabel(c){ return STATE.gran==='exact' ? c.time : c.band; }
+
+function renderSlots(){
+  const box = document.getElementById('slots'); box.innerHTML='';
+  CANDIDATES.slice(0, STATE.max).forEach((c,i)=>{
+    const row = document.createElement('div'); row.className='slot';
+    const timeField = STATE.gran==='exact'
+      ? `<input type="time" value="${c.time}">`
+      : `<select>${BANDS.map(b=>`<option ${b===c.band?'selected':''}>${b}</option>`).join('')}</select>`;
+    row.innerHTML = `<div class="n">${i+1}</div>
+      <div class="grow"><input type="text" value="${c.date}" placeholder="日付">${timeField}</div>
+      ${i>=1?'<button class="del" title="削除">✕</button>':''}`;
+    if(i>=1) row.querySelector('.del').onclick=()=>{ CANDIDATES.splice(i,1); renderAll(); };
+    box.appendChild(row);
+  });
+  const add = document.getElementById('addSlot');
+  add.disabled = CANDIDATES.length >= STATE.max;
+  add.textContent = add.disabled ? `＋ 候補を追加（最大${STATE.max}件）` : '＋ 候補を追加';
+}
+
+function renderPicks(){
+  const box = document.getElementById('picks'); box.innerHTML='';
+  CANDIDATES.slice(0, STATE.max).forEach((c,i)=>{
+    const row = document.createElement('div'); row.className='pickrow'+(i===picked?' sel':'');
+    row.innerHTML = `<div class="radio"></div><div class="info"><div class="d">${c.date} ${timeLabel(c)}</div><div class="s">中央図書館前</div></div>`;
+    row.onclick=()=>{ picked=i; renderPicks(); };
+    box.appendChild(row);
+  });
+}
+
+function renderA(){
+  document.querySelector('.aTimeLbl').textContent = timeLabel(CANDIDATES[0]);
+  document.querySelectorAll('#buyerA .timeband').forEach(e=>e.classList.toggle('hidden', STATE.gran==='exact'));
+  document.querySelectorAll('#buyerA .timeexact').forEach(e=>e.classList.toggle('hidden', STATE.gran!=='exact'));
+}
+
+function renderAll(){
+  const B = STATE.case==='B';
+  document.getElementById('buyerA').classList.toggle('hidden', B);
+  document.getElementById('buyerB').classList.toggle('hidden', !B);
+  document.getElementById('sellerA').classList.toggle('hidden', B);
+  document.getElementById('sellerB').classList.toggle('hidden', !B);
+  document.getElementById('grpMax').style.opacity = B ? 1 : .35;
+  document.getElementById('buyerSub').textContent = B
+    ? '受け渡しできる候補を複数えらんで送ってください。'
+    : '希望の受け渡し日時・場所を入力してください。';
+  if(B){ renderSlots(); renderPicks(); } else { renderA(); }
+}
+
+/* ---------- コントロール ---------- */
+document.getElementById('segCase').addEventListener('click',e=>{
+  if(!e.target.dataset.case) return;
+  STATE.case = e.target.dataset.case;
+  document.querySelectorAll('#segCase button').forEach(b=>b.classList.toggle('on', b===e.target));
+  renderAll();
+});
+document.getElementById('segGran').addEventListener('click',e=>{
+  if(!e.target.dataset.gran) return;
+  STATE.gran = e.target.dataset.gran;
+  document.querySelectorAll('#segGran button').forEach(b=>b.classList.toggle('on', b===e.target));
+  renderAll();
+});
+document.getElementById('maxSlots').addEventListener('input',e=>{
+  STATE.max = +e.target.value;
+  document.getElementById('maxLbl').textContent = STATE.max;
+  if(picked>=STATE.max) picked=0;
+  renderAll();
+});
+document.getElementById('addSlot').onclick=()=>{
+  if(CANDIDATES.length>=STATE.max) return;
+  CANDIDATES.push({ date:'日付を入力', band:BANDS[0], time:'10:00' });
+  renderAll();
+};
+document.getElementById('confirmPick').onclick=()=>{
+  alert('（モック）'+CANDIDATES[picked].date+' '+timeLabel(CANDIDATES[picked])+' で確定しました');
+};
+
+renderAll();
+</script>
+</body>
+</html>

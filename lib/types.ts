@@ -6,15 +6,22 @@ export type Condition =
   | "書き込み少し"
   | "汚れ・ダメージあり";
 
-export type ReservationStatus = "申請中" | "承認済み" | "完了" | "キャンセル";
+export type ReservationStatus =
+  | "申請中"
+  | "日程調整中"
+  | "承認済み"
+  | "完了"
+  | "キャンセル";
 
 export interface User {
   id: string;
   name: string;
   /** ログイン用メール（登録完了後は個人メール） */
   email: string;
-  /** 在籍確認に使った大学メール（監査用の記録） */
+  /** 在籍確認に使った大学メール（監査用の記録 / 再認証メールの宛先） */
   university_email?: string;
+  /** 在籍確認の有効期限（ISO文字列）。これを過ぎると出品・購入が停止する。 */
+  enrollment_valid_until?: string | null;
   university: string;
   faculty: string;
   grade: string;
@@ -49,6 +56,12 @@ export interface Listing {
   created_at: number;
 }
 
+/** 買い手が提示する受け渡し候補（日付＋時刻のセット）。機能④。 */
+export interface CandidateSlot {
+  date: string;
+  time: string;
+}
+
 export interface Reservation {
   id: string;
   listing_id: string;
@@ -61,6 +74,14 @@ export interface Reservation {
   preferred_date: string;
   preferred_time: string;
   preferred_location: string;
+  /** 買い手が提示した受け渡し候補（機能④）。1〜3件。旧データは undefined。 */
+  candidate_slots?: CandidateSlot[];
+  /** 出品者が確定した候補の index（機能④）。未選択時は undefined。 */
+  selected_slot?: number;
+  /** 出品者が提案した代替日程（機能③）。未提案時は undefined。 */
+  proposed_date?: string;
+  proposed_time?: string;
+  proposed_location?: string;
   message?: string;
   status: ReservationStatus;
   created_at: number;

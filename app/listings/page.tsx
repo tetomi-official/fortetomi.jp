@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { fetchListings } from "@/lib/listings";
+import { fetchListings, fetchListingsByFaculty } from "@/lib/listings";
 import { conditionLabel, yen, CONDITION_OPTIONS } from "@/lib/labels";
 import ListingCard from "@/components/ListingCard";
 import { useAuth } from "@/lib/auth";
@@ -31,9 +31,14 @@ export default function ListingsPage() {
   const [view, setView] = useState<"grid" | "list">("grid");
   const [page, setPage] = useState(1);
 
+  // PB-025: 未ログイン=全学 / ログイン後=自学部のみ（出品者の学部で絞る）
   useEffect(() => {
+    if (!ready) return;
     let active = true;
-    fetchListings().then((data) => {
+    setLoading(true);
+    // ログイン時は自学部の「他の人」の出品のみ（自分の出品は除外＝マイページで確認）
+    const req = user?.faculty ? fetchListingsByFaculty(user.faculty, user.id) : fetchListings();
+    req.then((data) => {
       if (active) {
         setListings(data);
         setLoading(false);
@@ -42,7 +47,7 @@ export default function ListingsPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [ready, user?.faculty]);
 
   const filtered = useMemo(() => {
     let list = all.filter((item) => {
@@ -101,7 +106,11 @@ export default function ListingsPage() {
             <span>Books</span>
           </div>
           <h1>教科書一覧</h1>
-          <p>GLOMAC内の出品教科書を検索・フィルター</p>
+          <p>
+            {ready && user?.faculty
+              ? `${user.faculty}の出品教科書を検索・フィルター`
+              : "GLOMAC内の出品教科書を検索・フィルター"}
+          </p>
           {ready &&
             (user ? (
               <p
@@ -132,7 +141,7 @@ export default function ListingsPage() {
                   fontSize: 14,
                 }}
               >
-                <i className="fas fa-graduation-cap" /> ログインすると所属学部が表示されます{" "}
+                <i className="fas fa-graduation-cap" /> ログインすると自学部の教科書に絞り込まれます{" "}
                 <Link href="/login" style={{ textDecoration: "underline", fontWeight: 600 }}>
                   ログイン
                 </Link>

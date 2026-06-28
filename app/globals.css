@@ -80,11 +80,11 @@ ul, ol { list-style: none; }
   justify-content: center;
   background: var(--navy);
   color: var(--white);
-  width: 52px;
-  padding: 22px 10px;
-  font-size: 11px;
+  width: 68px;
+  padding: 32px 14px;
+  font-size: 15px;
   font-weight: 800;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   writing-mode: vertical-rl;
   transition: background 0.25s, width 0.25s;
   box-shadow: -4px 0 18px rgba(20,49,74,0.25);
@@ -200,14 +200,6 @@ ul, ol { list-style: none; }
   transition: all 0.25s; white-space: nowrap; text-decoration: none;
 }
 .btn-navy:hover { background: var(--navy-dark); }
-.btn-coral {
-  display: inline-flex; align-items: center; gap: 8px;
-  background: var(--navy); color: var(--white);
-  padding: 13px 28px; border-radius: var(--r-sm);
-  font-family: var(--font-en); font-size: 14px; font-weight: 800;
-  transition: all 0.25s; text-decoration: none;
-}
-.btn-coral:hover { background: var(--navy-dark); }
 .btn-outline {
   display: inline-flex; align-items: center; gap: 8px;
   border: 2px solid var(--navy); color: var(--navy);
@@ -594,7 +586,70 @@ ul, ol { list-style: none; }
 }
 .badge-pending   { background: #fffbeb; color: #b45309; }
 .badge-confirmed { background: #ecfdf5; color: #065f46; }
+.badge-reschedule { background: #eff6ff; color: #1d4ed8; }
 .badge-done      { background: var(--bg-gray); color: var(--text-muted); }
+
+/* 機能③：日程の逆提案 */
+.reschedule-proposal {
+  margin-top: 10px; padding: 10px 12px;
+  background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px;
+}
+.reschedule-proposal-label {
+  font-size: 11px; font-weight: 800; color: #1d4ed8; margin-bottom: 4px;
+}
+.reschedule-proposal-body { font-size: 13px; color: var(--navy); line-height: 1.6; }
+.reschedule-form {
+  margin: 4px 0 16px; padding: 16px;
+  background: var(--bg-gray); border: 1px solid var(--border-light); border-radius: 10px;
+}
+.reschedule-form-title {
+  font-size: 13px; font-weight: 800; color: var(--navy); margin-bottom: 12px;
+}
+
+/* 機能④：購入希望モーダルの候補入力（買い手） */
+.slot-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+.slot-row { display: flex; align-items: center; gap: 8px; }
+.slot-num {
+  flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--navy); color: #fff; font-size: 11px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+}
+.slot-fields { flex: 1; display: flex; gap: 8px; }
+.slot-fields input { flex: 1; min-width: 0; }
+.slot-del {
+  flex: 0 0 auto; border: 0; background: none; color: var(--text-muted);
+  cursor: pointer; font-size: 14px; padding: 4px;
+}
+.slot-del:hover { color: #991b1b; }
+.slot-add {
+  width: 100%; border: 1.5px dashed var(--border); background: #fafbfc;
+  color: var(--navy); font-weight: 700; border-radius: 8px; padding: 9px;
+  cursor: pointer; font-size: 13px; font-family: inherit;
+}
+.slot-add:hover { border-color: var(--navy); }
+.slot-confirm-list { margin: 4px 0 0; padding-left: 20px; font-size: 14px; color: var(--navy); line-height: 1.8; }
+
+/* 機能④：候補の表示・選択（出品者カード／買い手カード） */
+.candidate-pick { margin-top: 10px; }
+.candidate-pick-label { font-size: 11px; font-weight: 800; color: var(--navy); margin-bottom: 6px; }
+.candidate-row {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  border: 1.5px solid var(--border); border-radius: 8px; padding: 8px 10px;
+  margin-bottom: 6px; background: var(--white); font-size: 13px;
+  color: var(--navy); text-align: left; font-family: inherit;
+}
+button.candidate-row { cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+button.candidate-row:hover { border-color: var(--navy); }
+.candidate-row.sel { border-color: #16a34a; background: #f0fdf4; }
+.candidate-row.confirmed { border-color: #16a34a; background: #f0fdf4; }
+.candidate-radio {
+  flex: 0 0 auto; width: 16px; height: 16px; border-radius: 50%;
+  border: 2px solid var(--border); box-sizing: border-box;
+}
+.candidate-row.sel .candidate-radio { border-color: #16a34a; box-shadow: inset 0 0 0 3px #16a34a; }
+.candidate-dt { flex: 1; font-weight: 700; }
+.candidate-confirmed-tag { font-size: 11px; font-weight: 800; color: #15803d; }
+
 .badge-cancelled { background: #fef2f2; color: #991b1b; }
 .tab-panel { display: none; }
 .tab-panel.active { display: block; }
@@ -930,19 +985,6 @@ ul, ol { list-style: none; }
 .faq-a { font-weight: 400; color: var(--text-mid); font-size: 13px; max-height: 0; opacity: 0; overflow: hidden; transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease; }
 .faq-item.open .faq-a { max-height: 320px; opacity: 1; padding-bottom: 20px; }
 
-.cta-final { background: var(--bg-gray); padding: 100px 72px; position: relative; }
-.cta-final-inner { max-width: var(--max-w); margin: 0 auto; }
-.cta-final-label { font-size: 11px; font-weight: 800; letter-spacing: 0.22em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 52px; text-align: center; }
-.cta-items { display: flex; flex-direction: column; gap: 44px; }
-.cta-item { display: flex; align-items: stretch; gap: 0; background: var(--white); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-lg); transition: transform 0.3s, box-shadow 0.3s; }
-.cta-item:hover { transform: translateY(-4px); box-shadow: var(--shadow-xl); }
-.cta-item-img { width: 260px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 5rem; }
-.cta-img-sell { background: linear-gradient(145deg, var(--navy) 0%, #2a5070 100%); }
-.cta-img-buy  { background: linear-gradient(145deg, #1c3f5c 0%, #0d2035 100%); }
-.cta-item-text { flex: 1; padding: 32px 36px; display: flex; flex-direction: column; justify-content: center; gap: 12px; }
-.cta-item-text h3 { font-family: var(--font-en); font-size: 1.6rem; font-weight: 900; color: var(--navy); letter-spacing: 0.06em; }
-.cta-item-text p { font-size: 14px; color: var(--text-mid); line-height: 1.8; font-weight: 400; }
-
 @media (max-width: 1024px) {
   .feature-section-inner { padding: 0 32px; }
   .feature-img-block { width: 100%; height: 300px; }
@@ -953,9 +995,6 @@ ul, ol { list-style: none; }
 @media (max-width: 768px) {
   .about-section { padding: 80px 24px 48px; }
   .faq-section { padding: 80px 24px; }
-  .cta-final { padding: 72px 24px; }
-  .cta-item { flex-direction: column; }
-  .cta-item-img { width: 100%; height: 160px; }
   .gallery-section { height: 500px; }
   .slide-content { left: 28px; right: 28px; }
   .hero-inner { padding: 100px 24px 140px; }
