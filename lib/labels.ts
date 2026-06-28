@@ -22,6 +22,7 @@ export function statusLabel(s: string): { label: string; cls: string } {
 export function reservationBadgeClass(status: string): string {
   const map: Record<string, string> = {
     "申請中": "badge-pending",
+    "日程調整中": "badge-reschedule",
     "承認済み": "badge-confirmed",
     "完了": "badge-done",
     "キャンセル": "badge-cancelled",
@@ -46,4 +47,15 @@ export function formatDate(ts?: number): string {
   if (!ts) return "";
   const d = new Date(Number(ts));
   return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+}
+
+/**
+ * 受け渡し候補（日付＋時刻）を表示用に整形（機能④）。
+ * 例: ("2026-06-30", "10:00") -> "6/30 10:00"。
+ * ISO 形式でない旧データ（"午前中（9:00〜12:00）" 等）はそのまま連結する。
+ */
+export function formatSlot(date: string, time: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+  const d = m ? `${Number(m[2])}/${Number(m[3])}` : date;
+  return [d, time].filter(Boolean).join(" ");
 }

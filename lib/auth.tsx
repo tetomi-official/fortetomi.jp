@@ -10,19 +10,22 @@ import {
 } from "react";
 import type { Session } from "@supabase/supabase-js";
 import type { User } from "./types";
-import { mockUsers } from "./mock-data";
 import { createClient } from "./supabase/client";
 import { ALLOWED_EMAIL_DOMAIN, isAllowedEmail, isValidEmail } from "./constants";
+import { isEnrollmentActive } from "./enrollment";
 
 // ===================================================
 // Supabase Auth（メール+パスワード / 方針B）
 // - 登録は「大学メール」を仮IDにして確認 → 在籍証明。
 //   その後「個人メール」へログインIDを切り替える（promotePersonalEmail）。
 // - プロフィール項目は profiles テーブルに保持（docs/supabase-setup.sql）。
-// - デモユーザーは Supabase 非経由で localStorage 併存（開発・体験用）。
+// - デモユーザーはシード済みアカウント（docs/supabase-seed.sql）で実セッションを張る。
+//   これにより一覧・検索・出品など本物のログインと同じ経路で動作する（開発・体験用）。
 // ===================================================
 
 const DEMO_KEY = "tetomi_demo_user";
+// デモ用シードアカウントの共通パスワード（docs/supabase-seed.sql と一致）。
+const DEMO_PASSWORD = "password123";
 
 export interface SignUpInput {
   name: string;
@@ -40,8 +43,10 @@ export interface SignUpInput {
 interface AuthContextValue {
   user: User | null;
   ready: boolean;
-  /** デモユーザーで即ログイン（Supabase 非経由） */
-  loginAsDemo: (userId: string) => void;
+  /** 在籍（大学メール）が現在有効か。失効中は出品・購入を停止する。 */
+  enrollmentActive: boolean;
+  /** デモユーザーでログイン（シード済みアカウントで実セッションを張る） */
+  loginAsDemo: (email: string) => Promise<{ error: string | null }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (
     input: SignUpInput,
@@ -49,6 +54,8 @@ interface AuthContextValue {
   /** 在籍確認後、ログインIDを個人メールへ切り替える（確認メールが個人宛に飛ぶ） */
   promotePersonalEmail: () => Promise<{ error: string | null; email: string | null }>;
   updateProfile: (patch: Partial<User>) => Promise<{ error: string | null }>;
+  /** 現在のセッションの profiles を再取得して user を更新（再認証後の状態反映用）。 */
+  refreshUser: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -65,8 +72,18 @@ interface ProfileRow {
   university_email: string | null;
   pending_personal_email: string | null;
   enrollment_verified: boolean | null;
+  enrollment_valid_until: string | null;
   rating: number | null;
   rating_count: number | null;
+}
+
+// profiles に profiles_private を埋め込んだ取得結果を、フラットな ProfileRow に正規化する。
+// PostgREST の to-one 埋め込みはオブジェクト/配列どちらの形もありうるので両対応。
+function flattenProfile(row: unknown): ProfileRow | null {
+  if (!row || typeof row !== "object") return null;
+  const r = row as Record<string, unknown> & { profiles_private?: unknown };
+  const pv = Array.isArray(r.profiles_private) ? r.profiles_private[0] : r.profiles_private;
+  return { ...r, ...((pv as object) ?? {}) } as unknown as ProfileRow;
 }
 
 function rowToUser(session: Session, row: ProfileRow | null): User {
@@ -75,6 +92,7 @@ function rowToUser(session: Session, row: ProfileRow | null): User {
     name: row?.name ?? session.user.email?.split("@")[0] ?? "",
     email: session.user.email ?? "", // 確認完了後は個人メール
     university_email: row?.university_email ?? "",
+    enrollment_valid_until: row?.enrollment_valid_until ?? null,
     university: row?.university ?? "",
     faculty: row?.faculty ?? "",
     grade: row?.grade ?? "",
@@ -104,10 +122,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async function hydrate(session: Session) {
       const { data: row } = await supabase
         .from("profiles")
-        .select("*")
+        .select("*, profiles_private(university_email, pending_personal_email, gender)")
         .eq("id", session.user.id)
         .maybeSingle();
-      if (active) setUser(rowToUser(session, row));
+      if (active) setUser(rowToUser(session, flattenProfile(row)));
     }
 
     async function init() {
@@ -139,15 +157,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const loginAsDemo = useCallback((userId: string) => {
-    const found = mockUsers.find((u) => u.id === userId);
-    if (!found) return;
-    try {
-      localStorage.setItem(DEMO_KEY, JSON.stringify(found));
-    } catch {
-      /* noop */
-    }
-    setUser(found);
+  const loginAsDemo = useCallback(async (email: string) => {
+    // シード済みアカウントで実際にサインインする。以後は通常ログインと同じ経路で
+    // profiles が hydrate され、一覧・検索・出品（在籍有効）が本物同様に動く。
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password: DEMO_PASSWORD,
+    });
+    return { error: error?.message ?? null };
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
@@ -176,12 +194,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // ※auth.users.email は確認後に個人メールへ置き換わるため、
     //   大学メールの重複は profiles.university_email を見ないと判定できない。
     const normalizedUnivEmail = input.universityEmail.trim().toLowerCase();
-    const { data: existing } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("university_email", normalizedUnivEmail)
-      .limit(1);
-    if (existing && existing.length > 0) {
+    // profiles は本人行しか読めない（PII保護）ため、メアド本体は露出せず
+    // 存在有無の boolean だけを返す SECURITY DEFINER 関数で判定する。
+    const { data: alreadyTaken } = await supabase.rpc("is_university_email_taken", {
+      p_email: normalizedUnivEmail,
+    });
+    if (alreadyTaken) {
       return {
         error: "この大学メールアドレスはすでに登録に使用されています",
         needsConfirm: false,
@@ -230,7 +248,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!authUser) return { error: "ログインしていません", email: null };
 
     const { data: row } = await supabase
-      .from("profiles")
+      .from("profiles_private")
       .select("pending_personal_email")
       .eq("id", authUser.id)
       .maybeSingle();
@@ -279,6 +297,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } = await supabase.auth.getUser();
     if (!authUser) return { error: "ログインしていません" };
 
+    // 公開安全な列は profiles、PII（gender）は profiles_private に分けて更新する。
     const { error } = await supabase
       .from("profiles")
       .update({
@@ -286,13 +305,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         university: patch.university,
         faculty: patch.faculty,
         grade: patch.grade,
-        gender: patch.gender,
       })
       .eq("id", authUser.id);
     if (error) return { error: error.message };
 
+    if (patch.gender !== undefined) {
+      const { error: privErr } = await supabase
+        .from("profiles_private")
+        .update({ gender: patch.gender })
+        .eq("id", authUser.id);
+      if (privErr) return { error: privErr.message };
+    }
+
     setUser((prev) => (prev ? { ...prev, ...patch } : prev));
     return { error: null };
+  }, []);
+
+  const refreshUser = useCallback(async () => {
+    if (readDemo()) return; // デモは常に有効・固定
+    const supabase = createClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) {
+      setUser(null);
+      return;
+    }
+    const { data: row } = await supabase
+      .from("profiles")
+      .select("*, profiles_private(university_email, pending_personal_email, gender)")
+      .eq("id", session.user.id)
+      .maybeSingle();
+    setUser(rowToUser(session, flattenProfile(row)));
   }, []);
 
   const logout = useCallback(async () => {
@@ -306,16 +350,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
+  const enrollmentActive = isEnrollmentActive(user?.enrollment_valid_until);
+
   return (
     <AuthContext.Provider
       value={{
         user,
         ready,
+        enrollmentActive,
         loginAsDemo,
         signIn,
         signUp,
         promotePersonalEmail,
         updateProfile,
+        refreshUser,
         logout,
       }}
     >

@@ -5,11 +5,12 @@ import { ToastProvider } from "@/components/Toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SideTab from "@/components/SideTab";
+import ReverifyBanner from "@/components/ReverifyBanner";
 
 export const metadata: Metadata = {
   title: "TETOMI【教科書取引サービス】",
   description:
-    "GLOMAC専用の教科書を手渡しで取引するサービス。送料・手数料ゼロ。TETOMIから学部内に新たなつながりを。",
+    "GLOMAC専用の教科書を手渡しで取引するサービス。送料ゼロ・手数料10%。TETOMIから学部内に新たなつながりを。",
 };
 
 export default function RootLayout({
@@ -30,6 +31,7 @@ export default function RootLayout({
           <ToastProvider>
             <SideTab />
             <Navbar />
+            <ReverifyBanner />
             {children}
             <Footer />
           </ToastProvider>

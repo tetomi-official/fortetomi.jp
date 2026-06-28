@@ -1,6 +1,8 @@
 import { type EmailOtpType } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { nextAcademicYearBoundary } from "@/lib/enrollment";
 
 // 確認メールのリンクを受けてセッション/メール変更を確定する。
 //  - type=signup       … 大学メールの在籍確認 → 個人メール登録へ誘導
@@ -21,7 +23,7 @@ export async function GET(request: NextRequest) {
         } = await supabase.auth.getUser();
         if (user) {
           const { data: prof } = await supabase
-            .from("profiles")
+            .from("profiles_private")
             .select("pending_personal_email")
             .eq("id", user.id)
             .maybeSingle();
@@ -32,9 +34,23 @@ export async function GET(request: NextRequest) {
           // （Secure email change が ON だと片側確認だけでは切り替わらないため、
           //   ここで早合点して pending を消すと復旧不能になる＝以前のバグ）
           if (!pending || current === pending) {
-            await supabase
+            // 登録完了＝在籍確認済み。次の年度末まで在籍を有効にする。
+            // enrollment_* はユーザー権限では書けない特権列なので service role で更新する
+            //   （ユーザーセッションで更新できると、本人が在籍ステータスを自己付与できてしまう）。
+            const admin = createAdminClient();
+            // 在籍ステータス（特権列）は profiles、pending_personal_email は profiles_private。
+            await admin
               .from("profiles")
-              .update({ enrollment_verified: true, pending_personal_email: null })
+              .update({
+                enrollment_verified: true,
+                enrollment_valid_until: nextAcademicYearBoundary(
+                  new Date(),
+                ).toISOString(),
+              })
+              .eq("id", user.id);
+            await admin
+              .from("profiles_private")
+              .update({ pending_personal_email: null })
               .eq("id", user.id);
             return NextResponse.redirect(new URL("/?welcome=1", request.url));
           }

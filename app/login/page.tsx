@@ -5,7 +5,15 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/Toast";
-import { mockUsers } from "@/lib/mock-data";
+
+// デモ用のシード済みアカウント（docs/supabase-seed.sql・全員 password123）。
+// 学部をばらして、ログイン後の学部別一覧の違いを体験できるようにしている。
+const DEMO_ACCOUNTS = [
+  { email: "sato@g.chuo-u.ac.jp", name: "佐藤 花子", faculty: "経済学部", grade: "2年" },
+  { email: "tanaka@g.chuo-u.ac.jp", name: "田中 太郎", faculty: "法学部", grade: "3年" },
+  { email: "suzuki@g.chuo-u.ac.jp", name: "鈴木 健一", faculty: "理工学部", grade: "4年" },
+  { email: "nakamura@g.chuo-u.ac.jp", name: "中村 結衣", faculty: "総合政策学部", grade: "2年" },
+];
 
 export default function LoginPage() {
   const router = useRouter();
@@ -32,8 +40,15 @@ export default function LoginPage() {
     router.push("/");
   };
 
-  const demo = (id: string) => {
-    loginAsDemo(id);
+  const demo = async (email: string) => {
+    if (submitting) return;
+    setSubmitting(true);
+    const { error } = await loginAsDemo(email);
+    setSubmitting(false);
+    if (error) {
+      showToast("デモログインに失敗しました", "error");
+      return;
+    }
     showToast("デモユーザーでログインしました", "success");
     router.push("/");
   };
@@ -85,8 +100,13 @@ export default function LoginPage() {
         <div className="modal-demo">
           <p className="modal-demo-title">— デモユーザーで試す —</p>
           <div className="demo-btns">
-            {mockUsers.map((u) => (
-              <button key={u.id} onClick={() => demo(u.id)} className="demo-btn">
+            {DEMO_ACCOUNTS.map((u) => (
+              <button
+                key={u.email}
+                onClick={() => demo(u.email)}
+                className="demo-btn"
+                disabled={submitting}
+              >
                 <i className="fas fa-user" style={{ marginRight: 6, opacity: 0.5 }} />
                 {u.name}（{u.faculty} {u.grade}）
               </button>

@@ -11,7 +11,7 @@ export default function Footer() {
             <br />
             GLOMAC専用 教科書手渡し取引サービス
             <br />
-            送料ゼロ・手数料ゼロ
+            送料ゼロ・手数料10%
           </p>
         </div>
         <div className="footer-col">
