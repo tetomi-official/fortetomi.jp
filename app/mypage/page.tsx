@@ -14,9 +14,22 @@ import {
   selectCandidateSlot,
 } from "@/lib/reservations";
 import { reservationBadgeClass, yen, formatSlot } from "@/lib/labels";
+import { sellerNet, PLATFORM_FEE_RATE, PAYOUT_FEE_YEN } from "@/lib/constants";
+import { decodePaymentQR } from "@/lib/payments";
+import MessagesPanel from "@/components/MessagesPanel";
+import SupportPanel from "@/components/SupportPanel";
+import BarcodeScanner from "@/components/BarcodeScanner";
+import { BarcodeFormat } from "@zxing/library";
 import type { Listing, Reservation, ReservationStatus } from "@/lib/types";
 
-type Tab = "dashboard" | "myListings" | "sentRes" | "receivedRes" | "profile";
+type Tab =
+  | "dashboard"
+  | "myListings"
+  | "sentRes"
+  | "receivedRes"
+  | "messages"
+  | "support"
+  | "profile";
 const GRADES = ["1年", "2年", "3年", "4年", "院生"];
 
 export default function MyPage() {
@@ -44,6 +57,8 @@ export default function MyPage() {
   const [received, setReceived] = useState<Reservation[]>([]);
   const [resBusyId, setResBusyId] = useState<string | null>(null);
   const [listingBusyId, setListingBusyId] = useState<string | null>(null);
+  // PB-036：出品者が受け渡しQRを読み取るスキャナの開閉。
+  const [scanning, setScanning] = useState(false);
 
   useEffect(() => {
     // 未ログイン時はログインゲートを早期 return するため、ここでの初期化は不要。
@@ -100,6 +115,48 @@ export default function MyPage() {
     }
     setReceived((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
     showToast(okMsg, status === "キャンセル" ? "" : "success");
+  };
+
+  // PB-036：出品者が買い手の受け渡しQRを読み取り、保存済みカードへ課金して取引を完了する。
+  //   金額・当事者・nonce の検証はすべてサーバー（/api/payments/charge）が行う。
+  const captureByQR = async (text: string) => {
+    setScanning(false);
+    const decoded = decodePaymentQR(text);
+    if (!decoded) {
+      showToast("QRを認識できませんでした。もう一度お試しください。", "error");
+      return;
+    }
+    setResBusyId(decoded.reservationId);
+    try {
+      const res = await fetch("/api/payments/charge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(decoded),
+      });
+      const data = (await res.json().catch(() => null)) as {
+        chargeId?: string;
+        error?: string;
+      } | null;
+      if (!res.ok || !data?.chargeId) {
+        showToast(data?.error ?? "決済に失敗しました", "error");
+        return;
+      }
+    } catch {
+      showToast("通信エラーが発生しました", "error");
+      return;
+    } finally {
+      setResBusyId(null);
+    }
+    showToast("決済が完了しました。取引完了です。", "success");
+    // 完了・売り切れを反映するため再取得。
+    if (user) {
+      const [s, rc] = await Promise.all([
+        fetchSentReservations(user.id),
+        fetchReceivedReservations(user.id),
+      ]);
+      setSent(s);
+      setReceived(rc);
+    }
   };
 
   // 機能③：送った購入希望（買い手視点）のステータス更新（提案日の承諾 / 断る）。
@@ -177,6 +234,9 @@ export default function MyPage() {
     showToast("別の日程を提案しました", "success");
   };
 
+  // PB-044：ログアウトは確認画面（モーダル）を一度挟んでから実行する。
+  const [logoutConfirm, setLogoutConfirm] = useState(false);
+
   const [profile, setProfile] = useState({
     name: user?.name ?? "",
     email: user?.email ?? "",
@@ -221,6 +281,13 @@ export default function MyPage() {
   const sentPending = sent.filter((r) => r.status === "申請中").length;
   const recvPending = received.filter((r) => r.status === "申請中").length;
 
+  // PB-045：売上残高。決済済み（paid_at あり）の受け取り予約から、手数料10%差引後の受取額を集計する。
+  // 振込（PB-046）は未実装のため、ここでは「引き出し可能な残高＝これまでの受取額の総計」として表示する。
+  const paidSales = received.filter((r) => r.paid_at);
+  const grossSales = paidSales.reduce((s, r) => s + r.price, 0);
+  const netBalance = paidSales.reduce((s, r) => s + sellerNet(r.price), 0);
+  const feeTotal = grossSales - netBalance;
+
   const saveProfile = (e: React.FormEvent) => {
     e.preventDefault();
     updateProfile(profile);
@@ -228,8 +295,9 @@ export default function MyPage() {
     setTab("dashboard");
   };
 
-  const onLogout = () => {
-    logout();
+  const onLogout = async () => {
+    await logout();
+    setLogoutConfirm(false);
     showToast("ログアウトしました");
     router.push("/");
   };
@@ -266,8 +334,10 @@ export default function MyPage() {
                 {navItem("myListings", "fa-book", "出品中の教科書", stats.active)}
                 {navItem("sentRes", "fa-paper-plane", "送った購入希望", sentPending)}
                 {navItem("receivedRes", "fa-inbox", "受け取った購入希望", recvPending)}
+                {navItem("messages", "fa-comments", "メッセージ")}
+                {navItem("support", "fa-headset", "運営サポート")}
                 {navItem("profile", "fa-user-cog", "プロフィール編集")}
-                <div className="sidebar-nav-item danger" onClick={onLogout}>
+                <div className="sidebar-nav-item danger" onClick={() => setLogoutConfirm(true)}>
                   <i className="fas fa-sign-out-alt" /> ログアウト
                 </div>
               </nav>
@@ -299,7 +369,58 @@ export default function MyPage() {
                         <div className="stat-chip-label">取引完了</div>
                       </div>
                     </div>
-                    <div style={{ paddingTop: 16, borderTop: "1px solid var(--border-light)", display: "flex", flexDirection: "column", gap: 14 }}>
+
+                    {/* PB-045：売上残高。決済済みの受取額（手数料10%差引後）を表示する。 */}
+                    <div
+                      style={{
+                        marginTop: 20,
+                        padding: 20,
+                        borderRadius: 14,
+                        background: "linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%)",
+                        color: "#fff",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <div style={{ fontSize: 12, opacity: 0.85, display: "flex", alignItems: "center", gap: 6 }}>
+                          <i className="fas fa-wallet" /> 売上残高（受取見込み）
+                        </div>
+                        <div style={{ fontSize: 11, opacity: 0.7 }}>取引 {paidSales.length} 件</div>
+                      </div>
+                      <div style={{ fontSize: 30, fontWeight: 800, marginTop: 6, letterSpacing: "0.02em" }}>
+                        {yen(netBalance)}
+                      </div>
+                      <div style={{ display: "flex", gap: 16, marginTop: 10, fontSize: 12, opacity: 0.85 }}>
+                        <span>売上総額 {yen(grossSales)}</span>
+                        <span>
+                          サービス手数料（{Math.round(PLATFORM_FEE_RATE * 100)}%） −{yen(feeTotal)}
+                        </span>
+                      </div>
+                      <div
+                        style={{
+                          marginTop: 14,
+                          paddingTop: 12,
+                          borderTop: "1px solid rgba(255,255,255,0.18)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: 12,
+                        }}
+                      >
+                        <span style={{ fontSize: 11, opacity: 0.8 }}>
+                          振込申請は準備中です（振込手数料 {yen(PAYOUT_FEE_YEN)}／回）
+                        </span>
+                        <button
+                          type="button"
+                          disabled
+                          className="btn-xs"
+                          style={{ background: "rgba(255,255,255,0.16)", color: "#fff", cursor: "not-allowed", opacity: 0.7 }}
+                        >
+                          <i className="fas fa-university" /> 振込申請
+                        </button>
+                      </div>
+                    </div>
+
+                    <div style={{ paddingTop: 16, marginTop: 16, borderTop: "1px solid var(--border-light)", display: "flex", flexDirection: "column", gap: 14 }}>
                       <Link href="/sell" className="dash-link">
                         <div className="dash-link-icon" style={{ background: "var(--navy)" }}>
                           <i className="fas fa-plus" />
@@ -471,7 +592,11 @@ export default function MyPage() {
                               {yen(r.price)}
                             </div>
                             {r.status === "申請中" && (
-                              <button className="btn-xs btn-xs-danger" onClick={() => showToast("（モック）キャンセルしました")}>
+                              <button
+                                className="btn-xs btn-xs-danger"
+                                disabled={resBusyId === r.id}
+                                onClick={() => changeSentResStatus(r.id, "キャンセル", "購入希望をキャンセルしました")}
+                              >
                                 キャンセル
                               </button>
                             )}
@@ -492,6 +617,18 @@ export default function MyPage() {
                                   <i className="fas fa-times" /> 断る
                                 </button>
                               </>
+                            )}
+                            {/* PB-036：承認済みは受け渡し・支払いへ。決済済みはバッジ表示。 */}
+                            {r.paid_at ? (
+                              <span className="badge badge-done">
+                                <i className="fas fa-check" /> 決済済み
+                              </span>
+                            ) : (
+                              r.status === "承認済み" && (
+                                <Link href={`/checkout/${r.id}`} className="btn-xs btn-xs-navy">
+                                  <i className="fas fa-qrcode" /> 受け取り・支払いへ
+                                </Link>
+                              )
                             )}
                           </div>
                         </div>
@@ -637,9 +774,10 @@ export default function MyPage() {
                                 <button
                                   className="btn-xs btn-xs-green"
                                   disabled={resBusyId === r.id}
-                                  onClick={() => changeResStatus(r.id, "完了", "取引完了にしました")}
+                                  onClick={() => setScanning(true)}
                                 >
-                                  <i className="fas fa-handshake" /> 取引完了
+                                  <i className="fas fa-qrcode" />{" "}
+                                  {resBusyId === r.id ? "決済中…" : "QRを読み取って決済"}
                                 </button>
                               )}
                             </div>
@@ -699,6 +837,19 @@ export default function MyPage() {
                 </div>
               )}
 
+              {/* MESSAGES（PB-041）：キャンセル以外の進行中取引をスレッドとして表示 */}
+              {tab === "messages" && (
+                <MessagesPanel
+                  user={user}
+                  threads={[...received, ...sent]
+                    .filter((r) => r.status !== "キャンセル")
+                    .sort((a, b) => b.created_at - a.created_at)}
+                />
+              )}
+
+              {/* 運営サポート（PB-042） */}
+              {tab === "support" && <SupportPanel />}
+
               {/* PROFILE */}
               {tab === "profile" && (
                 <div className="panel-card">
@@ -753,6 +904,42 @@ export default function MyPage() {
           </div>
         </div>
       </main>
+
+      {/* PB-044：ログアウト確認画面（モーダル）。承認後にログアウトしてホームへ。 */}
+      {logoutConfirm && (
+        <div className="modal-overlay" onClick={() => setLogoutConfirm(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-icon">
+              <i className="fas fa-sign-out-alt" />
+            </div>
+            <h3 className="modal-title">ログアウトしますか？</h3>
+            <p className="modal-text">
+              ログアウトするとホームページに戻ります。再度ご利用にはログインが必要です。
+            </p>
+            <div className="modal-actions">
+              <button type="button" className="btn-outline" onClick={() => setLogoutConfirm(false)}>
+                キャンセル
+              </button>
+              <button type="button" className="btn-navy" onClick={onLogout}>
+                <i className="fas fa-sign-out-alt" /> ログアウト
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PB-036：受け渡しQRスキャナ（出品者が買い手のQRを読み取って決済） */}
+      {scanning && (
+        <BarcodeScanner
+          formats={[BarcodeFormat.QR_CODE]}
+          validate={(t) => decodePaymentQR(t) !== null}
+          transform={(t) => t}
+          title="買い手のQRを読み取る"
+          hint="買い手が表示している受け渡しQRを枠内に映してください。読み取ると決済が実行されます。"
+          onDetected={captureByQR}
+          onClose={() => setScanning(false)}
+        />
+      )}
     </>
   );
 }

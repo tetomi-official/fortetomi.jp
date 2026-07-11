@@ -21,6 +21,7 @@ export default function LoginPage() {
   const { showToast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -30,7 +31,7 @@ export default function LoginPage() {
       return;
     }
     setSubmitting(true);
-    const { error } = await signIn(email, password);
+    const { error } = await signIn(email, password, remember);
     setSubmitting(false);
     if (error) {
       showToast("メールアドレスまたはパスワードが正しくありません", "error");
@@ -83,6 +84,14 @@ export default function LoginPage() {
               required
             />
           </div>
+          <label className="checkbox-row">
+            <input
+              type="checkbox"
+              checked={remember}
+              onChange={(e) => setRemember(e.target.checked)}
+            />
+            <span>ログイン状態を保持する（30日間）</span>
+          </label>
           <button
             type="submit"
             className="btn-navy btn-full"
@@ -92,6 +101,10 @@ export default function LoginPage() {
             <i className="fas fa-sign-in-alt" /> {submitting ? "ログイン中…" : "ログイン"}
           </button>
         </form>
+
+        <div className="auth-switch" style={{ marginTop: 4 }}>
+          <Link href="/forgot-password">パスワードをお忘れですか？</Link>
+        </div>
 
         <p className="auth-note">
           パスワードの保存・自動入力はブラウザのパスワードマネージャに委譲しています（autocomplete=&quot;current-password&quot;）。ログイン状態の維持はセッション側の責務です。

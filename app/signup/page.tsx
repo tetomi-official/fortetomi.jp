@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/Toast";
 import {
@@ -14,8 +14,11 @@ import {
   isValidEmail,
 } from "@/lib/constants";
 
+// 確認メール再送のクールダウン（秒）。Supabase 側レート制限より短めに抑えて連打を防ぐ。
+const RESEND_COOLDOWN_SEC = 60;
+
 export default function SignupPage() {
-  const { signUp } = useAuth();
+  const { signUp, resendSignupEmail } = useAuth();
   const { showToast } = useToast();
 
   const [form, setForm] = useState({
@@ -31,6 +34,28 @@ export default function SignupPage() {
   const [agree, setAgree] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
+  const [resending, setResending] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+
+  // クールダウンのカウントダウン。
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = setTimeout(() => setCooldown((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cooldown]);
+
+  const handleResend = async () => {
+    if (!sentTo || resending || cooldown > 0) return;
+    setResending(true);
+    const { error } = await resendSignupEmail(sentTo);
+    setResending(false);
+    if (error) {
+      showToast(error, "error");
+      return;
+    }
+    showToast("確認メールを再送信しました", "success");
+    setCooldown(RESEND_COOLDOWN_SEC);
+  };
 
   const set =
     (k: keyof typeof form) =>
@@ -107,8 +132,21 @@ export default function SignupPage() {
             メール内のリンクを開くと、次に個人メールの登録に進みます。
           </p>
           <p className="auth-note">
-            メールが届かない場合は迷惑メールフォルダをご確認ください。リンクの有効期限が切れた場合は、お手数ですが再度登録してください。
+            メールが届かない場合は迷惑メールフォルダをご確認ください。届かない・リンクの有効期限が切れた場合は、下のボタンから再送信できます。
           </p>
+          <button
+            type="button"
+            className="btn-navy btn-full"
+            onClick={handleResend}
+            disabled={resending || cooldown > 0}
+          >
+            <i className="fas fa-paper-plane" />{" "}
+            {resending
+              ? "送信中…"
+              : cooldown > 0
+                ? `再送信（${cooldown}秒後に再試行できます）`
+                : "確認メールを再送信"}
+          </button>
           <div className="auth-switch">
             すでに登録済みの方は <Link href="/login">ログイン</Link>
           </div>
@@ -236,13 +274,21 @@ export default function SignupPage() {
           <label className="checkbox-row">
             <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} />
             <span>
-              <a href="#" style={{ color: "var(--navy)", textDecoration: "underline" }}>
+              <Link
+                href="/terms"
+                target="_blank"
+                style={{ color: "var(--navy)", textDecoration: "underline" }}
+              >
                 利用規約
-              </a>
+              </Link>
               ・
-              <a href="#" style={{ color: "var(--navy)", textDecoration: "underline" }}>
+              <Link
+                href="/privacy"
+                target="_blank"
+                style={{ color: "var(--navy)", textDecoration: "underline" }}
+              >
                 プライバシーポリシー
-              </a>
+              </Link>
               に同意します
             </span>
           </label>

@@ -30,6 +30,8 @@ type ReservationRow = {
   message: string | null;
   status: string;
   created_at: string;
+  charge_id: string | null;
+  paid_at: string | null;
   listings: { title: string | null } | null;
   buyer: { name: string | null } | null;
   seller: { name: string | null } | null;
@@ -56,6 +58,8 @@ function rowToReservation(row: ReservationRow): Reservation {
     message: row.message ?? undefined,
     status: row.status as ReservationStatus,
     created_at: new Date(row.created_at).getTime(),
+    charge_id: row.charge_id ?? undefined,
+    paid_at: row.paid_at ? new Date(row.paid_at).getTime() : undefined,
   };
 }
 

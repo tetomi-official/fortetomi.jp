@@ -29,8 +29,9 @@ export default function Footer() {
       <div className="footer-bottom" style={{ maxWidth: "var(--max-w)", margin: "0 auto" }}>
         <p>© 2025 TETOMI for GLOMAC. All rights reserved.</p>
         <div className="footer-policies">
-          <a href="#">利用規約</a>
-          <a href="#">プライバシーポリシー</a>
+          <Link href="/terms">利用規約</Link>
+          <Link href="/privacy">プライバシーポリシー</Link>
+          <Link href="/legal">特定商取引法に基づく表記</Link>
         </div>
       </div>
     </footer>
