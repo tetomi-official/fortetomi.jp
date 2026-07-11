@@ -85,4 +85,17 @@ export interface Reservation {
   message?: string;
   status: ReservationStatus;
   created_at: number;
+  /** 決済（PB-036）。PAY.jp Charge ID。未決済は undefined。 */
+  charge_id?: string;
+  /** 決済完了時刻（ミリ秒）。未決済は undefined。 */
+  paid_at?: number;
+}
+
+/** 取引メッセージ（PB-041）。1 予約（reservation）= 1 スレッド。 */
+export interface Message {
+  id: string;
+  reservation_id: string;
+  sender_id: string;
+  body: string;
+  created_at: number;
 }

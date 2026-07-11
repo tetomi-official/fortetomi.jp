@@ -13,22 +13,33 @@ function isIsbnBarcode(text: string): boolean {
 }
 
 /**
- * カメラで ISBN バーコード（EAN-13）を読み取るモーダル（PB-018 ②）。
- * 読み取れたら onDetected(isbn) を呼んで自動で閉じる。手入力フォールバックは呼び出し側に残す。
+ * カメラでコードを読み取るモーダル。既定は ISBN バーコード（EAN-13, PB-018 ②）。
+ * formats/validate/transform を渡せば QR など別用途にも使える（PB-036 受け渡しQR）。
+ * 読み取れたら onDetected(value) を呼んで自動で閉じる。手入力フォールバックは呼び出し側に残す。
  */
 export default function BarcodeScanner({
   onDetected,
   onClose,
+  formats = [BarcodeFormat.EAN_13, BarcodeFormat.EAN_8],
+  validate = isIsbnBarcode,
+  transform = (t) => t.replace(/[^0-9Xx]/g, ""),
+  title = "バーコードを読み取る",
+  hint = "本の裏表紙にあるISBNバーコード（978…）を枠内に映してください。",
 }: {
-  onDetected: (isbn: string) => void;
+  onDetected: (value: string) => void;
   onClose: () => void;
+  formats?: BarcodeFormat[];
+  validate?: (text: string) => boolean;
+  transform?: (text: string) => string;
+  title?: string;
+  hint?: string;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const hints = new Map();
-    hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.EAN_13, BarcodeFormat.EAN_8]);
+    hints.set(DecodeHintType.POSSIBLE_FORMATS, formats);
     const reader = new BrowserMultiFormatReader(hints);
 
     let controls: Controls | null = null;
@@ -51,9 +62,9 @@ export default function BarcodeScanner({
           controls = ctrl;
           if (result && !stopped) {
             const text = result.getText();
-            if (isIsbnBarcode(text)) {
+            if (validate(text)) {
               stop();
-              onDetected(text.replace(/[^0-9Xx]/g, ""));
+              onDetected(transform(text));
             }
           }
         },
@@ -72,7 +83,9 @@ export default function BarcodeScanner({
       });
 
     return stop;
-  }, [onDetected]);
+    // モーダルはマウントごとに新規生成されるため、起動は1回だけでよい（props は初期値を採用）。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -80,8 +93,8 @@ export default function BarcodeScanner({
         <button className="modal-close" onClick={onClose} aria-label="閉じる">
           <i className="fas fa-times" />
         </button>
-        <div className="modal-logo">バーコードを読み取る</div>
-        <p className="modal-sub">本の裏表紙にあるISBNバーコード（978…）を枠内に映してください。</p>
+        <div className="modal-logo">{title}</div>
+        <p className="modal-sub">{hint}</p>
 
         {error ? (
           <div style={{ textAlign: "center", padding: "32px 16px", color: "var(--text-muted)", fontSize: 14, lineHeight: 1.8 }}>

@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { SESSION_EXP_COOKIE, isSessionExpired } from "@/lib/supabase/session";
 
 // 各リクエストで Supabase のセッション Cookie を更新する（トークンの自動リフレッシュ）。
 // @supabase/ssr の推奨セットアップ。
@@ -29,7 +30,17 @@ export async function proxy(request: NextRequest) {
   );
 
   // getUser() を呼ぶとセッションが検証・更新される
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // ログイン保持の絶対期限（tetomi_session_exp）を過ぎていたらローカルサインアウトして
+  // Cookie を破棄する。@supabase/ssr がセッション Cookie を 400 日固定にするため、
+  // 実効的な期限切れはこの自前ゲートで打ち切る（サーバー側で強制するので回避不可）。
+  if (user && isSessionExpired(request.cookies.get(SESSION_EXP_COOKIE)?.value)) {
+    await supabase.auth.signOut({ scope: "local" });
+    response.cookies.set(SESSION_EXP_COOKIE, "", { path: "/", maxAge: 0 });
+  }
 
   return response;
 }

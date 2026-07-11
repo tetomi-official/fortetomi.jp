@@ -13,6 +13,12 @@ import type { User } from "./types";
 import { createClient } from "./supabase/client";
 import { ALLOWED_EMAIL_DOMAIN, isAllowedEmail, isValidEmail } from "./constants";
 import { isEnrollmentActive } from "./enrollment";
+import {
+  clearSessionExp,
+  isSessionExpired,
+  readSessionExp,
+  writeSessionExp,
+} from "./supabase/session";
 
 // ===================================================
 // Supabase Auth（メール+パスワード / 方針B）
@@ -47,10 +53,21 @@ interface AuthContextValue {
   enrollmentActive: boolean;
   /** デモユーザーでログイン（シード済みアカウントで実セッションを張る） */
   loginAsDemo: (email: string) => Promise<{ error: string | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  /** remember=true でログイン保持30日、false（既定）で24時間の絶対期限。 */
+  signIn: (
+    email: string,
+    password: string,
+    remember?: boolean,
+  ) => Promise<{ error: string | null }>;
   signUp: (
     input: SignUpInput,
   ) => Promise<{ error: string | null; needsConfirm: boolean }>;
+  /** 登録確認メール（大学メール宛）を再送する。届かない/期限切れ時の救済。 */
+  resendSignupEmail: (email: string) => Promise<{ error: string | null }>;
+  /** パスワード再設定メールを送る（PB-012）。リンクは /auth/confirm?type=recovery。 */
+  sendPasswordReset: (email: string) => Promise<{ error: string | null }>;
+  /** 回復セッション中に新しいパスワードを設定する（PB-012）。 */
+  updatePassword: (password: string) => Promise<{ error: string | null }>;
   /** 在籍確認後、ログインIDを個人メールへ切り替える（確認メールが個人宛に飛ぶ） */
   promotePersonalEmail: () => Promise<{ error: string | null; email: string | null }>;
   updateProfile: (patch: Partial<User>) => Promise<{ error: string | null }>;
@@ -138,6 +155,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const {
         data: { session },
       } = await supabase.auth.getSession();
+      // ログイン保持の絶対期限が切れていたらローカルサインアウト（proxy と同じ判定）。
+      if (session && isSessionExpired(readSessionExp())) {
+        await supabase.auth.signOut({ scope: "local" });
+        if (active) {
+          setUser(null);
+          setReady(true);
+        }
+        return;
+      }
       if (session) await hydrate(session);
       if (active) setReady(true);
     }
@@ -165,15 +191,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       password: DEMO_PASSWORD,
     });
+    // デモも proxy の失効ゲート対象（実セッションを張るため）。保持30日で設定。
+    if (!error) writeSessionExp(true);
     return { error: error?.message ?? null };
   }, []);
 
-  const signIn = useCallback(async (email: string, password: string) => {
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return { error: error.message };
-    return { error: null };
-  }, []);
+  const signIn = useCallback(
+    async (email: string, password: string, remember = false) => {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) return { error: error.message };
+      // ログイン保持の絶対期限を設定（true=30日 / false=24時間）。proxy が期限で打ち切る。
+      writeSessionExp(remember);
+      return { error: null };
+    },
+    [],
+  );
 
   const signUp = useCallback(async (input: SignUpInput) => {
     // 大学メールは許可ドメイン、個人メールは形式チェック（最終防御）
@@ -238,6 +271,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: error.message, needsConfirm: false };
     }
     return { error: null, needsConfirm: !data.session };
+  }, []);
+
+  // 登録確認メールの再送。signUp と同じ大学メール宛・同じ確認導線（/auth/confirm）に送る。
+  // 連打・多重送信の抑止は UI 側のクールダウンで行い、最終的なレート制限は Supabase 側に委ねる。
+  const resendSignupEmail = useCallback(async (email: string) => {
+    const supabase = createClient();
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: {
+        emailRedirectTo:
+          typeof window !== "undefined"
+            ? `${window.location.origin}/auth/confirm`
+            : undefined,
+      },
+    });
+    return { error: error?.message ?? null };
+  }, []);
+
+  // パスワード再設定メールを送る。リンクを開くと /auth/confirm(type=recovery) が
+  // 回復セッションを張り、/reset-password で新パスワードを設定する。
+  const sendPasswordReset = useCallback(async (email: string) => {
+    const supabase = createClient();
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo:
+        typeof window !== "undefined"
+          ? `${window.location.origin}/auth/confirm`
+          : undefined,
+    });
+    return { error: error?.message ?? null };
+  }, []);
+
+  // 回復セッション中に新しいパスワードを設定する。
+  const updatePassword = useCallback(async (password: string) => {
+    const supabase = createClient();
+    const { error } = await supabase.auth.updateUser({ password });
+    return { error: error?.message ?? null };
   }, []);
 
   const promotePersonalEmail = useCallback(async () => {
@@ -345,6 +415,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       /* noop */
     }
+    clearSessionExp();
     const supabase = createClient();
     await supabase.auth.signOut();
     setUser(null);
@@ -361,6 +432,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loginAsDemo,
         signIn,
         signUp,
+        resendSignupEmail,
+        sendPasswordReset,
+        updatePassword,
         promotePersonalEmail,
         updateProfile,
         refreshUser,

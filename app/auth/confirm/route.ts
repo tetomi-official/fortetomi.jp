@@ -3,10 +3,26 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { nextAcademicYearBoundary } from "@/lib/enrollment";
+import { SESSION_EXP_COOKIE, SHORT_DURATION_MS } from "@/lib/supabase/session";
+
+// verifyOtp で張ったセッションが、ログイン保持ゲート（PB-011: proxy/AuthProvider）に
+// 「exp Cookie 無し＝失効」と判定され即ログアウトされるのを防ぐ。
+// signup/email_change/recovery の成功リダイレクトに 24h の期限 Cookie を付与する。
+function redirectWithSession(request: NextRequest, path: string): NextResponse {
+  const res = NextResponse.redirect(new URL(path, request.url));
+  res.cookies.set(SESSION_EXP_COOKIE, String(Date.now() + SHORT_DURATION_MS), {
+    path: "/",
+    maxAge: Math.floor(SHORT_DURATION_MS / 1000),
+    sameSite: "lax",
+    secure: request.nextUrl.protocol === "https:",
+  });
+  return res;
+}
 
 // 確認メールのリンクを受けてセッション/メール変更を確定する。
 //  - type=signup       … 大学メールの在籍確認 → 個人メール登録へ誘導
 //  - type=email_change … 個人メールへの切替確認 → 登録完了
+//  - type=recovery     … パスワード再設定（PB-012）→ 新パスワード入力ページへ
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const token_hash = searchParams.get("token_hash");
@@ -17,6 +33,10 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.verifyOtp({ type, token_hash });
 
     if (!error) {
+      // パスワード再設定：verifyOtp で回復セッションが張られた状態で新パスワード入力へ。
+      if (type === "recovery") {
+        return redirectWithSession(request, "/reset-password");
+      }
       if (type === "email_change") {
         const {
           data: { user },
@@ -52,16 +72,14 @@ export async function GET(request: NextRequest) {
               .from("profiles_private")
               .update({ pending_personal_email: null })
               .eq("id", user.id);
-            return NextResponse.redirect(new URL("/?welcome=1", request.url));
+            return redirectWithSession(request, "/?welcome=1");
           }
           // まだ切り替わっていない → 残りの確認を促す画面へ
-          return NextResponse.redirect(
-            new URL("/signup/complete?await=1", request.url),
-          );
+          return redirectWithSession(request, "/signup/complete?await=1");
         }
       }
       // signup（大学メール）確認後 → 個人メール登録ステップへ
-      return NextResponse.redirect(new URL("/signup/complete", request.url));
+      return redirectWithSession(request, "/signup/complete");
     }
   }
 

@@ -5,14 +5,19 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { fetchListingById, fetchSellerProfile, type SellerProfile } from "@/lib/listings";
 import { createReservation } from "@/lib/reservations";
-import { pickupLocationForFaculty } from "@/lib/constants";
+import {
+  HANDOVER_TIME_LABEL,
+  pickupLocationForFaculty,
+  upcomingHandoverDates,
+} from "@/lib/constants";
 import { conditionLabel, yen, formatDate, formatSlot } from "@/lib/labels";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/Toast";
 import type { CandidateSlot, Listing } from "@/lib/types";
 
 const MAX_SLOTS = 3;
-const emptySlot = (): CandidateSlot => ({ date: "", time: "" });
+// PB-051: 時刻は昼休み固定。日付のみ買い手が次の1週間から選ぶ。
+const emptySlot = (): CandidateSlot => ({ date: "", time: HANDOVER_TIME_LABEL });
 
 const LIKE_KEY = "tetomi_likes";
 const condTagMap: Record<string, { label: string; cls: string }> = {
@@ -114,6 +119,8 @@ export default function DetailPage() {
 
   // PB-025: 受け渡し場所はユーザーの学部から自動決定（現状は固定値）
   const pickupLocation = pickupLocationForFaculty(user?.faculty);
+  // PB-051: 受け渡し候補日の選択肢（今日から暦7日分）。時刻は昼休み固定。
+  const dateOptions = upcomingHandoverDates(7);
 
   const metas = [
     { label: "状態", value: listing.condition },
@@ -169,11 +176,11 @@ export default function DetailPage() {
     setModalOpen(true);
   };
 
-  // PB-028 → PB-029: 入力内容を確認ステップへ（全候補の日時必須）
+  // PB-028 → PB-029: 入力内容を確認ステップへ（全候補の日付必須。時刻は昼休み固定）
   const goConfirm = (e: React.FormEvent) => {
     e.preventDefault();
-    if (form.slots.some((s) => !s.date || !s.time)) {
-      showToast("各候補の日付と時刻をすべて入力してください", "error");
+    if (form.slots.some((s) => !s.date)) {
+      showToast("各候補の受け渡し日を選んでください", "error");
       return;
     }
     setStep("confirm");
@@ -327,7 +334,7 @@ export default function DetailPage() {
             <div className="modal-logo">購入希望を送る</div>
             <p className="modal-sub">
               {step === "input"
-                ? "受け渡しできる候補日時を選んで送ってください（最大3件）。"
+                ? "受け渡しは昼休みです。都合の良い候補日を選んで送ってください（最大3件）。"
                 : "以下の内容で送信します。よろしければ「購入希望を送る」を押してください。"}
             </p>
             <div className="modal-book-preview">
@@ -343,24 +350,34 @@ export default function DetailPage() {
             {step === "input" ? (
               <form onSubmit={goConfirm}>
                 <div className="form-group required">
-                  <label>受け渡し候補（都合の良い順に）</label>
+                  <label>受け渡し候補日（都合の良い順に）</label>
                   <div className="slot-list">
                     {form.slots.map((s, i) => (
                       <div className="slot-row" key={i}>
                         <div className="slot-num">{i + 1}</div>
                         <div className="slot-fields">
-                          <input
-                            type="date"
+                          <select
                             required
                             value={s.date}
                             onChange={(e) => updateSlot(i, { date: e.target.value })}
-                          />
-                          <input
-                            type="time"
-                            required
-                            value={s.time}
-                            onChange={(e) => updateSlot(i, { time: e.target.value })}
-                          />
+                          >
+                            <option value="" disabled>
+                              日付を選択
+                            </option>
+                            {dateOptions.map((o) => (
+                              <option
+                                key={o.value}
+                                value={o.value}
+                                // 他の候補で選択済みの日付は選べないようにする
+                                disabled={form.slots.some((os, oi) => oi !== i && os.date === o.value)}
+                              >
+                                {o.label}
+                              </option>
+                            ))}
+                          </select>
+                          <span className="slot-time-fixed">
+                            <i className="fas fa-clock" /> {HANDOVER_TIME_LABEL}
+                          </span>
                         </div>
                         {form.slots.length > 1 && (
                           <button
@@ -380,6 +397,7 @@ export default function DetailPage() {
                       <i className="fas fa-plus" /> 候補を追加（最大{MAX_SLOTS}件）
                     </button>
                   )}
+                  <p className="form-hint">受け渡し時間は昼休みに固定です。日付のみお選びください。</p>
                 </div>
                 <div className="form-group required">
                   <label>希望場所</label>
