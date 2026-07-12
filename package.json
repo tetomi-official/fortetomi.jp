@@ -9,6 +9,7 @@
     "lint": "eslint",
     "seed:images": "node scripts/seed-images.mjs",
     "seed:bulk": "node scripts/seed-bulk.mjs",
+    "scrape:syllabus": "node scripts/scrape-syllabus.mjs",
     "test:resend": "node --env-file=.env.local scripts/test-resend.mjs"
   },
   "dependencies": {

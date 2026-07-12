@@ -54,6 +54,8 @@ export interface Listing {
   views: number;
   likes: number;
   created_at: number;
+  /** この出品が一覧/検索に表示される学部の集合（PB-058 学部横断出品）。既定は出品者の学部。 */
+  faculties?: string[];
 }
 
 /** 買い手が提示する受け渡し候補（日付＋時刻のセット）。機能④。 */

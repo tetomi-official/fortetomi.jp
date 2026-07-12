@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { fetchListingById, fetchSellerProfile, type SellerProfile } from "@/lib/listings";
+import { fetchCoursesByIsbn, type SyllabusCourse } from "@/lib/syllabus";
 import { createReservation } from "@/lib/reservations";
 import {
   HANDOVER_TIME_LABEL,
@@ -40,6 +41,7 @@ export default function DetailPage() {
 
   const [listing, setListing] = useState<Listing | null>(null);
   const [seller, setSeller] = useState<SellerProfile | null>(null);
+  const [courses, setCourses] = useState<SyllabusCourse[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [liked, setLiked] = useState(false);
@@ -74,7 +76,11 @@ export default function DetailPage() {
     fetchListingById(params.id).then(async (l) => {
       if (!active) return;
       setListing(l);
-      if (l) setSeller(await fetchSellerProfile(l.seller_id));
+      if (l) {
+        setSeller(await fetchSellerProfile(l.seller_id));
+        // PB-058: この教科書が使われる授業（ISBN照合）。ISBN無し・一致無しは空。
+        setCourses(l.isbn ? await fetchCoursesByIsbn(l.isbn) : []);
+      }
       if (active) setLoading(false);
     });
     return () => {
@@ -130,6 +136,19 @@ export default function DetailPage() {
     { label: "ISBN", value: listing.isbn || "—" },
     { label: "出版年", value: listing.publication_year || "—" },
   ];
+
+  // PB-058: 「この教科書が使われる授業」を学部でグループ化（閲覧者の学部を先頭に）。
+  const courseGroups = (() => {
+    const byFac = new Map<string, SyllabusCourse[]>();
+    for (const c of courses) {
+      const key = c.faculty ?? "その他";
+      if (!byFac.has(key)) byFac.set(key, []);
+      byFac.get(key)!.push(c);
+    }
+    return [...byFac.keys()]
+      .sort((a, b) => (a === user?.faculty ? -1 : b === user?.faculty ? 1 : 0))
+      .map((faculty) => ({ faculty, items: byFac.get(faculty)! }));
+  })();
 
   const toggleLike = () => {
     try {
@@ -278,6 +297,50 @@ export default function DetailPage() {
                 <div className="detail-desc-block">
                   <h4>コメント</h4>
                   <p>{listing.description}</p>
+                </div>
+              )}
+
+              {courses.length > 0 && (
+                <div className="detail-courses-block">
+                  <h4>
+                    <i className="fas fa-graduation-cap" /> この教科書が使われる授業
+                  </h4>
+                  {courseGroups.map((g) => (
+                    <div className="course-group" key={g.faculty}>
+                      <div className="course-group-fac">
+                        {g.faculty}
+                        {g.faculty === user?.faculty && <em>（あなたの学部）</em>}
+                      </div>
+                      <ul>
+                        {g.items.map((c) => (
+                          <li key={c.id}>
+                            <div className="c-row">
+                              <span className="c-name">{c.course_name}</span>
+                              {c.source_url && (
+                                <a
+                                  href={c.source_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="c-link"
+                                >
+                                  シラバス <i className="fas fa-external-link-alt" />
+                                </a>
+                              )}
+                            </div>
+                            <div className="c-sub">
+                              {[
+                                c.instructor,
+                                [c.term, c.day_period].filter(Boolean).join(" "),
+                                c.year_level,
+                              ]
+                                .filter(Boolean)
+                                .join("・")}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
                 </div>
               )}
 

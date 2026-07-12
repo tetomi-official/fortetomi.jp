@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createHash } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 // 受け渡し課金（PAY.jp Charge 作成）。PB-036 Phase 1（QRモデル）。
 // フロー：出品者が対面で「買い手が表示したQR（生 nonce）」を読み取り、このAPIを呼ぶ。
@@ -35,6 +36,15 @@ export async function POST(req: Request) {
   } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: "ログインが必要です" }, { status: 401 });
+  }
+
+  // 1.5) レート制限：課金試行の乱発を抑止（30回/10分/出品者）。
+  const rl = await checkRateLimit(`charge:${user.id}`, 30, 600);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "操作が多すぎます。しばらくしてからお試しください。" },
+      { status: 429 },
+    );
   }
 
   // 2) 入力（reservationId + 生 nonce）

@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createHash } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { nextAcademicYearBoundary } from "@/lib/enrollment";
+import { checkRateLimit, clientIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -15,6 +16,12 @@ export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get("token");
   if (!token) {
     return NextResponse.redirect(new URL("/reverify?status=invalid", request.url));
+  }
+
+  // レート制限：トークン総当たりを抑止（20回/時/IP）。未認証の着地点なので IP でキーイング。
+  const rl = await checkRateLimit(`reverify-confirm:${clientIp(request)}`, 20, 3600);
+  if (!rl.allowed) {
+    return NextResponse.redirect(new URL("/reverify?status=error", request.url));
   }
 
   const admin = createAdminClient();

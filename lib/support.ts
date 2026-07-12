@@ -72,7 +72,7 @@ export const FAQS: Faq[] = [
 ];
 
 /** 運営の有人窓口（FAQで解決しないとき案内する）。 */
-export const SUPPORT_CONTACT = "support@fortetomi.jp";
+export const SUPPORT_CONTACT = "support@tetomi.jp";
 
 export interface SupportAnswer {
   /** FAQと一致したか。false のときは有人窓口へ案内。 */

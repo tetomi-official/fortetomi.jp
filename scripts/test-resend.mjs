@@ -8,7 +8,7 @@
 //
 // 参照する環境変数（app/api/reverify/request と共通）:
 //   RESEND_API_KEY       … 必須。Resend の API キー。
-//   REVERIFY_MAIL_FROM   … 任意。送信元。既定 "TETOMI <no-reply@fortetomi.jp>"。
+//   REVERIFY_MAIL_FROM   … 任意。送信元。既定 "TETOMI <no-reply@tetomi.jp>"。
 
 const to = process.argv[2];
 if (!to) {
@@ -24,7 +24,7 @@ if (!apiKey) {
   process.exit(1);
 }
 
-const from = process.env.REVERIFY_MAIL_FROM || "TETOMI <no-reply@fortetomi.jp>";
+const from = process.env.REVERIFY_MAIL_FROM || "TETOMI <no-reply@tetomi.jp>";
 const now = new Date().toISOString();
 
 const html = `

@@ -80,7 +80,11 @@ export default function CheckoutPage() {
           <PaymentQR reservationId={reservation.id} onNeedCard={() => setCardReady(false)} />
         </div>
       ) : (
-        <PaymentForm onRegistered={refreshCard} submitLabel="カードを登録してQRを表示" />
+        <PaymentForm
+          onRegistered={refreshCard}
+          submitLabel="カードを登録してQRを表示"
+          defaultEmail={user?.email ?? ""}
+        />
       )}
     </>,
   );

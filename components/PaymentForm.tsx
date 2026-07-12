@@ -2,23 +2,46 @@
 
 import { useEffect, useRef, useState } from "react";
 
-// 支払いカードの登録フォーム（PB-036 Phase 1）。
+// 支払いカードの登録フォーム（PB-036 Phase 1 / Phase 2: EMV 3-Dセキュア必須化）。
 // カード入力〜トークン化はすべて payjp.js v2（クライアント）で完結し、カード番号は自社サーバーを通らない。
-// サーバーには token だけ送り、PAY.jp Customer を作成して payment_customers に保存する。
-// 実際の課金は対面のQR受け渡し時に、この保存済みカードへ行う（PaymentQR / charge API）。
+//
+// 3Dセキュア（PDFセキュリティ要件・EMV 3DS 義務化対応）:
+//  - カード登録の「この瞬間」に買い手本人のブラウザで 3DS 認証を完了させる。
+//    対面のQR受け渡し時は出品者操作＝買い手不在なので 3DS はできない。だから登録時に済ませ、
+//    以後は 3DS 認証済みの保存カード（Customer）へ課金する設計（continuous/MIT 相当）。
+//  - iframe ワークフローを使い、createToken(three_d_secure:true) の中で 3DS 画面を表示・完結させる
+//    （サブウィンドウ型と違いポップアップブロックの影響を受けず、スマホでも安定）。
+//  - createToken には 3DS 要件として「名義」と「メール（または電話）」が必須。
+//  - サーバー(register-card)側でもトークンの three_d_secure_status を再検証し、未認証トークンでの
+//    カード登録を拒否する（クライアントだけの検証は迂回されうるため）。
 
 const PAYJP_SCRIPT_SRC = "https://js.pay.jp/v2/pay.js";
 
 type PayjpCardElement = { mount: (selector: string) => void };
 type PayjpElements = { create: (type: "card") => PayjpCardElement };
-type PayjpTokenResponse = { id?: string; error?: { message?: string } };
+type ThreeDSecureStatus = "unverified" | "verified" | "attempted" | "error";
+type PayjpTokenResponse = {
+  id?: string;
+  card?: { three_d_secure_status?: ThreeDSecureStatus };
+  error?: { message?: string };
+};
+type CreateTokenData = {
+  three_d_secure?: boolean;
+  card?: { name?: string; email?: string; phone?: string };
+};
 type PayjpInstance = {
   elements: () => PayjpElements;
-  createToken: (el: PayjpCardElement) => Promise<PayjpTokenResponse>;
+  createToken: (el: PayjpCardElement, data?: CreateTokenData) => Promise<PayjpTokenResponse>;
+  // サブウィンドウ型フォールバック用。iframe 型では通常不要。
+  openThreeDSecureDialog?: (
+    tokenId: string,
+    options?: { timeout?: number },
+  ) => Promise<PayjpTokenResponse | void>;
 };
+type PayjpConstructorOptions = { threeDSecureWorkflow?: "subwindow" | "iframe" | "redirect" };
 declare global {
   interface Window {
-    Payjp?: (publicKey: string) => PayjpInstance;
+    Payjp?: (publicKey: string, options?: PayjpConstructorOptions) => PayjpInstance;
   }
 }
 
@@ -45,13 +68,18 @@ function loadPayjpScript(): Promise<void> {
 export default function PaymentForm({
   onRegistered,
   submitLabel = "カードを登録する",
+  defaultEmail = "",
 }: {
   onRegistered?: () => void;
   submitLabel?: string;
+  defaultEmail?: string;
 }) {
+  const payjpRef = useRef<PayjpInstance | null>(null);
   const cardElementRef = useRef<PayjpCardElement | null>(null);
   const [ready, setReady] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState(defaultEmail);
   const [error, setError] = useState<string | null>(() =>
     process.env.NEXT_PUBLIC_PAYJP_PUBLIC_KEY
       ? null
@@ -66,10 +94,12 @@ export default function PaymentForm({
     loadPayjpScript()
       .then(() => {
         if (cancelled || !window.Payjp) return;
-        const payjp = window.Payjp(publicKey);
+        // 3DS は iframe 型で inline 表示（ポップアップブロック回避）。
+        const payjp = window.Payjp(publicKey, { threeDSecureWorkflow: "iframe" });
         const elements = payjp.elements();
         const cardElement = elements.create("card");
         cardElement.mount("#payjp-card");
+        payjpRef.current = payjp;
         cardElementRef.current = cardElement;
         setReady(true);
       })
@@ -82,16 +112,39 @@ export default function PaymentForm({
   }, []);
 
   async function handleSubmit() {
-    const publicKey = process.env.NEXT_PUBLIC_PAYJP_PUBLIC_KEY;
+    const payjp = payjpRef.current;
     const cardElement = cardElementRef.current;
-    if (!publicKey || !cardElement || !window.Payjp) return;
+    if (!payjp || !cardElement) return;
+    if (!name.trim()) {
+      setError("カード名義を入力してください（3Dセキュア認証に必要です）");
+      return;
+    }
+    if (!email.trim()) {
+      setError("メールアドレスを入力してください（3Dセキュア認証に必要です）");
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
-      const payjp = window.Payjp(publicKey);
-      const result = await payjp.createToken(cardElement);
+      // 3DS を要求してトークン化。iframe 型なら createToken 内で 3DS 画面が完結する。
+      let result = await payjp.createToken(cardElement, {
+        three_d_secure: true,
+        card: { name: name.trim(), email: email.trim() },
+      });
       if (result.error || !result.id) {
         setError(result.error?.message ?? "カード情報を確認してください");
+        return;
+      }
+      // iframe で完結しなかった場合のフォールバック（サブウィンドウ型ダイアログ）。
+      if (result.card?.three_d_secure_status === "unverified" && payjp.openThreeDSecureDialog) {
+        const after = await payjp.openThreeDSecureDialog(result.id);
+        if (after && typeof after === "object" && "card" in after) {
+          result = after as PayjpTokenResponse;
+        }
+      }
+      const status = result.card?.three_d_secure_status;
+      if (status !== "verified" && status !== "attempted") {
+        setError("3Dセキュア認証が完了しませんでした。もう一度お試しください。");
         return;
       }
       const res = await fetch("/api/payments/register-card", {
@@ -131,6 +184,28 @@ export default function PaymentForm({
     <div className="form-card">
       <h2>支払いカードの登録</h2>
       <div className="form-group">
+        <label htmlFor="payjp-name">カード名義</label>
+        <input
+          id="payjp-name"
+          type="text"
+          autoComplete="cc-name"
+          placeholder="TARO YAMADA"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+      </div>
+      <div className="form-group">
+        <label htmlFor="payjp-email">メールアドレス</label>
+        <input
+          id="payjp-email"
+          type="email"
+          autoComplete="email"
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+      </div>
+      <div className="form-group">
         <label>カード情報</label>
         {/* payjp.js がこの要素内に安全なカード入力欄（iframe）を描画する */}
         <div
@@ -143,6 +218,8 @@ export default function PaymentForm({
         />
         <p className="form-hint">
           テストカード例：4242 4242 4242 4242 / 任意の未来の有効期限 / 任意のCVC
+          <br />
+          登録時に 3Dセキュア認証（カード会社の本人確認）が表示されます。
         </p>
       </div>
       {error && <p style={{ color: "#c0392b", fontSize: 14, marginBottom: 12 }}>{error}</p>}
