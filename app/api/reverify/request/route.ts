@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createHash, randomBytes } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 // crypto を使うため Node ランタイムで動かす。
 export const runtime = "nodejs";
@@ -29,6 +30,15 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: "ログインが必要です" }, { status: 401 });
+  }
+
+  // レート制限：再認証メール送信の乱発を抑止（5回/時/ユーザー）。既存の120秒クールダウンに上限を追加。
+  const rl = await checkRateLimit(`reverify:${user.id}`, 5, 3600);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "送信回数が上限に達しました。しばらくしてからお試しください。" },
+      { status: 429 },
+    );
   }
 
   const admin = createAdminClient();
@@ -100,7 +110,7 @@ async function sendReverifyEmail(to: string, confirmUrl: string): Promise<boolea
     console.warn("[reverify] RESEND_API_KEY 未設定。確認リンク:", confirmUrl);
     return true;
   }
-  const from = process.env.REVERIFY_MAIL_FROM || "TETOMI <no-reply@fortetomi.jp>";
+  const from = process.env.REVERIFY_MAIL_FROM || "TETOMI <no-reply@tetomi.jp>";
   const html = `
     <div style="font-family:sans-serif;line-height:1.8;color:#1f2937">
       <h2 style="color:#1e293b">在籍確認（再認証）</h2>

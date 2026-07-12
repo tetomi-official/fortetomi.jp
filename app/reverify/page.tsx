@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/Toast";
 import { formatEnrollmentDeadline } from "@/lib/enrollment";
 
-export default function ReverifyPage() {
+function ReverifyContent() {
   const { user, ready, enrollmentActive, refreshUser } = useAuth();
   const { showToast } = useToast();
   const params = useSearchParams();
@@ -158,5 +158,15 @@ export default function ReverifyPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function ReverifyPage() {
+  return (
+    <Suspense
+      fallback={<main className="page-main" style={{ background: "var(--bg-gray)" }} />}
+    >
+      <ReverifyContent />
+    </Suspense>
   );
 }

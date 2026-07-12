@@ -31,6 +31,7 @@ type ListingRow = {
   views: number;
   likes: number;
   created_at: string;
+  faculties: string[] | null;
   profiles: { name: string | null } | null;
 };
 
@@ -57,6 +58,7 @@ function rowToListing(row: ListingRow): Listing {
     views: row.views,
     likes: row.likes,
     created_at: new Date(row.created_at).getTime(),
+    faculties: row.faculties ?? [],
   };
 }
 
@@ -137,11 +139,12 @@ export async function fetchNewestListings(limit = 4): Promise<Listing[]> {
  */
 export async function countActiveListingsByFaculty(faculty: string): Promise<number> {
   const supabase = createClient();
+  // PB-058: 出品者の学部ではなく、出品の対象学部集合（faculties）に当該学部を含むもので数える。
   const { count, error } = await supabase
     .from("listings")
-    .select("id, profiles!inner(faculty)", { count: "exact", head: true })
+    .select("id", { count: "exact", head: true })
     .eq("status", "出品中")
-    .eq("profiles.faculty", faculty);
+    .contains("faculties", [faculty]);
   if (error) {
     console.error("countActiveListingsByFaculty failed:", error.message);
     return 0;
@@ -160,10 +163,12 @@ export async function fetchListingsByFaculty(
   excludeSellerId?: string,
 ): Promise<Listing[]> {
   const supabase = createClient();
+  // PB-058: 出品者の学部ではなく、出品の対象学部集合（faculties）に当該学部を含む出品を返す
+  //（学部横断出品＝他学部で使う教科書もその学部の一覧に並ぶ）。出品者名は profiles(name) で結合。
   let q = supabase
     .from("listings")
-    .select("*, profiles!inner(name, faculty)")
-    .eq("profiles.faculty", faculty);
+    .select("*, profiles(name)")
+    .contains("faculties", [faculty]);
   if (excludeSellerId) q = q.neq("seller_id", excludeSellerId);
   const { data, error } = await q.order("created_at", { ascending: false });
   if (error) {
@@ -248,6 +253,8 @@ export type CreateListingInput = {
   price: number;
   location: string;
   image_urls: string[];
+  /** この出品を表示する学部の集合（PB-058）。最低でも出品者の学部を含む非空配列。 */
+  faculties: string[];
 };
 
 /** 出品のステータスを更新（PB：完了にする 等）。本人のみ（RLS）。 */
@@ -295,6 +302,7 @@ export async function updateListing(
       price: input.price,
       location: input.location,
       image_urls: input.image_urls,
+      faculties: input.faculties,
     })
     .eq("id", id);
   if (error) {
@@ -325,6 +333,7 @@ export async function createListing(
       price: input.price,
       location: input.location,
       image_urls: input.image_urls,
+      faculties: input.faculties,
       seller_id: sellerId,
     })
     .select("id")

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createHash, randomBytes } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 // 受け渡しQR用のワンタイム nonce を発行する（買い手本人）。PB-036 Phase 1。
 //  - 生の nonce は返り値（QRに載せる）だけに存在し、DB には SHA-256 ハッシュのみ保存する。
@@ -21,6 +22,15 @@ export async function POST(req: Request) {
   } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: "ログインが必要です" }, { status: 401 });
+  }
+
+  // レート制限：QR用 nonce 発行の乱発を抑止（30回/10分/ユーザー）。
+  const rl = await checkRateLimit(`nonce:${user.id}`, 30, 600);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "操作が多すぎます。しばらくしてからお試しください。" },
+      { status: 429 },
+    );
   }
 
   const body = (await req.json().catch(() => null)) as { reservationId?: unknown } | null;

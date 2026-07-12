@@ -7,11 +7,17 @@ import { useToast } from "@/components/Toast";
 import { conditionLabel, yen, CONDITION_OPTIONS } from "@/lib/labels";
 import { createListing, updateListing, uploadListingImages, fetchListingById } from "@/lib/listings";
 import { lookupBook } from "@/lib/booklookup";
+import { fetchCoursesByIsbn, facultiesFromCourses, type SyllabusCourse } from "@/lib/syllabus";
 import BarcodeScanner from "@/components/BarcodeScanner";
 import type { Condition } from "@/lib/types";
 
 const MIN_IMAGES = 2;
 const MAX_IMAGES = 5;
+
+/** 文字列配列の重複除去（空値は除外、順序維持）。 */
+const uniqStrings = (arr: (string | null | undefined)[]): string[] => [
+  ...new Set(arr.filter((s): s is string => !!s && s.trim() !== "")),
+];
 
 const condIcon: Record<Condition, string> = {
   "新品・未使用": "fa-star",
@@ -37,6 +43,9 @@ export default function SellPage() {
   const [scanOpen, setScanOpen] = useState(false);
   // 公式書影（参考表示。出品写真とは別物）。
   const [coverRef, setCoverRef] = useState<string | null>(null);
+  // PB-058: ISBN一致した授業と、その使用学部。出品者が対象学部を選んで学部横断出品する。
+  const [matchedCourses, setMatchedCourses] = useState<SyllabusCourse[]>([]);
+  const [selectedFaculties, setSelectedFaculties] = useState<string[]>([]);
   // アップロード用に File を保持。プレビューは下の useEffect で生成。
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -88,6 +97,7 @@ export default function SellPage() {
       });
       setCondition(l.condition);
       setExistingImages(l.image_urls ?? []);
+      setSelectedFaculties(l.faculties ?? []);
       setEditLoading(false);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -172,25 +182,64 @@ export default function SellPage() {
     }
     setLooking(true);
     try {
-      const meta = await lookupBook(isbn);
-      if (!meta) {
-        showToast("該当する書籍が見つかりませんでした。手入力してください。", "warning");
-        return;
+      // 書誌情報（OpenBD/Google）とシラバス授業照合を並行取得。
+      // 書誌が無くてもシラバスには載っていることがあるので、両者は独立に扱う。
+      const [meta, courses] = await Promise.all([
+        lookupBook(isbn).catch(() => null),
+        fetchCoursesByIsbn(isbn).catch(() => [] as SyllabusCourse[]),
+      ]);
+
+      // PB-058: 使用授業と対象学部（出品者学部＋一致学部）を既定で全選択。
+      setMatchedCourses(courses);
+      const facultyOptions = uniqStrings([user.faculty, ...facultiesFromCourses(courses)]);
+      setSelectedFaculties(facultyOptions);
+
+      if (meta) {
+        setForm((f) => ({
+          ...f,
+          title: meta.title ?? f.title,
+          author: meta.author ?? f.author,
+          publisher: meta.publisher ?? f.publisher,
+          year: meta.publication_year ?? f.year,
+          // 授業名が空なら、出品者学部の一致授業（無ければ先頭）で補完。
+          subject: f.subject.trim() ? f.subject : preferredCourseName(courses, user.faculty) ?? f.subject,
+        }));
+        setCoverRef(meta.cover_url ?? null);
+        showToast("書誌情報を自動入力しました。内容をご確認ください。", "success");
+      } else {
+        if (courses.length) {
+          setForm((f) => ({
+            ...f,
+            subject: f.subject.trim() ? f.subject : preferredCourseName(courses, user.faculty) ?? f.subject,
+          }));
+        }
+        showToast(
+          courses.length
+            ? "書誌情報は見つかりませんでしたが、シラバスの授業情報を取得しました。"
+            : "該当する書籍が見つかりませんでした。手入力してください。",
+          courses.length ? "success" : "warning",
+        );
       }
-      setForm((f) => ({
-        ...f,
-        title: meta.title ?? f.title,
-        author: meta.author ?? f.author,
-        publisher: meta.publisher ?? f.publisher,
-        year: meta.publication_year ?? f.year,
-      }));
-      setCoverRef(meta.cover_url ?? null);
-      showToast("書誌情報を自動入力しました。内容をご確認ください。", "success");
     } catch {
       showToast("取得に失敗しました。時間をおいて再度お試しください。", "error");
     } finally {
       setLooking(false);
     }
+  };
+
+  // 授業名の自動補完用：出品者学部の授業を優先し、無ければ先頭の授業名を返す。
+  const preferredCourseName = (courses: SyllabusCourse[], faculty?: string): string | undefined => {
+    if (!courses.length) return undefined;
+    const own = faculty ? courses.find((c) => c.faculty === faculty) : undefined;
+    return (own ?? courses[0]).course_name;
+  };
+
+  // 対象学部チェックボックスのトグル（出品者学部は常に含める＝外せない）。
+  const toggleFaculty = (faculty: string) => {
+    if (user && faculty === user.faculty) return;
+    setSelectedFaculties((prev) =>
+      prev.includes(faculty) ? prev.filter((f) => f !== faculty) : [...prev, faculty],
+    );
   };
 
   const goStep = (n: number) => {
@@ -247,6 +296,8 @@ export default function SellPage() {
         price: Number(form.price),
         location: form.location.trim(),
         image_urls: imageUrls,
+        // PB-058: 出品者学部は必ず含める。ISBN一致で選んだ他学部を追加（学部横断出品）。
+        faculties: uniqStrings([user.faculty, ...selectedFaculties]),
       };
       const { error } = editId
         ? await updateListing(editId, payload)
@@ -269,6 +320,8 @@ export default function SellPage() {
   };
 
   const previewCond = condition ? conditionLabel(condition) : null;
+  // PB-058: 対象学部の選択肢（出品者学部＋ISBN一致学部）。出品者学部は常に先頭・固定。
+  const facultyOptions = uniqStrings([user.faculty, ...facultiesFromCourses(matchedCourses)]);
 
   return (
     <>
@@ -406,6 +459,55 @@ export default function SellPage() {
                           <br />
                           出品写真には実物の写真を別途アップロードしてください。
                         </div>
+                      </div>
+                    )}
+                    {matchedCourses.length > 0 && (
+                      <div className="syllabus-match-card">
+                        <div className="syllabus-match-head">
+                          <i className="fas fa-graduation-cap" />
+                          <span>この教科書が使われる授業（シラバス照合）</span>
+                        </div>
+                        <p className="form-hint" style={{ marginTop: 0 }}>
+                          出品する学部を選べます。選んだ学部の一覧・検索にこの出品が表示されます（学部横断出品）。
+                          あなたの学部は常に含まれます。
+                        </p>
+                        <div className="faculty-check-row">
+                          {facultyOptions.map((f) => {
+                            const own = f === user.faculty;
+                            const checked = own || selectedFaculties.includes(f);
+                            const count = matchedCourses.filter((c) => c.faculty === f).length;
+                            return (
+                              <label key={f} className={`faculty-chip ${checked ? "on" : ""}`.trim()}>
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  disabled={own}
+                                  onChange={() => toggleFaculty(f)}
+                                />
+                                <span>
+                                  {f}
+                                  {own && <em>（あなたの学部）</em>}
+                                  {count > 0 && <b>{count}</b>}
+                                </span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                        <ul className="syllabus-course-list">
+                          {matchedCourses.slice(0, 8).map((c) => (
+                            <li key={c.id}>
+                              <span className="course-name">{c.course_name}</span>
+                              <span className="course-meta">
+                                {[c.faculty, c.instructor, [c.term, c.day_period].filter(Boolean).join(" ")]
+                                  .filter(Boolean)
+                                  .join("・")}
+                              </span>
+                            </li>
+                          ))}
+                          {matchedCourses.length > 8 && (
+                            <li className="course-more">ほか {matchedCourses.length - 8} 件</li>
+                          )}
+                        </ul>
                       </div>
                     )}
                     <div className="form-group">
