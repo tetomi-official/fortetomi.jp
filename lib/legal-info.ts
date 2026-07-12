@@ -14,7 +14,7 @@ export const LEGAL_INFO = {
   /** サービスURL（本番ドメイン） */
   siteUrl: "https://tetomi.jp",
   /** 取扱いクレジットカードブランド */
-  cardBrands: "VISA、Mastercard（その他ブランドは順次対応予定）",
+  cardBrands: "VISA、Mastercard",
   /** PAY.JP Platform（Payouts）ユーザー利用規約 */
   payjpPayoutsTermsUrl: "https://pay.jp/terms/tos-payouts-user.pdf",
 } as const;
