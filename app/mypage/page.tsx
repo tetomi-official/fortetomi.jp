@@ -16,6 +16,7 @@ import {
 import { reservationBadgeClass, yen, formatSlot } from "@/lib/labels";
 import { sellerNet, PLATFORM_FEE_RATE, PAYOUT_FEE_YEN } from "@/lib/constants";
 import { decodePaymentQR } from "@/lib/payments";
+import { canReserve } from "@/lib/prerelease";
 import MessagesPanel from "@/components/MessagesPanel";
 import SupportPanel from "@/components/SupportPanel";
 import BarcodeScanner from "@/components/BarcodeScanner";
@@ -40,6 +41,8 @@ export default function MyPage() {
 
   const [allListings, setAllListings] = useState<Listing[]>([]);
   useEffect(() => {
+    // phase 0（制限ビュー）は各機能を出さないためデータ取得も行わない。
+    if (!canReserve) return;
     let active = true;
     fetchListings().then((data) => {
       if (active) setAllListings(data);
@@ -62,7 +65,8 @@ export default function MyPage() {
 
   useEffect(() => {
     // 未ログイン時はログインゲートを早期 return するため、ここでの初期化は不要。
-    if (!user) return;
+    // phase 0（制限ビュー）でも購入希望の取得は不要。
+    if (!user || !canReserve) return;
     let active = true;
     Promise.all([
       fetchSentReservations(user.id),
@@ -301,6 +305,83 @@ export default function MyPage() {
     showToast("ログアウトしました");
     router.push("/");
   };
+
+  // プレリリース phase 0（閲覧のみ）：マイページには到達できるが、使えるのはログアウトのみ。
+  // 各機能は「準備中」の案内にとどめ、canReserve（phase 1）で従来のフル機能を解禁する。
+  if (!canReserve) {
+    return (
+      <>
+        <MyHeader sub={`${user.name}さんのページ`} />
+        <main className="page-main" style={{ background: "var(--bg-gray)" }}>
+          <div className="container">
+            <div className="mypage-layout">
+              {/* SIDEBAR：プロフィール概要とログアウトのみ */}
+              <aside className="mypage-sidebar">
+                <div className="sidebar-profile">
+                  <div className="sidebar-avatar">{(user.name || "?").charAt(0)}</div>
+                  <div className="sidebar-name">{user.name}</div>
+                  <div className="sidebar-univ">{`${user.faculty} ${user.grade}`.trim() || "GLOMAC学生"}</div>
+                  <div className="sidebar-rating">
+                    <i className="fas fa-star" />
+                    <span>{user.rating}</span>
+                  </div>
+                </div>
+                <nav className="sidebar-nav">
+                  <div className="sidebar-nav-item danger" onClick={() => setLogoutConfirm(true)}>
+                    <i className="fas fa-sign-out-alt" /> ログアウト
+                  </div>
+                </nav>
+              </aside>
+
+              {/* MAIN PANEL：準備中の案内 */}
+              <div>
+                <div className="panel-card">
+                  <div className="panel-body" style={{ textAlign: "center", padding: "56px 32px" }}>
+                    <div style={{ fontSize: "3rem", marginBottom: 16 }}>🚧</div>
+                    <h3 style={{ fontSize: "1.3rem", fontWeight: 800, color: "var(--navy)", marginBottom: 12 }}>
+                      マイページは準備中です
+                    </h3>
+                    <p style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 8 }}>
+                      出品・購入希望・メッセージなどの各機能は順次公開予定です。
+                    </p>
+                    <p style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 24 }}>
+                      今しばらくお待ちください。
+                    </p>
+                    <button type="button" className="btn-navy" onClick={() => setLogoutConfirm(true)}>
+                      <i className="fas fa-sign-out-alt" /> ログアウト
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        {/* PB-044：ログアウト確認モーダル（制限ビューでも同じ確認フローを踏む） */}
+        {logoutConfirm && (
+          <div className="modal-overlay" onClick={() => setLogoutConfirm(false)}>
+            <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-icon">
+                <i className="fas fa-sign-out-alt" />
+              </div>
+              <h3 className="modal-title">ログアウトしますか？</h3>
+              <p className="modal-text">
+                ログアウトするとホームページに戻ります。再度ご利用にはログインが必要です。
+              </p>
+              <div className="modal-actions">
+                <button type="button" className="btn-outline" onClick={() => setLogoutConfirm(false)}>
+                  キャンセル
+                </button>
+                <button type="button" className="btn-navy" onClick={onLogout}>
+                  <i className="fas fa-sign-out-alt" /> ログアウト
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
 
   const navItem = (key: Tab, icon: string, label: string, badge?: number) => (
     <div

@@ -5,9 +5,12 @@
 // しきい値として扱い、機能の出し分け判断をすべてここに集約する。
 //
 //   Phase 0: プレリリース（閲覧のみ）— トップ / 一覧・検索 / 詳細（ボタン無効）
-//   Phase 1: 購入・予約解禁 — 購入希望ボタン / /checkout / /mypage / /api/payments
+//   Phase 1: 購入・予約解禁 — 購入希望ボタン / /checkout / /api/payments
 //   Phase 2: 出品解禁 — /sell
 //   Phase 3+: 全解禁
+//
+// ※ /mypage は全フェーズで到達可（ここでは遮断しない）。ただし phase 0 では
+//    ページ側で「準備中の案内＋ログアウトのみ」の制限ビューを出し、機能は canReserve で解禁する。
 //
 // 解禁はコード変更なしで、Vercel の環境変数を 0→1→2 と上げるだけ。
 // ※ NEXT_PUBLIC_* はビルド時にインライン化されるため、変更時は再デプロイが走る。
@@ -24,7 +27,6 @@ export const canSell = RELEASE_PHASE >= 2; // 出品
 // ※ /sell は「閲覧は可・出品操作（次へ/出品ボタン）だけ canSell で無効化」の方針のため
 //    ここでは遮断しない。実際の出品作成は app/sell/page.tsx の submit() を canSell でガードする。
 const RESTRICTED: { prefix: string; minPhase: number; isApi?: boolean }[] = [
-  { prefix: "/mypage", minPhase: 1 },
   { prefix: "/checkout", minPhase: 1 },
   { prefix: "/api/payments", minPhase: 1, isApi: true },
 ];
