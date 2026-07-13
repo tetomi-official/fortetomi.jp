@@ -21,8 +21,9 @@ export const canSell = RELEASE_PHASE >= 2; // 出品
 
 // proxy でのサーバー強制用: フェーズ未満なら遮断するルート。
 // ここに無いパス（/auth/confirm・/api/reverify・法務・認証ページ等）は常に許可。
+// ※ /sell は「閲覧は可・出品操作（次へ/出品ボタン）だけ canSell で無効化」の方針のため
+//    ここでは遮断しない。実際の出品作成は app/sell/page.tsx の submit() を canSell でガードする。
 const RESTRICTED: { prefix: string; minPhase: number; isApi?: boolean }[] = [
-  { prefix: "/sell", minPhase: 2 },
   { prefix: "/mypage", minPhase: 1 },
   { prefix: "/checkout", minPhase: 1 },
   { prefix: "/api/payments", minPhase: 1, isApi: true },
