@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { canReserve, canSell } from "@/lib/prerelease";
 
 export default function Footer() {
   return (
@@ -17,8 +18,8 @@ export default function Footer() {
         <div className="footer-col">
           <h4>Service</h4>
           <Link href="/listings">教科書を探す</Link>
-          <Link href="/sell">出品する</Link>
-          <Link href="/mypage">マイページ</Link>
+          {canSell && <Link href="/sell">出品する</Link>}
+          {canReserve && <Link href="/mypage">マイページ</Link>}
         </div>
         <div className="footer-col">
           <h4>Info</h4>

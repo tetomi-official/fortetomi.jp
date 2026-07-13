@@ -13,6 +13,7 @@ import {
 } from "@/lib/constants";
 import { conditionLabel, yen, formatDate, formatSlot } from "@/lib/labels";
 import { useAuth } from "@/lib/auth";
+import { canReserve } from "@/lib/prerelease";
 import { useToast } from "@/components/Toast";
 import type { CandidateSlot, Listing } from "@/lib/types";
 
@@ -174,6 +175,8 @@ export default function DetailPage() {
   };
 
   const openReserve = () => {
+    // プレリリース中（Phase 0）は購入導線を封鎖。UI でも非表示だが二重防御。
+    if (!canReserve) return;
     if (!user) {
       showToast("購入希望にはログインが必要です", "error");
       router.push("/login");
@@ -360,13 +363,21 @@ export default function DetailPage() {
               </div>
 
               <div className="action-panel">
-                <button className="btn-buy-main" onClick={openReserve} disabled={isSold}>
-                  <i className={`fas ${isSold ? "fa-ban" : "fa-handshake"}`} />{" "}
-                  {isSold ? st.label : "購入を希望する"}
-                </button>
-                <button className="btn-chat-seller" onClick={() => router.push("/mypage")}>
-                  <i className="fas fa-comment-dots" /> 出品者にメッセージ
-                </button>
+                {canReserve ? (
+                  <>
+                    <button className="btn-buy-main" onClick={openReserve} disabled={isSold}>
+                      <i className={`fas ${isSold ? "fa-ban" : "fa-handshake"}`} />{" "}
+                      {isSold ? st.label : "購入を希望する"}
+                    </button>
+                    <button className="btn-chat-seller" onClick={() => router.push("/mypage")}>
+                      <i className="fas fa-comment-dots" /> 出品者にメッセージ
+                    </button>
+                  </>
+                ) : (
+                  <button className="btn-buy-main" disabled>
+                    <i className="fas fa-lock" /> 準備中です
+                  </button>
+                )}
                 <div className="action-secondary">
                   <button className={`btn-like ${liked ? "liked" : ""}`.trim()} onClick={toggleLike}>
                     <i className="fas fa-heart" />
@@ -377,9 +388,19 @@ export default function DetailPage() {
                   </button>
                 </div>
                 <p className="action-note">
-                  購入希望を送ると出品者に通知されます。
-                  <br />
-                  受け渡し場所・日時はメッセージで調整してください。
+                  {canReserve ? (
+                    <>
+                      購入希望を送ると出品者に通知されます。
+                      <br />
+                      受け渡し場所・日時はメッセージで調整してください。
+                    </>
+                  ) : (
+                    <>
+                      現在プレリリース中です。
+                      <br />
+                      購入機能はまもなく公開します。
+                    </>
+                  )}
                 </p>
               </div>
             </div>
