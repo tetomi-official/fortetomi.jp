@@ -6,13 +6,10 @@ import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/Toast";
 
-// デモ用のシード済みアカウント（docs/supabase-seed.sql・全員 password123）。
-// 学部をばらして、ログイン後の学部別一覧の違いを体験できるようにしている。
+// デモ用のシード済みアカウント（docs/supabase-seed.sql・password123）。
+// プレリリース中は PAY.jp 審査担当者が閲覧確認できるよう 1 アカウントに限定する。
 const DEMO_ACCOUNTS = [
   { email: "sato@g.chuo-u.ac.jp", name: "佐藤 花子", faculty: "経済学部", grade: "2年" },
-  { email: "tanaka@g.chuo-u.ac.jp", name: "田中 太郎", faculty: "法学部", grade: "3年" },
-  { email: "suzuki@g.chuo-u.ac.jp", name: "鈴木 健一", faculty: "理工学部", grade: "4年" },
-  { email: "nakamura@g.chuo-u.ac.jp", name: "中村 結衣", faculty: "総合政策学部", grade: "2年" },
 ];
 
 export default function LoginPage() {

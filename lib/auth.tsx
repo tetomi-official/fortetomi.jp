@@ -33,6 +33,16 @@ const DEMO_KEY = "tetomi_demo_user";
 // デモ用シードアカウントの共通パスワード（docs/supabase-seed.sql と一致）。
 const DEMO_PASSWORD = "password123";
 
+// メール確認リンク・リダイレクトのベースURL。
+// 本番では NEXT_PUBLIC_SITE_URL（例: https://tetomi.jp）を最優先し、
+// localhost で登録した場合に確認リンクが localhost を指す事故を防ぐ。
+// 未設定時のみ window.location.origin にフォールバックする。
+function siteOrigin(): string | undefined {
+  const env = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
+  if (env) return env;
+  return typeof window !== "undefined" ? window.location.origin : undefined;
+}
+
 export interface SignUpInput {
   name: string;
   /** 大学メール（@g.chuo-u.ac.jp）。在籍確認に使う仮ID */
@@ -252,10 +262,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           gender: input.gender ?? "",
           personal_email: input.personalEmail, // 後でログインIDへ昇格
         },
-        emailRedirectTo:
-          typeof window !== "undefined"
-            ? `${window.location.origin}/auth/confirm`
-            : undefined,
+        emailRedirectTo: siteOrigin() ? `${siteOrigin()}/auth/confirm` : undefined,
       },
     });
     if (error) {
@@ -281,10 +288,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       type: "signup",
       email,
       options: {
-        emailRedirectTo:
-          typeof window !== "undefined"
-            ? `${window.location.origin}/auth/confirm`
-            : undefined,
+        emailRedirectTo: siteOrigin() ? `${siteOrigin()}/auth/confirm` : undefined,
       },
     });
     return { error: error?.message ?? null };
@@ -295,10 +299,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const sendPasswordReset = useCallback(async (email: string) => {
     const supabase = createClient();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo:
-        typeof window !== "undefined"
-          ? `${window.location.origin}/auth/confirm`
-          : undefined,
+      redirectTo: siteOrigin() ? `${siteOrigin()}/auth/confirm` : undefined,
     });
     return { error: error?.message ?? null };
   }, []);
@@ -336,10 +337,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.updateUser(
       { email: personal },
       {
-        emailRedirectTo:
-          typeof window !== "undefined"
-            ? `${window.location.origin}/auth/confirm`
-            : undefined,
+        emailRedirectTo: siteOrigin() ? `${siteOrigin()}/auth/confirm` : undefined,
       },
     );
     if (error) return { error: error.message, email: personal };
