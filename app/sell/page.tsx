@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
+import { canSell } from "@/lib/prerelease";
 import { useToast } from "@/components/Toast";
 import { conditionLabel, yen, CONDITION_OPTIONS } from "@/lib/labels";
 import { createListing, updateListing, uploadListingImages, fetchListingById } from "@/lib/listings";
@@ -271,6 +272,8 @@ export default function SellPage() {
 
   const submit = async () => {
     if (submitting) return;
+    // プレリリース中（Phase < 2）は出品作成を封鎖。UI でも「次へ」を無効化しているが二重防御。
+    if (!canSell) return;
     if (!condition) {
       showToast("教科書の状態を選択してください", "error");
       return;
@@ -567,7 +570,17 @@ export default function SellPage() {
                   </div>
 
                   <div style={{ textAlign: "right" }}>
-                    <button onClick={() => goStep(2)} className="btn-navy">
+                    {!canSell && (
+                      <p className="form-hint" style={{ textAlign: "right", marginBottom: 8 }}>
+                        現在プレリリース中のため、出品はまだご利用いただけません。まもなく公開します。
+                      </p>
+                    )}
+                    <button
+                      onClick={() => goStep(2)}
+                      className="btn-navy"
+                      disabled={!canSell}
+                      title={!canSell ? "出品機能はまもなく公開します" : undefined}
+                    >
                       次へ <i className="fas fa-arrow-right" />
                     </button>
                   </div>

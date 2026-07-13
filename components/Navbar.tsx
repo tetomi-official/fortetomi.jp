@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
-import { canReserve, canSell } from "@/lib/prerelease";
+import { canReserve } from "@/lib/prerelease";
 import { fetchActionRequiredCount } from "@/lib/notifications";
 
 export default function Navbar() {
@@ -72,11 +72,9 @@ export default function Navbar() {
               ログイン
             </Link>
           )}
-          {canSell && (
-            <Link href="/sell" className="nav-cta">
-              <i className="fas fa-plus" /> 出品する
-            </Link>
-          )}
+          <Link href="/sell" className="nav-cta">
+            <i className="fas fa-plus" /> 出品する
+          </Link>
           {user && canReserve && (
             <Link href="/mypage" className="nav-user-badge" id="navAvatar" style={{ position: "relative" }}>
               <i className="fas fa-user-circle" />
