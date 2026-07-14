@@ -2,11 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth";
 import { ToastProvider } from "@/components/Toast";
-import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SideTab from "@/components/SideTab";
-import ReverifyBanner from "@/components/ReverifyBanner";
-import GraduationSwitchBanner from "@/components/GraduationSwitchBanner";
+import HeaderStack from "@/components/HeaderStack";
 
 export const metadata: Metadata = {
   title: "TETOMI【教科書取引サービス】",
@@ -31,9 +29,7 @@ export default function RootLayout({
         <AuthProvider>
           <ToastProvider>
             <SideTab />
-            <Navbar />
-            <ReverifyBanner />
-            <GraduationSwitchBanner />
+            <HeaderStack />
             {children}
             <Footer />
           </ToastProvider>
