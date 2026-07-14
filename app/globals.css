@@ -201,7 +201,11 @@ ul, ol { list-style: none; }
 .legal-body .todo { color: #9a3412; background: #fff7ed; padding: 1px 6px; border-radius: 4px; font-size: 12px; }
 
 .hamburger { display: none; flex-direction: column; gap: 5px; padding: 6px; }
-.hamburger span { display: block; width: 24px; height: 2px; background: var(--white); border-radius: 2px; transition: 0.3s; }
+.hamburger span { display: block; width: 24px; height: 2px; background: var(--white); border-radius: 2px; transition: transform 0.3s, opacity 0.2s; }
+/* 開いたときに3本バーを×へ変形（bar間5px＋高さ2pxで7px寄せ） */
+.hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.hamburger.open span:nth-child(2) { opacity: 0; }
+.hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
 /* BUTTONS */
 .btn-white {
@@ -796,19 +800,40 @@ button.candidate-row:hover { border-color: var(--navy); }
 @media (max-width: 768px) {
   :root { --nav-h: 60px; }
   .nav-container { padding: 0 16px; }
+  /* モバイル：全画面オーバーレイメニュー（参考サイト風） */
   .nav-links {
-    display: none; flex-direction: column;
-    position: absolute; top: var(--nav-h); left: 0; right: 0;
-    background: var(--navy); padding: 16px 20px 20px;
-    box-shadow: var(--shadow-xl); gap: 4px;
+    position: fixed; inset: 0; z-index: 1;
+    flex-direction: column; justify-content: center; align-items: flex-end;
+    gap: 4px; padding: 0 32px;
+    background: rgba(20,49,74,0.97);
+    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    opacity: 0; visibility: hidden;
+    transform: translateY(-24px);
+    transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.4,0.4,0,1), visibility 0.35s;
+    pointer-events: none;
   }
-  .nav-links.open { display: flex; }
+  .nav-links.open { opacity: 1; visibility: visible; transform: none; pointer-events: auto; }
   .hamburger { display: flex; }
-  .nav-link-item { align-items: flex-start; padding: 10px 8px; }
+  /* ロゴ・ハンバーガーはオーバーレイより前面に */
+  .nav-logo, .hamburger { position: relative; z-index: 2; }
+  /* 右寄せ・大きめ項目 */
+  .nav-link-item { align-items: flex-end; padding: 10px 0; }
+  .nav-link-item .link-en { font-size: 26px; letter-spacing: 0.02em; }
+  .nav-link-item .link-ja { font-size: 12px; margin-top: 2px; }
   .nav-link-item::after { display: none; }
-  .btn-login-nav { margin-left: 0; }
-  .nav-cta { margin-left: 0; }
-  .nav-user-badge { margin-left: 0; }
+  .btn-login-nav { margin-left: 0; margin-top: 12px; align-self: flex-end; }
+  .nav-cta { margin-left: 0; margin-top: 12px; align-self: flex-end; }
+  .nav-user-badge { margin-left: 0; margin-top: 12px; align-self: flex-end; }
+  /* 項目のスタッガー表示（開いた時に順にフェード＋スライド） */
+  .nav-links > * { opacity: 0; transform: translateY(12px);
+    transition: opacity 0.4s ease, transform 0.4s ease; }
+  .nav-links.open > * { opacity: 1; transform: none; }
+  .nav-links.open > *:nth-child(1) { transition-delay: .06s; }
+  .nav-links.open > *:nth-child(2) { transition-delay: .10s; }
+  .nav-links.open > *:nth-child(3) { transition-delay: .14s; }
+  .nav-links.open > *:nth-child(4) { transition-delay: .18s; }
+  .nav-links.open > *:nth-child(5) { transition-delay: .22s; }
+  .nav-links.open > *:nth-child(6) { transition-delay: .26s; }
   .detail-meta-grid { grid-template-columns: 1fr; }
   .form-row { grid-template-columns: 1fr; }
   .form-card { padding: 24px 18px; }

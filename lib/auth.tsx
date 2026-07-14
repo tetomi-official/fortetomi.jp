@@ -21,10 +21,13 @@ import {
 } from "./supabase/session";
 
 // ===================================================
-// Supabase Auth（メール+パスワード / 方針B）
-// - 登録は「大学メール」を仮IDにして確認 → 在籍証明。
-//   その後「個人メール」へログインIDを切り替える（promotePersonalEmail）。
-// - プロフィール項目は profiles テーブルに保持（docs/supabase-setup.sql）。
+// Supabase Auth（メール+パスワード / 方針C）
+// - 登録は「大学メール」を仮IDにして確認 → 在籍証明。以降も大学メールが
+//   ログインID（auth.users.email）のまま。登録は確認リンク1回で完結する。
+// - 登録時の「個人メール」は復旧用アドレス（recovery_email）として保持し、
+//   卒業前に本人が個人メールへログインを切り替える（changeLoginEmail）。
+//   切替を忘れてロックアウトした場合は recovery_email 経由で救済する（/recover）。
+// - プロフィール項目は profiles / profiles_private テーブルに保持（docs/supabase-setup.sql）。
 // - デモユーザーはシード済みアカウント（docs/supabase-seed.sql）で実セッションを張る。
 //   これにより一覧・検索・出品など本物のログインと同じ経路で動作する（開発・体験用）。
 // ===================================================
@@ -45,10 +48,10 @@ function siteOrigin(): string | undefined {
 
 export interface SignUpInput {
   name: string;
-  /** 大学メール（@g.chuo-u.ac.jp）。在籍確認に使う仮ID */
+  /** 大学メール（@g.chuo-u.ac.jp）。ログインID 兼 在籍確認に使う */
   universityEmail: string;
-  /** 個人メール。登録完了後のログインID */
-  personalEmail: string;
+  /** 個人メール。復旧用アドレス（卒業後の切替先・ロックアウト救済先） */
+  recoveryEmail: string;
   password: string;
   university?: string;
   faculty?: string;
@@ -78,8 +81,8 @@ interface AuthContextValue {
   sendPasswordReset: (email: string) => Promise<{ error: string | null }>;
   /** 回復セッション中に新しいパスワードを設定する（PB-012）。 */
   updatePassword: (password: string) => Promise<{ error: string | null }>;
-  /** 在籍確認後、ログインIDを個人メールへ切り替える（確認メールが個人宛に飛ぶ） */
-  promotePersonalEmail: () => Promise<{ error: string | null; email: string | null }>;
+  /** ログインメールを新しいアドレスへ変更する（卒業前の個人メール切替。確認メールが新アドレスに飛ぶ）。 */
+  changeLoginEmail: (newEmail: string) => Promise<{ error: string | null }>;
   updateProfile: (patch: Partial<User>) => Promise<{ error: string | null }>;
   /** 現在のセッションの profiles を再取得して user を更新（再認証後の状態反映用）。 */
   refreshUser: () => Promise<void>;
@@ -97,7 +100,7 @@ interface ProfileRow {
   grade: string | null;
   gender: string | null;
   university_email: string | null;
-  pending_personal_email: string | null;
+  recovery_email: string | null;
   enrollment_verified: boolean | null;
   enrollment_valid_until: string | null;
   rating: number | null;
@@ -117,8 +120,9 @@ function rowToUser(session: Session, row: ProfileRow | null): User {
   return {
     id: session.user.id,
     name: row?.name ?? session.user.email?.split("@")[0] ?? "",
-    email: session.user.email ?? "", // 確認完了後は個人メール
+    email: session.user.email ?? "", // ログインID（登録時は大学メール / 切替後は個人メール）
     university_email: row?.university_email ?? "",
+    recovery_email: row?.recovery_email ?? "",
     enrollment_valid_until: row?.enrollment_valid_until ?? null,
     university: row?.university ?? "",
     faculty: row?.faculty ?? "",
@@ -149,7 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async function hydrate(session: Session) {
       const { data: row } = await supabase
         .from("profiles")
-        .select("*, profiles_private(university_email, pending_personal_email, gender)")
+        .select("*, profiles_private(university_email, recovery_email, gender)")
         .eq("id", session.user.id)
         .maybeSingle();
       if (active) setUser(rowToUser(session, flattenProfile(row)));
@@ -226,16 +230,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         needsConfirm: false,
       };
     }
-    if (!isValidEmail(input.personalEmail)) {
-      return { error: "個人メールアドレスの形式が正しくありません", needsConfirm: false };
+    if (!isValidEmail(input.recoveryEmail)) {
+      return { error: "復旧用メールアドレスの形式が正しくありません", needsConfirm: false };
     }
 
     const supabase = createClient();
 
     // 同一大学メールでの複数登録を事前にチェック（UX 用の早期リターン）。
-    // 確実な防御は DB 側の部分ユニークインデックス profiles_university_email_uniq。
-    // ※auth.users.email は確認後に個人メールへ置き換わるため、
-    //   大学メールの重複は profiles.university_email を見ないと判定できない。
+    // 確実な防御は DB 側の部分ユニークインデックス profiles_private_university_email_uniq。
+    // ※卒業切替後は auth.users.email が個人メールへ置き換わり大学メールが解放されるため、
+    //   大学メールの重複は profiles_private.university_email を見ないと判定できない。
     const normalizedUnivEmail = input.universityEmail.trim().toLowerCase();
     // profiles は本人行しか読めない（PII保護）ため、メアド本体は露出せず
     // 存在有無の boolean だけを返す SECURITY DEFINER 関数で判定する。
@@ -250,7 +254,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const { data, error } = await supabase.auth.signUp({
-      email: input.universityEmail, // 仮ID = 大学メール
+      email: input.universityEmail, // ログインID = 大学メール（在籍中はこのまま）
       password: input.password,
       options: {
         // profiles 行はこのメタデータから DB トリガーが作成する
@@ -260,7 +264,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           faculty: input.faculty ?? "",
           grade: input.grade ?? "",
           gender: input.gender ?? "",
-          personal_email: input.personalEmail, // 後でログインIDへ昇格
+          recovery_email: input.recoveryEmail, // 復旧用アドレス（卒業時の切替先）
         },
         emailRedirectTo: siteOrigin() ? `${siteOrigin()}/auth/confirm` : undefined,
       },
@@ -311,37 +315,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error?.message ?? null };
   }, []);
 
-  const promotePersonalEmail = useCallback(async () => {
+  // ログインメールを新しいアドレスへ変更する（卒業前の個人メール切替）。
+  // updateUser が新アドレス宛に email_change の確認メールを送り、リンクを開くと
+  // /auth/confirm(type=email_change) で切替が確定する。
+  const changeLoginEmail = useCallback(async (newEmail: string) => {
+    const trimmed = newEmail.trim();
+    if (!isValidEmail(trimmed)) {
+      return { error: "メールアドレスの形式が正しくありません" };
+    }
     const supabase = createClient();
     const {
       data: { user: authUser },
     } = await supabase.auth.getUser();
-    if (!authUser) return { error: "ログインしていません", email: null };
+    if (!authUser) return { error: "ログインしていません" };
 
-    const { data: row } = await supabase
-      .from("profiles_private")
-      .select("pending_personal_email")
-      .eq("id", authUser.id)
-      .maybeSingle();
-
-    const personal = row?.pending_personal_email;
-    if (!personal) {
-      return { error: "登録された個人メールが見つかりません", email: null };
-    }
-
-    // すでに個人メールに切り替わっていれば何もしない
-    if (authUser.email?.toLowerCase() === personal.toLowerCase()) {
-      return { error: null, email: personal };
+    // すでにそのアドレスなら何もしない。
+    if (authUser.email?.toLowerCase() === trimmed.toLowerCase()) {
+      return { error: null };
     }
 
     const { error } = await supabase.auth.updateUser(
-      { email: personal },
+      { email: trimmed },
       {
         emailRedirectTo: siteOrigin() ? `${siteOrigin()}/auth/confirm` : undefined,
       },
     );
-    if (error) return { error: error.message, email: personal };
-    return { error: null, email: personal };
+    if (error) return { error: error.message };
+    return { error: null };
   }, []);
 
   const updateProfile = useCallback(async (patch: Partial<User>) => {
@@ -377,10 +377,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .eq("id", authUser.id);
     if (error) return { error: error.message };
 
-    if (patch.gender !== undefined) {
+    // PII（gender / 復旧用アドレス）は profiles_private を更新する。
+    // ※ログインメール（email）は auth 側のフローが必要なので changeLoginEmail で扱う。
+    const privatePatch: { gender?: string; recovery_email?: string } = {};
+    if (patch.gender !== undefined) privatePatch.gender = patch.gender;
+    if (patch.recovery_email !== undefined) privatePatch.recovery_email = patch.recovery_email;
+    if (Object.keys(privatePatch).length > 0) {
       const { error: privErr } = await supabase
         .from("profiles_private")
-        .update({ gender: patch.gender })
+        .update(privatePatch)
         .eq("id", authUser.id);
       if (privErr) return { error: privErr.message };
     }
@@ -401,7 +406,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     const { data: row } = await supabase
       .from("profiles")
-      .select("*, profiles_private(university_email, pending_personal_email, gender)")
+      .select("*, profiles_private(university_email, recovery_email, gender)")
       .eq("id", session.user.id)
       .maybeSingle();
     setUser(rowToUser(session, flattenProfile(row)));
@@ -433,7 +438,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         resendSignupEmail,
         sendPasswordReset,
         updatePassword,
-        promotePersonalEmail,
+        changeLoginEmail,
         updateProfile,
         refreshUser,
         logout,

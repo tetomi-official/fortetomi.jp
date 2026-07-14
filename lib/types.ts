@@ -16,10 +16,12 @@ export type ReservationStatus =
 export interface User {
   id: string;
   name: string;
-  /** ログイン用メール（登録完了後は個人メール） */
+  /** ログイン用メール（登録時は大学メール。卒業時に個人メールへ切替可） */
   email: string;
-  /** 在籍確認に使った大学メール（監査用の記録 / 再認証メールの宛先） */
+  /** 在籍確認に使った大学メール（再認証メールの宛先。切替後も残す） */
   university_email?: string;
+  /** 復旧用アドレス（卒業後も使える連絡先。ロックアウト時の救済先） */
+  recovery_email?: string;
   /** 在籍確認の有効期限（ISO文字列）。これを過ぎると出品・購入が停止する。 */
   enrollment_valid_until?: string | null;
   university: string;

@@ -91,9 +91,10 @@ Supabase → **Authentication** → **Emails** → **SMTP Settings** で Custom 
    npm run test:resend -- <自分が受信できるアドレス>
    ```
    → `no-reply@tetomi.jp` からテストメールが届けば、ドメイン認証と API キーは OK。
-2. **登録確認メール（SMTP 経由）** ☐: 手順5完了後、実際に新規登録を1件通し、①大学メール確認 ②個人メール確認 の2通が **Resend から**届き、`/auth/confirm` → `/signup/complete` → ログインまで通ること。
-   - 届かない/期限切れ時は各画面の「確認メールを再送信」ボタンで再送できる（コード実装済み）。
+2. **登録確認メール（SMTP 経由）** ☐: 手順5完了後、実際に新規登録を1件通し、大学メール確認の1通が **Resend から**届き、`/auth/confirm(type=signup)` → 在籍有効化 → 大学メールでログインまで通ること（方針C：登録は確認1回で完結）。
+   - 届かない/期限切れ時は signup 画面の「確認メールを再送信」ボタンで再送できる（コード実装済み）。
 3. **reverify メール** ☐: `/reverify` から「大学メールで再認証する」→ 大学メール宛に実送信されること。
+4. **復旧メール（ログイン切替）** ☐: `/recover` に大学メールを入力 → 登録時の復旧用アドレス宛に切替リンクが届き、`/api/recover/confirm` 後にログインメールが差し替わること。`RESEND_API_KEY` 未設定時はサーバーログにリンクが出る。
 
 ## 補足：メール受信について
 - `support@tetomi.jp`（`lib/support.ts` の `SUPPORT_CONTACT`）は**送信ドメイン設定だけでは受信できない**。Resend の Enable Receiving は OFF。実際に問い合わせを受けるには MX / 転送設定が別途必要。
@@ -101,5 +102,6 @@ Supabase → **Authentication** → **Emails** → **SMTP Settings** で Custom 
 ## 関連
 - [`.env.example`](../.env.example) — 環境変数の見本
 - `app/api/reverify/request/route.ts` — reverify メール送信（Resend HTTP API）
+- `app/api/recover/request/route.ts` — ログイン復旧メール送信（Resend HTTP API）
 - `scripts/test-resend.mjs` — 疎通テスト
-- `app/signup/page.tsx` / `app/signup/complete/page.tsx` — 確認メール再送信ボタン
+- `app/signup/page.tsx` — 確認メール再送信ボタン

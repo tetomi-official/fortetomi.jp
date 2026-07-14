@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SideTab from "@/components/SideTab";
 import ReverifyBanner from "@/components/ReverifyBanner";
+import GraduationSwitchBanner from "@/components/GraduationSwitchBanner";
 
 export const metadata: Metadata = {
   title: "TETOMI【教科書取引サービス】",
@@ -32,6 +33,7 @@ export default function RootLayout({
             <SideTab />
             <Navbar />
             <ReverifyBanner />
+            <GraduationSwitchBanner />
             {children}
             <Footer />
           </ToastProvider>
