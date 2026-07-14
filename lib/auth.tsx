@@ -254,7 +254,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const { data, error } = await supabase.auth.signUp({
-      email: input.universityEmail, // ログインID = 大学メール（在籍中はこのまま）
+      // 重複チェックと同じ正規化済み値を渡す。生入力のままだと、スマホの
+      // オートコレクト/予測変換で末尾スペースや大文字が混入した際に
+      // 「検証は通ったのに送信先アドレスが別物」になり確認メールが不達になる。
+      email: normalizedUnivEmail, // ログインID = 大学メール（在籍中はこのまま）
       password: input.password,
       options: {
         // profiles 行はこのメタデータから DB トリガーが作成する
@@ -270,6 +273,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
     });
     if (error) {
+      // スマホではエラートーストを見落としやすいので、切り分け用に痕跡を残す。
+      console.error("[signUp] Supabase auth.signUp failed:", error.message);
       // 事前チェックをすり抜けた競合時は、DB のユニーク制約が
       // handle_new_user トリガー内で発火し、GoTrue は汎用的な
       // 「Database error saving new user」を返す。重複の可能性として案内する。
@@ -290,7 +295,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const supabase = createClient();
     const { error } = await supabase.auth.resend({
       type: "signup",
-      email,
+      email: email.trim().toLowerCase(), // signUp と同じ正規化で宛先の揺れを防ぐ
       options: {
         emailRedirectTo: siteOrigin() ? `${siteOrigin()}/auth/confirm` : undefined,
       },
@@ -302,7 +307,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // 回復セッションを張り、/reset-password で新パスワードを設定する。
   const sendPasswordReset = useCallback(async (email: string) => {
     const supabase = createClient();
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
       redirectTo: siteOrigin() ? `${siteOrigin()}/auth/confirm` : undefined,
     });
     return { error: error?.message ?? null };
@@ -319,7 +324,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // updateUser が新アドレス宛に email_change の確認メールを送り、リンクを開くと
   // /auth/confirm(type=email_change) で切替が確定する。
   const changeLoginEmail = useCallback(async (newEmail: string) => {
-    const trimmed = newEmail.trim();
+    const trimmed = newEmail.trim().toLowerCase();
     if (!isValidEmail(trimmed)) {
       return { error: "メールアドレスの形式が正しくありません" };
     }

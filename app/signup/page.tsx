@@ -113,7 +113,8 @@ export default function SignupPage() {
       return;
     }
     if (needsConfirm) {
-      setSentTo(form.universityEmail);
+      // 実際に送信された宛先（正規化済み）を表示する。
+      setSentTo(form.universityEmail.trim().toLowerCase());
       return;
     }
     showToast(`登録を受け付けました`, "success");
@@ -184,6 +185,10 @@ export default function SignupPage() {
             <input
               type="email"
               autoComplete="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              inputMode="email"
               placeholder={`example@${ALLOWED_EMAIL_DOMAIN}`}
               value={form.universityEmail}
               onChange={set("universityEmail")}
@@ -196,6 +201,10 @@ export default function SignupPage() {
             <input
               type="email"
               autoComplete="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              inputMode="email"
               placeholder="example@gmail.com"
               value={form.recoveryEmail}
               onChange={set("recoveryEmail")}

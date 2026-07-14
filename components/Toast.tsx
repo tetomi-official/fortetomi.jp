@@ -28,7 +28,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setType(t);
     setVisible(true);
     if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => setVisible(false), 3200);
+    // エラー/警告は見落とすと原因切り分けができないため長めに表示する。
+    const duration = t === "error" || t === "warning" ? 7000 : 3200;
+    timer.current = setTimeout(() => setVisible(false), duration);
   }, []);
 
   return (

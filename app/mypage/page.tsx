@@ -1040,6 +1040,10 @@ export default function MyPage() {
                           <input
                             type="email"
                             autoComplete="email"
+                            autoCapitalize="none"
+                            autoCorrect="off"
+                            spellCheck={false}
+                            inputMode="email"
                             placeholder="example@gmail.com"
                             value={newLoginEmail}
                             onChange={(e) => setNewLoginEmail(e.target.value)}
@@ -1064,6 +1068,10 @@ export default function MyPage() {
                           <input
                             type="email"
                             autoComplete="email"
+                            autoCapitalize="none"
+                            autoCorrect="off"
+                            spellCheck={false}
+                            inputMode="email"
                             placeholder="example@gmail.com"
                             value={recoveryInput}
                             onChange={(e) => setRecoveryInput(e.target.value)}

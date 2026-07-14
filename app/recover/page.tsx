@@ -112,6 +112,10 @@ function RecoverInner() {
           <input
             type="email"
             autoComplete="email"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            inputMode="email"
             placeholder={`example@${ALLOWED_EMAIL_DOMAIN}`}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
