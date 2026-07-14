@@ -1021,8 +1021,9 @@ button.candidate-row:hover { border-color: var(--navy); }
 @media (max-width: 768px) {
   .about-section { padding: 80px 24px 48px; }
   .faq-section { padding: 80px 24px; }
-  .gallery-section { height: 500px; }
-  .slide-content { left: 28px; right: 28px; }
+  .gallery-section { height: clamp(440px, 58vh, 520px); }
+  .slide-content { left: 28px; right: 28px; bottom: 88px; }
+  .slide-desc { max-width: none; }
   .hero-inner { padding: 100px 24px 140px; }
   .new-listings { padding: 64px 24px; }
 }
@@ -1030,6 +1031,18 @@ button.candidate-row:hover { border-color: var(--navy); }
   .hero-inner { padding: 80px 16px 120px; }
   .hero-btns { flex-direction: column; }
   .about-section { padding: 60px 16px 40px; }
+
+  /* スライダー: 狭い画面では高さを抑えて左右の見切れを減らし、被写体を上寄せで保持 */
+  .gallery-section { height: 380px; }
+  .slide-bg { font-size: 6rem; }
+  .slide-bg img { object-position: center 32%; }
+  .slide-bg::after { background: linear-gradient(to top, rgba(13,32,53,0.94) 0%, rgba(13,32,53,0.55) 52%, rgba(13,32,53,0.15) 100%); }
+  .slide-content { left: 20px; right: 20px; bottom: 72px; gap: 7px; }
+  .slide-tag { font-size: 11px; letter-spacing: 0.1em; }
+  .slide-title { font-size: 1.5rem; }
+  .slide-desc { font-size: 12.5px; line-height: 1.55; }
+  .slide-controls { height: 72px; gap: 10px; }
+  .slide-dot, .slide-arrow { width: 30px; height: 30px; font-size: 12px; }
 }
 
 /* ===================================================

@@ -16,6 +16,7 @@ const ABOUT_SLIDES = [
   {
     tag: "01 — Direct",
     icon: "fa-hand-holding-heart",
+    img: "/images/slide-1-direct.jpg",
     title: "送料・梱包ゼロの手渡し",
     desc: "対面で直接受け渡すから、配送も梱包もいりません。キャンパス内で取引が完結します。",
     cls: "slide-bg-1",
@@ -23,6 +24,7 @@ const ABOUT_SLIDES = [
   {
     tag: "02 — Save",
     icon: "fa-piggy-bank",
+    img: "/images/slide-2-save.jpg",
     title: "売り手も買い手もおトク",
     desc: "中古教科書を適正価格で。買う人は安く手に入り、売る人は使わない本を現金化できます。",
     cls: "slide-bg-2",
@@ -30,6 +32,7 @@ const ABOUT_SLIDES = [
   {
     tag: "03 — Easy",
     icon: "fa-camera",
+    img: "/images/slide-3-easy.jpg",
     title: "写真からかんたん出品",
     desc: "本の写真を撮るだけで情報を自動入力。出品から取引のやり取りまで、すべてオンラインで完了します。",
     cls: "slide-bg-3",
@@ -37,6 +40,7 @@ const ABOUT_SLIDES = [
   {
     tag: "04 — Safe",
     icon: "fa-shield-halved",
+    img: "/images/slide-4-safe.jpg",
     title: "大学メール認証で学内限定",
     desc: "大学メールでの在籍確認により、同じ学部の学生だけが利用できる安心の取引環境です。",
     cls: "slide-bg-4",
@@ -206,7 +210,11 @@ export default function HomePage() {
           {ABOUT_SLIDES.map((g, i) => (
             <div key={i} className={`gallery-slide ${i === slide ? "active" : ""}`.trim()}>
               <div className={`slide-bg ${g.cls}`}>
-                <i className={`fas ${g.icon}`} aria-hidden="true" />
+                {g.img ? (
+                  <img src={g.img} alt="" loading={i === 0 ? "eager" : "lazy"} />
+                ) : (
+                  <i className={`fas ${g.icon}`} aria-hidden="true" />
+                )}
               </div>
               <div className="slide-content">
                 <p className="slide-tag">{g.tag}</p>
