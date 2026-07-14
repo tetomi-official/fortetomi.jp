@@ -32,6 +32,7 @@ import {
 //   これにより一覧・検索・出品など本物のログインと同じ経路で動作する（開発・体験用）。
 // ===================================================
 
+// 旧デモ実装が使っていた localStorage キー。現在は掃除（削除）専用に残す。
 const DEMO_KEY = "tetomi_demo_user";
 // デモ用シードアカウントの共通パスワード（docs/supabase-seed.sql と一致）。
 const DEMO_PASSWORD = "password123";
@@ -134,12 +135,15 @@ function rowToUser(session: Session, row: ProfileRow | null): User {
   };
 }
 
-function readDemo(): User | null {
+// 旧デモ実装（loginAsDemo が User オブジェクトを localStorage に永続化していた）の
+// 残骸を掃除する。現行 loginAsDemo は実セッション方式のためこのキーは不要。
+// これを消さないと、過去に旧デモを押したブラウザが起動のたびに古いユーザー
+// （例: 削除済みの「鈴木」）を復元し続けてしまう。
+function clearLegacyDemo() {
   try {
-    const raw = localStorage.getItem(DEMO_KEY);
-    return raw ? (JSON.parse(raw) as User) : null;
+    localStorage.removeItem(DEMO_KEY);
   } catch {
-    return null;
+    /* noop */
   }
 }
 
@@ -161,12 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     async function init() {
-      const demo = readDemo();
-      if (demo) {
-        setUser(demo);
-        setReady(true);
-        return;
-      }
+      clearLegacyDemo();
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -187,7 +186,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (readDemo()) return;
       if (session) void hydrate(session);
       else setUser(null);
     });
@@ -351,20 +349,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updateProfile = useCallback(async (patch: Partial<User>) => {
-    if (readDemo()) {
-      setUser((prev) => {
-        if (!prev) return prev;
-        const next = { ...prev, ...patch };
-        try {
-          localStorage.setItem(DEMO_KEY, JSON.stringify(next));
-        } catch {
-          /* noop */
-        }
-        return next;
-      });
-      return { error: null };
-    }
-
     const supabase = createClient();
     const {
       data: { user: authUser },
@@ -401,7 +385,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshUser = useCallback(async () => {
-    if (readDemo()) return; // デモは常に有効・固定
     const supabase = createClient();
     const {
       data: { session },
@@ -419,11 +402,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    try {
-      localStorage.removeItem(DEMO_KEY);
-    } catch {
-      /* noop */
-    }
+    clearLegacyDemo();
     clearSessionExp();
     const supabase = createClient();
     await supabase.auth.signOut();
