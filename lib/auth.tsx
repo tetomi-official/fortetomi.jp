@@ -37,13 +37,14 @@ const DEMO_KEY = "tetomi_demo_user";
 const DEMO_PASSWORD = "password123";
 
 // メール確認リンク・リダイレクトのベースURL。
-// 本番では NEXT_PUBLIC_SITE_URL（例: https://tetomi.jp）を最優先し、
-// localhost で登録した場合に確認リンクが localhost を指す事故を防ぐ。
-// 未設定時のみ window.location.origin にフォールバックする。
+// これらの呼び出しは全てクライアント（"use client" の useAuth フック内）なので、
+// 実際のオリジンを最優先にする。これによりプレビュー（develop）では develop URL、
+// 本番（tetomi.jp）では tetomi.jp が自動で使われ、環境ごとに認証を完結できる。
+// NEXT_PUBLIC_SITE_URL は window が無い SSR 時のフォールバックに留める。
+// ※メール本文リンクの最終的なドメインは Supabase 側テンプレート（{{ .RedirectTo }}）が決める。
 function siteOrigin(): string | undefined {
-  const env = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
-  if (env) return env;
-  return typeof window !== "undefined" ? window.location.origin : undefined;
+  if (typeof window !== "undefined") return window.location.origin;
+  return process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
 }
 
 export interface SignUpInput {

@@ -115,6 +115,9 @@ export default function SignupPage() {
     if (needsConfirm) {
       // 実際に送信された宛先（正規化済み）を表示する。
       setSentTo(form.universityEmail.trim().toLowerCase());
+      // 確認画面はカードが短く、スクロール位置が保持されると先にフッターが
+      // 見えてしまう（再送ボタンは上部）。即座に最上部へ戻す。
+      window.scrollTo({ top: 0 });
       return;
     }
     showToast(`登録を受け付けました`, "success");
