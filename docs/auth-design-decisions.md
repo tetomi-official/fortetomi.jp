@@ -172,6 +172,33 @@
 
 ---
 
+## 7. 方針転換：B → C（大学メールログイン継続 ＋ 個人メール復旧）
+
+更新: 2026-07-14
+
+### 経緯
+当初の登録フロー（方針B）は「大学メールを仮IDにして在籍確認 → 登録直後に個人メールへログインIDを昇格」する2段階方式だった。しかしオンボーディング最悪のタイミングで「大学メール確認①→個人メール確認②」の二重確認ダンスが発生し、摩擦・離脱が大きい。「大学メールで直接ログインできる方が UX 的にも自然」という結論から、方針C へ転換する。
+
+### 方針C
+- **大学メールをログインID（`auth.users.email`）のまま在籍中ずっと使う**。登録は確認リンク1回で完結。
+- 登録時の個人メールは **`profiles_private.recovery_email`（復旧用アドレス）** として恒久保存。
+- 卒業前に本人がマイページから **個人メールへログインを切り替える**（`changeLoginEmail` → `updateUser({email})` → `type=email_change` 確認）。
+- 在籍の確定は **signup 確認時点** に移動（昇格ステップ廃止に伴う。旧実装は email_change 確認時に付与していた）。
+
+### トレードオフ（採用理由）
+| 論点 | 内容 |
+|---|---|
+| 最大リスク | **卒業時ロックアウト**。Supabase Auth はログイン/パスワード再設定が `auth.users.email` の1アドレス依存で、ネイティブの復旧用サブアドレスが無い。大学メール失効後に切替を忘れると、パスワード再設定メールが死んだ宛先に飛びアカウント復旧不能。 |
+| 3層防御 | ①卒業前リマインドバナー（`GraduationSwitchBanner`）②マイページのセルフ切替 ③**復旧フロー**（`/recover` → `recovery_email` 宛のワンタイムトークンで `auth.users.email` を復旧用アドレスへ差し替え、パスワード再設定を送る）。 |
+| 安全性 | 復旧リンクは `recovery_email` にしか送らない。大学メールを知る第三者でも `recovery_email` を乗っ取らない限り復旧不能。request は未ログイン経路のためアカウント存在を漏らさない一律応答＋レート制限。 |
+| 見送った代替 | Google Workspace（`g.chuo-u.ac.jp`）OAuth 化＝在籍を hd クレームで偽装不可に自動証明＋確認メール不要。オンボーディング最良だが OAuth 基盤導入で改修大。将来メール到達性を根本回避したくなった際の次段候補。 |
+
+### 実装（2026-07-14）
+- DB: `docs/supabase-migration-3-recovery-email.sql`（`recovery_email` 列 / `handle_new_user` 更新 / 復旧トークン表 `email_recovery_requests`）。適用順序 #1 → #2 → #3 厳守。
+- コード: `lib/auth.tsx`（`changeLoginEmail`・signUp metadata `recovery_email`）、`app/auth/confirm/route.ts`（signup で在籍付与 / email_change は付与しない）、`app/api/recover/{request,confirm}`、`app/recover/page.tsx`、`components/GraduationSwitchBanner.tsx`、`app/mypage`（実メール変更＋復旧用アドレス編集）、`app/signup`（復旧用アドレス表記）。`app/signup/complete` は廃止。
+
+---
+
 ## 関連
 
 - [../README.md](../README.md) — TETOMI のサービス概要。「今後の改善案」に Firebase Authentication・大学拡張の記載あり。

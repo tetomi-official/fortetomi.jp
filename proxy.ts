@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_EXP_COOKIE, isSessionExpired } from "@/lib/supabase/session";
+import { blockedRoute } from "@/lib/prerelease";
 
 // 各リクエストで Supabase のセッション Cookie を更新する（トークンの自動リフレッシュ）。
 // @supabase/ssr の推奨セットアップ。
@@ -40,6 +41,19 @@ export async function proxy(request: NextRequest) {
   if (user && isSessionExpired(request.cookies.get(SESSION_EXP_COOKIE)?.value)) {
     await supabase.auth.signOut({ scope: "local" });
     response.cookies.set(SESSION_EXP_COOKIE, "", { path: "/", maxAge: 0 });
+  }
+
+  // プレリリース段階解禁：現在のフェーズで許可されていないルートはサーバー側で弾く。
+  // UI 非表示だけだと URL 直打ちでバイパスできるため、ここで実効的に遮断する。
+  const blocked = blockedRoute(request.nextUrl.pathname);
+  if (blocked) {
+    if (blocked.isApi) {
+      return NextResponse.json({ error: "not_available" }, { status: 404 });
+    }
+    const url = request.nextUrl.clone();
+    url.pathname = "/";
+    url.search = "";
+    return NextResponse.redirect(url);
   }
 
   return response;

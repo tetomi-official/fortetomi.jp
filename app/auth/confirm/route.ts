@@ -20,8 +20,8 @@ function redirectWithSession(request: NextRequest, path: string): NextResponse {
 }
 
 // 確認メールのリンクを受けてセッション/メール変更を確定する。
-//  - type=signup       … 大学メールの在籍確認 → 個人メール登録へ誘導
-//  - type=email_change … 個人メールへの切替確認 → 登録完了
+//  - type=signup       … 大学メールの在籍確認 → 在籍を有効化して登録完了（ログインID＝大学メール）
+//  - type=email_change … 卒業前の個人メールへのログイン切替確認 → マイページへ
 //  - type=recovery     … パスワード再設定（PB-012）→ 新パスワード入力ページへ
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -37,49 +37,43 @@ export async function GET(request: NextRequest) {
       if (type === "recovery") {
         return redirectWithSession(request, "/reset-password");
       }
+
+      // 卒業前のログインメール切替（大学メール → 個人メール）の確定。
+      // 在籍ステータスはここでは触らない（切替≒卒業想定。在籍は valid_until の自然失効に委ねる）。
       if (type === "email_change") {
         const {
           data: { user },
         } = await supabase.auth.getUser();
-        if (user) {
-          const { data: prof } = await supabase
-            .from("profiles_private")
-            .select("pending_personal_email")
-            .eq("id", user.id)
-            .maybeSingle();
-          const pending = prof?.pending_personal_email?.toLowerCase() ?? null;
-          const current = user.email?.toLowerCase() ?? null;
-
-          // メールが実際に個人メールへ切り替わったときだけ「完了」とする。
-          // （Secure email change が ON だと片側確認だけでは切り替わらないため、
-          //   ここで早合点して pending を消すと復旧不能になる＝以前のバグ）
-          if (!pending || current === pending) {
-            // 登録完了＝在籍確認済み。次の年度末まで在籍を有効にする。
-            // enrollment_* はユーザー権限では書けない特権列なので service role で更新する
-            //   （ユーザーセッションで更新できると、本人が在籍ステータスを自己付与できてしまう）。
-            const admin = createAdminClient();
-            // 在籍ステータス（特権列）は profiles、pending_personal_email は profiles_private。
-            await admin
-              .from("profiles")
-              .update({
-                enrollment_verified: true,
-                enrollment_valid_until: nextAcademicYearBoundary(
-                  new Date(),
-                ).toISOString(),
-              })
-              .eq("id", user.id);
-            await admin
-              .from("profiles_private")
-              .update({ pending_personal_email: null })
-              .eq("id", user.id);
-            return redirectWithSession(request, "/?welcome=1");
-          }
-          // まだ切り替わっていない → 残りの確認を促す画面へ
-          return redirectWithSession(request, "/signup/complete?await=1");
+        // Secure email change が ON の場合、両側の確認が済むまで new_email が残る。
+        // まだ残っていれば「もう片方のリンクも開いて」と案内する。
+        if (user?.new_email) {
+          return redirectWithSession(request, "/mypage?email_change=await");
         }
+        return redirectWithSession(request, "/mypage?email_changed=1");
       }
-      // signup（大学メール）確認後 → 個人メール登録ステップへ
-      return redirectWithSession(request, "/signup/complete");
+
+      // 大学メールの在籍確認完了＝登録完了。次の年度末まで在籍を有効にする。
+      // enrollment_* はユーザー権限では書けない特権列なので service role で更新する
+      //   （ユーザーセッションで更新できると、本人が在籍ステータスを自己付与できてしまう）。
+      if (type === "signup") {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (user) {
+          const admin = createAdminClient();
+          await admin
+            .from("profiles")
+            .update({
+              enrollment_verified: true,
+              enrollment_valid_until: nextAcademicYearBoundary(new Date()).toISOString(),
+            })
+            .eq("id", user.id);
+        }
+        return redirectWithSession(request, "/?welcome=1");
+      }
+
+      // 想定外の type はホームへ。
+      return redirectWithSession(request, "/");
     }
   }
 

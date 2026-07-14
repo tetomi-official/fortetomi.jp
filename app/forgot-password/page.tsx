@@ -60,7 +60,7 @@ export default function ForgotPasswordPage() {
         <div className="auth-logo">TETOMI</div>
         <h1 className="auth-title">パスワードをお忘れですか？</h1>
         <p className="auth-sub">
-          登録した個人メールアドレスを入力してください。
+          ログインに使っているメールアドレスを入力してください。
           <br />
           パスワード再設定用のリンクをお送りします。
         </p>
@@ -71,6 +71,10 @@ export default function ForgotPasswordPage() {
             <input
               type="email"
               autoComplete="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              inputMode="email"
               placeholder="example@gmail.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -85,6 +89,13 @@ export default function ForgotPasswordPage() {
         <div className="auth-switch">
           <Link href="/login">ログインに戻る</Link>
         </div>
+        <p className="auth-note">
+          卒業などで大学メールが使えずログインできない方は{" "}
+          <Link href="/recover" style={{ color: "var(--navy)", textDecoration: "underline" }}>
+            こちらから復旧
+          </Link>
+          してください。
+        </p>
       </div>
     </main>
   );

@@ -16,6 +16,7 @@ import {
 import { reservationBadgeClass, yen, formatSlot } from "@/lib/labels";
 import { sellerNet, PLATFORM_FEE_RATE, PAYOUT_FEE_YEN } from "@/lib/constants";
 import { decodePaymentQR } from "@/lib/payments";
+import { canReserve } from "@/lib/prerelease";
 import MessagesPanel from "@/components/MessagesPanel";
 import SupportPanel from "@/components/SupportPanel";
 import BarcodeScanner from "@/components/BarcodeScanner";
@@ -34,12 +35,31 @@ const GRADES = ["1年", "2年", "3年", "4年", "院生"];
 
 export default function MyPage() {
   const router = useRouter();
-  const { user, ready, updateProfile, logout } = useAuth();
+  const { user, ready, updateProfile, changeLoginEmail, logout } = useAuth();
   const { showToast } = useToast();
-  const [tab, setTab] = useState<Tab>("dashboard");
+  // バナーからの ?tab=profile で初期タブをプロフィール編集に開く（初期値で解決）。
+  const [tab, setTab] = useState<Tab>(() =>
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("tab") === "profile"
+      ? "profile"
+      : "dashboard",
+  );
+
+  // メール切替確認からの戻り（?email_changed=1 / ?email_change=await）でトースト通知する。
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    if (q.get("email_changed") === "1") {
+      showToast("ログイン用メールアドレスを変更しました", "success");
+    } else if (q.get("email_change") === "await") {
+      showToast("もう一方のメールに届いた確認リンクも開くと切替が完了します", "success");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [allListings, setAllListings] = useState<Listing[]>([]);
   useEffect(() => {
+    // phase 0（制限ビュー）は各機能を出さないためデータ取得も行わない。
+    if (!canReserve) return;
     let active = true;
     fetchListings().then((data) => {
       if (active) setAllListings(data);
@@ -62,7 +82,8 @@ export default function MyPage() {
 
   useEffect(() => {
     // 未ログイン時はログインゲートを早期 return するため、ここでの初期化は不要。
-    if (!user) return;
+    // phase 0（制限ビュー）でも購入希望の取得は不要。
+    if (!user || !canReserve) return;
     let active = true;
     Promise.all([
       fetchSentReservations(user.id),
@@ -239,11 +260,16 @@ export default function MyPage() {
 
   const [profile, setProfile] = useState({
     name: user?.name ?? "",
-    email: user?.email ?? "",
     university: user?.university ?? "",
     faculty: user?.faculty ?? "",
     grade: user?.grade ?? "3年",
   });
+
+  // ログインメール変更（卒業前の個人メール切替）と復旧用アドレス編集。
+  const [newLoginEmail, setNewLoginEmail] = useState("");
+  const [emailSubmitting, setEmailSubmitting] = useState(false);
+  const [recoveryInput, setRecoveryInput] = useState(user?.recovery_email ?? "");
+  const [recoverySubmitting, setRecoverySubmitting] = useState(false);
 
   if (!ready) return <main className="page-main" style={{ background: "var(--bg-gray)" }} />;
 
@@ -295,12 +321,118 @@ export default function MyPage() {
     setTab("dashboard");
   };
 
+  // ログイン用メールを変更する（新アドレス宛に確認メールが飛び、開くと切替が確定する）。
+  const handleChangeLoginEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (emailSubmitting) return;
+    setEmailSubmitting(true);
+    const { error } = await changeLoginEmail(newLoginEmail);
+    setEmailSubmitting(false);
+    if (error) {
+      showToast(error, "error");
+      return;
+    }
+    setNewLoginEmail("");
+    showToast("新しいメールアドレス宛に確認メールを送りました。リンクを開くと切替が完了します。", "success");
+  };
+
+  // 復旧用アドレスを保存する。
+  const handleSaveRecovery = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (recoverySubmitting) return;
+    setRecoverySubmitting(true);
+    const { error } = await updateProfile({ recovery_email: recoveryInput.trim() });
+    setRecoverySubmitting(false);
+    if (error) {
+      showToast(error, "error");
+      return;
+    }
+    showToast("復旧用アドレスを更新しました", "success");
+  };
+
   const onLogout = async () => {
     await logout();
     setLogoutConfirm(false);
     showToast("ログアウトしました");
     router.push("/");
   };
+
+  // プレリリース phase 0（閲覧のみ）：マイページには到達できるが、使えるのはログアウトのみ。
+  // 各機能は「準備中」の案内にとどめ、canReserve（phase 1）で従来のフル機能を解禁する。
+  if (!canReserve) {
+    return (
+      <>
+        <MyHeader sub={`${user.name}さんのページ`} />
+        <main className="page-main" style={{ background: "var(--bg-gray)" }}>
+          <div className="container">
+            <div className="mypage-layout">
+              {/* SIDEBAR：プロフィール概要とログアウトのみ */}
+              <aside className="mypage-sidebar">
+                <div className="sidebar-profile">
+                  <div className="sidebar-avatar">{(user.name || "?").charAt(0)}</div>
+                  <div className="sidebar-name">{user.name}</div>
+                  <div className="sidebar-univ">{`${user.faculty} ${user.grade}`.trim() || "GLOMAC学生"}</div>
+                  <div className="sidebar-rating">
+                    <i className="fas fa-star" />
+                    <span>{user.rating}</span>
+                  </div>
+                </div>
+                <nav className="sidebar-nav">
+                  <div className="sidebar-nav-item danger" onClick={() => setLogoutConfirm(true)}>
+                    <i className="fas fa-sign-out-alt" /> ログアウト
+                  </div>
+                </nav>
+              </aside>
+
+              {/* MAIN PANEL：準備中の案内 */}
+              <div>
+                <div className="panel-card">
+                  <div className="panel-body" style={{ textAlign: "center", padding: "56px 32px" }}>
+                    <div style={{ fontSize: "3rem", marginBottom: 16 }}>🚧</div>
+                    <h3 style={{ fontSize: "1.3rem", fontWeight: 800, color: "var(--navy)", marginBottom: 12 }}>
+                      マイページは準備中です
+                    </h3>
+                    <p style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 8 }}>
+                      出品・購入希望・メッセージなどの各機能は順次公開予定です。
+                    </p>
+                    <p style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 24 }}>
+                      今しばらくお待ちください。
+                    </p>
+                    <button type="button" className="btn-navy" onClick={() => setLogoutConfirm(true)}>
+                      <i className="fas fa-sign-out-alt" /> ログアウト
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        {/* PB-044：ログアウト確認モーダル（制限ビューでも同じ確認フローを踏む） */}
+        {logoutConfirm && (
+          <div className="modal-overlay" onClick={() => setLogoutConfirm(false)}>
+            <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-icon">
+                <i className="fas fa-sign-out-alt" />
+              </div>
+              <h3 className="modal-title">ログアウトしますか？</h3>
+              <p className="modal-text">
+                ログアウトするとホームページに戻ります。再度ご利用にはログインが必要です。
+              </p>
+              <div className="modal-actions">
+                <button type="button" className="btn-outline" onClick={() => setLogoutConfirm(false)}>
+                  キャンセル
+                </button>
+                <button type="button" className="btn-navy" onClick={onLogout}>
+                  <i className="fas fa-sign-out-alt" /> ログアウト
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
 
   const navItem = (key: Tab, icon: string, label: string, badge?: number) => (
     <div
@@ -858,15 +990,9 @@ export default function MyPage() {
                   </div>
                   <div className="panel-body">
                     <form className="profile-form" onSubmit={saveProfile}>
-                      <div className="form-row">
-                        <div className="form-group required">
-                          <label>お名前</label>
-                          <input type="text" required value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} />
-                        </div>
-                        <div className="form-group required">
-                          <label>メールアドレス</label>
-                          <input type="email" required value={profile.email} onChange={(e) => setProfile({ ...profile, email: e.target.value })} />
-                        </div>
+                      <div className="form-group required">
+                        <label>お名前</label>
+                        <input type="text" required value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} />
                       </div>
                       <div className="form-row">
                         <div className="form-group">
@@ -897,6 +1023,65 @@ export default function MyPage() {
                         </button>
                       </div>
                     </form>
+
+                    {/* メールアドレス設定：ログイン用メールの変更（卒業前の切替）＋復旧用アドレス */}
+                    <div style={{ marginTop: 32, paddingTop: 24, borderTop: "1px solid var(--border, #e5e7eb)" }}>
+                      <h4 style={{ fontWeight: 800, color: "var(--navy)", marginBottom: 8 }}>
+                        ログイン用メールアドレス
+                      </h4>
+                      <p style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 12 }}>
+                        現在のログインID：<strong>{user.email}</strong>
+                        <br />
+                        卒業などで大学メールが使えなくなる前に、個人のメールアドレスへ切り替えてください。
+                      </p>
+                      <form className="profile-form" onSubmit={handleChangeLoginEmail}>
+                        <div className="form-group">
+                          <label>新しいログイン用メールアドレス</label>
+                          <input
+                            type="email"
+                            autoComplete="email"
+                            autoCapitalize="none"
+                            autoCorrect="off"
+                            spellCheck={false}
+                            inputMode="email"
+                            placeholder="example@gmail.com"
+                            value={newLoginEmail}
+                            onChange={(e) => setNewLoginEmail(e.target.value)}
+                          />
+                        </div>
+                        <button type="submit" className="btn-navy" disabled={emailSubmitting || !newLoginEmail}>
+                          <i className="fas fa-envelope" /> {emailSubmitting ? "送信中…" : "確認メールを送る"}
+                        </button>
+                      </form>
+                    </div>
+
+                    <div style={{ marginTop: 24, paddingTop: 24, borderTop: "1px solid var(--border, #e5e7eb)" }}>
+                      <h4 style={{ fontWeight: 800, color: "var(--navy)", marginBottom: 8 }}>
+                        復旧用メールアドレス
+                      </h4>
+                      <p style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 12 }}>
+                        ログインできなくなった際の復旧に使う、個人の連絡先です。
+                      </p>
+                      <form className="profile-form" onSubmit={handleSaveRecovery}>
+                        <div className="form-group">
+                          <label>復旧用メールアドレス</label>
+                          <input
+                            type="email"
+                            autoComplete="email"
+                            autoCapitalize="none"
+                            autoCorrect="off"
+                            spellCheck={false}
+                            inputMode="email"
+                            placeholder="example@gmail.com"
+                            value={recoveryInput}
+                            onChange={(e) => setRecoveryInput(e.target.value)}
+                          />
+                        </div>
+                        <button type="submit" className="btn-navy" disabled={recoverySubmitting}>
+                          <i className="fas fa-save" /> {recoverySubmitting ? "保存中…" : "保存する"}
+                        </button>
+                      </form>
+                    </div>
                   </div>
                 </div>
               )}

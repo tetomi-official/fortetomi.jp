@@ -24,7 +24,7 @@ export default function SignupPage() {
   const [form, setForm] = useState({
     name: "",
     universityEmail: "",
-    personalEmail: "",
+    recoveryEmail: "",
     password: "",
     passwordConfirm: "",
     faculty: "",
@@ -67,7 +67,7 @@ export default function SignupPage() {
     if (
       !form.name ||
       !form.universityEmail ||
-      !form.personalEmail ||
+      !form.recoveryEmail ||
       !form.password ||
       !form.faculty ||
       !form.gender
@@ -79,8 +79,8 @@ export default function SignupPage() {
       showToast(`大学メールは @${ALLOWED_EMAIL_DOMAIN} のアドレスのみ登録できます`, "error");
       return;
     }
-    if (!isValidEmail(form.personalEmail)) {
-      showToast("個人メールアドレスの形式が正しくありません", "error");
+    if (!isValidEmail(form.recoveryEmail)) {
+      showToast("復旧用メールアドレスの形式が正しくありません", "error");
       return;
     }
     if (form.password.length < 8) {
@@ -100,7 +100,7 @@ export default function SignupPage() {
     const { error, needsConfirm } = await signUp({
       name: form.name,
       universityEmail: form.universityEmail,
-      personalEmail: form.personalEmail,
+      recoveryEmail: form.recoveryEmail,
       password: form.password,
       university: UNIVERSITY_NAME,
       faculty: form.faculty,
@@ -113,7 +113,11 @@ export default function SignupPage() {
       return;
     }
     if (needsConfirm) {
-      setSentTo(form.universityEmail);
+      // 実際に送信された宛先（正規化済み）を表示する。
+      setSentTo(form.universityEmail.trim().toLowerCase());
+      // 確認画面はカードが短く、スクロール位置が保持されると先にフッターが
+      // 見えてしまう（再送ボタンは上部）。即座に最上部へ戻す。
+      window.scrollTo({ top: 0 });
       return;
     }
     showToast(`登録を受け付けました`, "success");
@@ -129,7 +133,7 @@ export default function SignupPage() {
           <p className="auth-sub">
             在籍確認のため、<strong>{sentTo}</strong> 宛に確認メールを送りました。
             <br />
-            メール内のリンクを開くと、次に個人メールの登録に進みます。
+            メール内のリンクを開くと登録が完了し、この大学メールでログインできるようになります。
           </p>
           <p className="auth-note">
             メールが届かない場合は迷惑メールフォルダをご確認ください。届かない・リンクの有効期限が切れた場合は、下のボタンから再送信できます。
@@ -163,7 +167,7 @@ export default function SignupPage() {
         <p className="auth-sub">
           {UNIVERSITY_NAME}の在学生向けサービスです。
           <br />
-          在籍確認のため、大学メール宛に確認メールを送信します。
+          大学メールでログインします。在籍確認のため大学メール宛に確認メールを送信します。
         </p>
 
         <form onSubmit={handleSubmit}>
@@ -180,10 +184,14 @@ export default function SignupPage() {
           </div>
 
           <div className="form-group required">
-            <label>大学メールアドレス（在籍確認用）</label>
+            <label>大学メールアドレス（ログイン用）</label>
             <input
               type="email"
-              autoComplete="off"
+              autoComplete="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              inputMode="email"
               placeholder={`example@${ALLOWED_EMAIL_DOMAIN}`}
               value={form.universityEmail}
               onChange={set("universityEmail")}
@@ -192,15 +200,22 @@ export default function SignupPage() {
           </div>
 
           <div className="form-group required">
-            <label>個人メールアドレス（ログイン用）</label>
+            <label>復旧用メールアドレス（個人の連絡先）</label>
             <input
               type="email"
               autoComplete="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              inputMode="email"
               placeholder="example@gmail.com"
-              value={form.personalEmail}
-              onChange={set("personalEmail")}
+              value={form.recoveryEmail}
+              onChange={set("recoveryEmail")}
               required
             />
+            <p className="field-hint" style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
+              卒業後も使えるアドレスを入力してください。大学メールが使えなくなった際の復旧・ログイン切替に使います。
+            </p>
           </div>
 
           <div className="form-group required">
@@ -299,7 +314,7 @@ export default function SignupPage() {
         </form>
 
         <p className="auth-note">
-          大学メールは在籍確認のためだけに使用します。確認後はログイン用の個人メールに切り替わります。許可ドメイン（@{ALLOWED_EMAIL_DOMAIN}）のみ受け付けます。
+          大学メール（@{ALLOWED_EMAIL_DOMAIN}）がログインIDになります。卒業前に、マイページから復旧用の個人メールへ切り替えてください。
         </p>
 
         <div className="auth-switch">

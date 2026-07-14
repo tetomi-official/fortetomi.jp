@@ -14,6 +14,20 @@ export default function Navbar() {
   // PB-031：対応待ちの購入希望件数。ヘッダーのマイページにバッジ表示する。
   const [notifCount, setNotifCount] = useState(0);
 
+  // メニュー展開中：Escape で閉じる。全画面オーバーレイなので背面スクロールは抑止する。
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [menuOpen]);
+
   // ログイン中は対応待ち件数を取得。ページ遷移（pathname 変化）ごとに取り直して最新化する。
   useEffect(() => {
     let active = true;
@@ -49,7 +63,11 @@ export default function Navbar() {
             <span className="logo-sub">手から手へ、教科書とつながりを</span>
           </div>
         </Link>
-        <div className={`nav-links ${menuOpen ? "open" : ""}`.trim()} id="navLinks">
+        <div
+          className={`nav-links ${menuOpen ? "open" : ""}`.trim()}
+          id="navLinks"
+          onClick={() => setMenuOpen(false)}
+        >
           <Link href="/" className="nav-link-item">
             <span className="link-en">Home</span>
             <span className="link-ja">トップ</span>
@@ -87,8 +105,9 @@ export default function Navbar() {
           )}
         </div>
         <button
-          className="hamburger"
+          className={`hamburger ${menuOpen ? "open" : ""}`.trim()}
           aria-label="メニュー"
+          aria-expanded={menuOpen}
           onClick={() => setMenuOpen((v) => !v)}
         >
           <span />
