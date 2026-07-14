@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { fetchActionRequiredCount } from "@/lib/notifications";
 
@@ -11,8 +11,25 @@ export default function Navbar() {
   const { user } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  // メニューパネルと3本バーボタンの参照。枠外クリック判定に使う。
+  const menuRef = useRef<HTMLDivElement>(null);
+  const hamburgerRef = useRef<HTMLButtonElement>(null);
   // PB-031：対応待ちの購入希望件数。ヘッダーのマイページにバッジ表示する。
   const [notifCount, setNotifCount] = useState(0);
+
+  // メニュー展開中に、パネル外（かつ3本バー外）をクリック/タップしたら閉じる。
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target as Node;
+      if (menuRef.current?.contains(target) || hamburgerRef.current?.contains(target)) {
+        return;
+      }
+      setMenuOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [menuOpen]);
 
   // ログイン中は対応待ち件数を取得。ページ遷移（pathname 変化）ごとに取り直して最新化する。
   useEffect(() => {
@@ -49,7 +66,7 @@ export default function Navbar() {
             <span className="logo-sub">手から手へ、教科書とつながりを</span>
           </div>
         </Link>
-        <div className={`nav-links ${menuOpen ? "open" : ""}`.trim()} id="navLinks">
+        <div ref={menuRef} className={`nav-links ${menuOpen ? "open" : ""}`.trim()} id="navLinks">
           <Link href="/" className="nav-link-item">
             <span className="link-en">Home</span>
             <span className="link-ja">トップ</span>
@@ -87,8 +104,10 @@ export default function Navbar() {
           )}
         </div>
         <button
+          ref={hamburgerRef}
           className="hamburger"
           aria-label="メニュー"
+          aria-expanded={menuOpen}
           onClick={() => setMenuOpen((v) => !v)}
         >
           <span />
