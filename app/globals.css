@@ -122,9 +122,7 @@ ul, ol { list-style: none; }
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  background: var(--navy);
-  padding: 7px 18px 7px 14px;
-  border-radius: 6px;
+  padding: 2px 0 2px 12px;
   border-left: 3px solid rgba(255,255,255,0.6);
   gap: 2px;
 }
@@ -820,16 +818,37 @@ button.candidate-row:hover { border-color: var(--navy); }
     pointer-events: none;
   }
   .nav-links.open { opacity: 1; visibility: visible; transform: none; pointer-events: auto; }
+  /* モバイルでは navbar の backdrop-filter を無効化。filter系は position:fixed の
+     子要素の包含ブロックを作ってしまい、全画面オーバーレイ .nav-links を navbar 内
+     (高さ60px)に閉じ込める。navbar 背景は rgba(20,49,74,0.95) でほぼ不透明なので
+     ぼかしを外しても見た目の影響はない。 */
+  .navbar { backdrop-filter: none; -webkit-backdrop-filter: none; }
   .hamburger { display: flex; }
   /* ロゴ・ハンバーガーはオーバーレイより前面に */
   .nav-logo, .hamburger { position: relative; z-index: 2; }
   /* 白背景オーバーレイでは×印を濃色にして視認できるように */
   .hamburger.open span { background: var(--navy); }
+  /* メニュー展開中はロゴ背後が白オーバーレイになるため、文字とアクセント線を濃色化 */
+  .nav-logo.menu-open .logo-main { color: var(--navy); }
+  .nav-logo.menu-open .logo-sub { color: var(--text-muted); }
+  .nav-logo.menu-open .nav-logo-badge { border-left-color: var(--navy); }
   /* 右寄せ・大きめ項目（白背景に合わせて文字色を濃色化） */
   .nav-link-item { align-items: flex-end; padding: 10px 0; }
   .nav-link-item .link-en { font-size: 26px; letter-spacing: 0.02em; color: var(--navy); }
   .nav-link-item .link-ja { font-size: 12px; margin-top: 2px; color: var(--text-muted); }
   .nav-link-item::after { display: none; }
+  /* メニュー内の2ボタンを同サイズの一組に揃える */
+  .btn-login-nav, .nav-cta {
+    width: 160px;
+    box-sizing: border-box;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
   .btn-login-nav {
     margin-left: 0; margin-top: 12px; align-self: flex-end;
     border-color: var(--navy); color: var(--navy);

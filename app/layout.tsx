@@ -6,7 +6,6 @@ import Footer from "@/components/Footer";
 import SideTab from "@/components/SideTab";
 import HeaderStack from "@/components/HeaderStack";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
-import InstallPrompt from "@/components/InstallPrompt";
 
 export const metadata: Metadata = {
   title: "TETOMI【教科書取引サービス】",
@@ -51,7 +50,6 @@ export default function RootLayout({
             <HeaderStack />
             {children}
             <Footer />
-            <InstallPrompt />
           </ToastProvider>
         </AuthProvider>
         <ServiceWorkerRegister />

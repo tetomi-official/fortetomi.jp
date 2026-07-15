@@ -57,7 +57,7 @@ export default function Navbar() {
   return (
     <nav className={`navbar ${solid ? "scrolled" : ""}`.trim()} id="navbar">
       <div className="nav-container">
-        <Link href="/" className="nav-logo" aria-label="TETOMI Home">
+        <Link href="/" className={`nav-logo ${menuOpen ? "menu-open" : ""}`.trim()} aria-label="TETOMI Home">
           <div className="nav-logo-badge">
             <span className="logo-main">TETOMI</span>
             <span className="logo-sub">手から手へ、教科書とつながりを</span>
