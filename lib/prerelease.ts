@@ -22,6 +22,11 @@ export const RELEASE_PHASE = Number(process.env.NEXT_PUBLIC_RELEASE_PHASE ?? "0"
 export const canReserve = RELEASE_PHASE >= 1; // 購入希望・予約・checkout・決済
 export const canSell = RELEASE_PHASE >= 2; // 出品
 
+// ログイン用メールの切替（卒業前の個人メール切替）を解禁するか。
+// フェーズとは独立の専用フラグ。既定は無効で、マイページは現在値の表示のみにする。
+// 解禁は Vercel で NEXT_PUBLIC_EMAIL_CHANGE_ENABLED=1 を設定して再デプロイするだけ。
+export const canChangeLoginEmail = process.env.NEXT_PUBLIC_EMAIL_CHANGE_ENABLED === "1";
+
 // proxy でのサーバー強制用: フェーズ未満なら遮断するルート。
 // ここに無いパス（/auth/confirm・/api/reverify・法務・認証ページ等）は常に許可。
 // ※ /sell は「閲覧は可・出品操作（次へ/出品ボタン）だけ canSell で無効化」の方針のため

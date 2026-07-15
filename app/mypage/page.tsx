@@ -16,7 +16,7 @@ import {
 import { reservationBadgeClass, yen, formatSlot } from "@/lib/labels";
 import { sellerNet, PLATFORM_FEE_RATE, PAYOUT_FEE_YEN } from "@/lib/constants";
 import { decodePaymentQR } from "@/lib/payments";
-import { canReserve } from "@/lib/prerelease";
+import { canReserve, canChangeLoginEmail } from "@/lib/prerelease";
 import MessagesPanel from "@/components/MessagesPanel";
 import SupportPanel from "@/components/SupportPanel";
 import BarcodeScanner from "@/components/BarcodeScanner";
@@ -1065,28 +1065,39 @@ export default function MyPage() {
                       </h4>
                       <p style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 12 }}>
                         現在のログインID：<strong>{user.email}</strong>
-                        <br />
-                        卒業などで大学メールが使えなくなる前に、個人のメールアドレスへ切り替えてください。
+                        {canChangeLoginEmail && (
+                          <>
+                            <br />
+                            卒業などで大学メールが使えなくなる前に、個人のメールアドレスへ切り替えてください。
+                          </>
+                        )}
                       </p>
-                      <form className="profile-form" onSubmit={handleChangeLoginEmail}>
-                        <div className="form-group">
-                          <label>新しいログイン用メールアドレス</label>
-                          <input
-                            type="email"
-                            autoComplete="email"
-                            autoCapitalize="none"
-                            autoCorrect="off"
-                            spellCheck={false}
-                            inputMode="email"
-                            placeholder="example@gmail.com"
-                            value={newLoginEmail}
-                            onChange={(e) => setNewLoginEmail(e.target.value)}
-                          />
-                        </div>
-                        <button type="submit" className="btn-navy" disabled={emailSubmitting || !newLoginEmail}>
-                          <i className="fas fa-envelope" /> {emailSubmitting ? "送信中…" : "確認メールを送る"}
-                        </button>
-                      </form>
+                      {canChangeLoginEmail ? (
+                        <form className="profile-form" onSubmit={handleChangeLoginEmail}>
+                          <div className="form-group">
+                            <label>新しいログイン用メールアドレス</label>
+                            <input
+                              type="email"
+                              autoComplete="email"
+                              autoCapitalize="none"
+                              autoCorrect="off"
+                              spellCheck={false}
+                              inputMode="email"
+                              placeholder="example@gmail.com"
+                              value={newLoginEmail}
+                              onChange={(e) => setNewLoginEmail(e.target.value)}
+                            />
+                          </div>
+                          <button type="submit" className="btn-navy" disabled={emailSubmitting || !newLoginEmail}>
+                            <i className="fas fa-envelope" /> {emailSubmitting ? "送信中…" : "確認メールを送る"}
+                          </button>
+                        </form>
+                      ) : (
+                        <p style={{ fontSize: 13, color: "var(--text-muted)", margin: 0 }}>
+                          <i className="fas fa-lock" style={{ marginRight: 6 }} />
+                          メールアドレスの切替は現在準備中です。ご利用いただけるようになるまで、しばらくお待ちください。
+                        </p>
+                      )}
                     </div>
 
                     <div style={{ marginTop: 24, paddingTop: 24, borderTop: "1px solid var(--border, #e5e7eb)" }}>

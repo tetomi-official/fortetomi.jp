@@ -13,6 +13,7 @@ import type { Session } from "@supabase/supabase-js";
 import type { User } from "./types";
 import { createClient } from "./supabase/client";
 import { ALLOWED_EMAIL_DOMAIN, isAllowedEmail, isValidEmail } from "./constants";
+import { canChangeLoginEmail } from "./prerelease";
 import { isEnrollmentActive, parseEntranceYear } from "./enrollment";
 import {
   clearSessionExp,
@@ -359,6 +360,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // updateUser が新アドレス宛に email_change の確認メールを送り、リンクを開くと
   // /auth/confirm(type=email_change) で切替が確定する。
   const changeLoginEmail = useCallback(async (newEmail: string) => {
+    // 切替機能は初期は無効（フラグで後日解禁）。UI を隠すだけでなくここでも遮断する。
+    if (!canChangeLoginEmail) {
+      return { error: "メールアドレスの切替は現在ご利用いただけません" };
+    }
     const trimmed = newEmail.trim().toLowerCase();
     if (!isValidEmail(trimmed)) {
       return { error: "メールアドレスの形式が正しくありません" };
