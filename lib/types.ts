@@ -22,6 +22,8 @@ export interface User {
   university_email?: string;
   /** 復旧用アドレス（卒業後も使える連絡先。ロックアウト時の救済先） */
   recovery_email?: string;
+  /** 復旧用アドレスが検証済みか（検証済みのみロックアウト救済の送信先になる） */
+  recovery_email_verified?: boolean;
   /** 在籍確認の有効期限（ISO文字列）。これを過ぎると出品・購入が停止する。 */
   enrollment_valid_until?: string | null;
   university: string;

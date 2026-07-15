@@ -47,16 +47,17 @@ export async function POST(request: NextRequest) {
 
   const admin = createAdminClient();
 
-  // 大学メールから対象ユーザーと復旧用アドレスを引く。
+  // 大学メールから対象ユーザーと復旧用アドレス・検証状態を引く。
   const { data: prof } = await admin
     .from("profiles_private")
-    .select("id, recovery_email")
+    .select("id, recovery_email, recovery_email_verified")
     .ilike("university_email", email)
     .maybeSingle();
 
   const recoveryEmail = prof?.recovery_email?.trim();
-  // 該当ユーザーが無い / 復旧用アドレス未設定なら、何もせず ok（存在を漏らさない）。
-  if (prof?.id && recoveryEmail) {
+  // 該当ユーザーが無い / 復旧用アドレス未設定 / 未検証なら、何もせず ok（存在・検証状態を漏らさない）。
+  // 未検証のアドレスへ送らないのは、書き間違い・他人のアドレスへ救済リンクが飛ぶ事故を防ぐため。
+  if (prof?.id && recoveryEmail && prof.recovery_email_verified) {
     // ワンタイムトークンを生成し、ハッシュだけ保存する（生トークンはメールのみ）。
     const token = randomBytes(32).toString("hex");
     const tokenHash = sha256(token);

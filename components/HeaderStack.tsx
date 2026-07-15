@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import Navbar from "@/components/Navbar";
 import ReverifyBanner from "@/components/ReverifyBanner";
 import GraduationSwitchBanner from "@/components/GraduationSwitchBanner";
+import RecoveryEmailVerifyBanner from "@/components/RecoveryEmailVerifyBanner";
 
 // Navbar と各バナー（在籍再認証 / 卒業メール切替）を 1 つの固定ヘッダーにまとめる。
 // バナーは表示条件・テキスト折り返しで高さが変わるため、スタックの実高さを測って
@@ -44,6 +45,7 @@ export default function HeaderStack() {
       <Navbar />
       <ReverifyBanner />
       <GraduationSwitchBanner />
+      <RecoveryEmailVerifyBanner />
     </div>
   );
 }

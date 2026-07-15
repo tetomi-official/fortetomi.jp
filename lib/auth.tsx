@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -12,7 +13,7 @@ import type { Session } from "@supabase/supabase-js";
 import type { User } from "./types";
 import { createClient } from "./supabase/client";
 import { ALLOWED_EMAIL_DOMAIN, isAllowedEmail, isValidEmail } from "./constants";
-import { isEnrollmentActive } from "./enrollment";
+import { isEnrollmentActive, parseEntranceYear } from "./enrollment";
 import {
   clearSessionExp,
   isSessionExpired,
@@ -103,6 +104,7 @@ interface ProfileRow {
   gender: string | null;
   university_email: string | null;
   recovery_email: string | null;
+  recovery_email_verified: boolean | null;
   enrollment_verified: boolean | null;
   enrollment_valid_until: string | null;
   rating: number | null;
@@ -125,6 +127,7 @@ function rowToUser(session: Session, row: ProfileRow | null): User {
     email: session.user.email ?? "", // ログインID（登録時は大学メール / 切替後は個人メール）
     university_email: row?.university_email ?? "",
     recovery_email: row?.recovery_email ?? "",
+    recovery_email_verified: row?.recovery_email_verified ?? false,
     enrollment_valid_until: row?.enrollment_valid_until ?? null,
     university: row?.university ?? "",
     faculty: row?.faculty ?? "",
@@ -150,18 +153,43 @@ function clearLegacyDemo() {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
+  // 在籍自己修復を叩くのはセッションあたり一度だけ（ループ防止）。
+  const healTriedRef = useRef(false);
 
   useEffect(() => {
     const supabase = createClient();
     let active = true;
 
-    async function hydrate(session: Session) {
-      const { data: row } = await supabase
+    async function fetchProfile(userId: string) {
+      const { data } = await supabase
         .from("profiles")
-        .select("*, profiles_private(university_email, recovery_email, gender)")
-        .eq("id", session.user.id)
+        .select("*, profiles_private(university_email, recovery_email, recovery_email_verified, gender)")
+        .eq("id", userId)
         .maybeSingle();
-      if (active) setUser(rowToUser(session, flattenProfile(row)));
+      return data;
+    }
+
+    async function hydrate(session: Session) {
+      let u = rowToUser(session, flattenProfile(await fetchProfile(session.user.id)));
+
+      // 在籍が無効かつ未試行なら、setUser より前にサーバー側の自己修復を試す。
+      // 先に付与を済ませてから最終値を一度だけセットするので、バナーが一瞬出て消える
+      // ちらつきを防げる。confirm 済みだが在籍付与に取りこぼしたユーザーを救済する。
+      // 卒業生・未confirm・許可外ドメインはサーバー側で弾かれ healed:false になる。
+      if (!healTriedRef.current && !isEnrollmentActive(u.enrollment_valid_until)) {
+        healTriedRef.current = true;
+        try {
+          const res = await fetch("/api/enrollment/heal", { method: "POST" });
+          const json = (await res.json().catch(() => ({}))) as { healed?: boolean };
+          if (json?.healed) {
+            u = rowToUser(session, flattenProfile(await fetchProfile(session.user.id)));
+          }
+        } catch {
+          /* noop: 失効ユーザーは既存の /reverify 導線に委ねる */
+        }
+      }
+
+      if (active) setUser(u);
     }
 
     async function init() {
@@ -226,6 +254,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!isAllowedEmail(input.universityEmail)) {
       return {
         error: `大学メールは @${ALLOWED_EMAIL_DOMAIN} のアドレスのみ登録できます`,
+        needsConfirm: false,
+      };
+    }
+    // 在籍期間は大学メール先頭の入学年コード（例 a24…）から算出する。
+    // 読み取れないアドレスは在籍期間を判定できないため登録を弾く。
+    if (parseEntranceYear(input.universityEmail) === null) {
+      return {
+        error: "大学メールから入学年を判別できませんでした。アドレスをご確認ください",
         needsConfirm: false,
       };
     }
@@ -380,7 +416,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (privErr) return { error: privErr.message };
     }
 
-    setUser((prev) => (prev ? { ...prev, ...patch } : prev));
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, ...patch };
+      // 復旧用アドレスを別のアドレスに変えると、DB トリガーが検証状態をリセットする。
+      // ローカルの user もそれに合わせて未検証に落とす（バナー/バッジ表示の整合）。
+      if (patch.recovery_email !== undefined && patch.recovery_email !== prev.recovery_email) {
+        next.recovery_email_verified = false;
+      }
+      return next;
+    });
     return { error: null };
   }, []);
 
@@ -395,7 +440,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     const { data: row } = await supabase
       .from("profiles")
-      .select("*, profiles_private(university_email, recovery_email, gender)")
+      .select("*, profiles_private(university_email, recovery_email, recovery_email_verified, gender)")
       .eq("id", session.user.id)
       .maybeSingle();
     setUser(rowToUser(session, flattenProfile(row)));

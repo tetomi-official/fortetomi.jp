@@ -812,8 +812,8 @@ button.candidate-row:hover { border-color: var(--navy); }
     position: fixed; inset: 0; z-index: 1;
     flex-direction: column; justify-content: center; align-items: flex-end;
     gap: 4px; padding: 0 32px;
-    background: rgba(20,49,74,0.97);
-    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    background: #fff;
+    box-shadow: -4px 0 24px rgba(20,49,74,0.12);
     opacity: 0; visibility: hidden;
     transform: translateY(-24px);
     transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.4,0.4,0,1), visibility 0.35s;
@@ -823,14 +823,25 @@ button.candidate-row:hover { border-color: var(--navy); }
   .hamburger { display: flex; }
   /* ロゴ・ハンバーガーはオーバーレイより前面に */
   .nav-logo, .hamburger { position: relative; z-index: 2; }
-  /* 右寄せ・大きめ項目 */
+  /* 白背景オーバーレイでは×印を濃色にして視認できるように */
+  .hamburger.open span { background: var(--navy); }
+  /* 右寄せ・大きめ項目（白背景に合わせて文字色を濃色化） */
   .nav-link-item { align-items: flex-end; padding: 10px 0; }
-  .nav-link-item .link-en { font-size: 26px; letter-spacing: 0.02em; }
-  .nav-link-item .link-ja { font-size: 12px; margin-top: 2px; }
+  .nav-link-item .link-en { font-size: 26px; letter-spacing: 0.02em; color: var(--navy); }
+  .nav-link-item .link-ja { font-size: 12px; margin-top: 2px; color: var(--text-muted); }
   .nav-link-item::after { display: none; }
-  .btn-login-nav { margin-left: 0; margin-top: 12px; align-self: flex-end; }
-  .nav-cta { margin-left: 0; margin-top: 12px; align-self: flex-end; }
-  .nav-user-badge { margin-left: 0; margin-top: 12px; align-self: flex-end; }
+  .btn-login-nav {
+    margin-left: 0; margin-top: 12px; align-self: flex-end;
+    border-color: var(--navy); color: var(--navy);
+  }
+  .nav-cta {
+    margin-left: 0; margin-top: 12px; align-self: flex-end;
+    background: var(--navy); color: var(--white);
+  }
+  .nav-user-badge {
+    margin-left: 0; margin-top: 12px; align-self: flex-end;
+    color: var(--navy); border-color: var(--navy);
+  }
   /* 項目のスタッガー表示（開いた時に順にフェード＋スライド） */
   .nav-links > * { opacity: 0; transform: translateY(12px);
     transition: opacity 0.4s ease, transform 0.4s ease; }
