@@ -13,6 +13,7 @@ import {
   isAllowedEmail,
   isValidEmail,
 } from "@/lib/constants";
+import { parseEntranceYear } from "@/lib/enrollment";
 
 // 確認メール再送のクールダウン（秒）。Supabase 側レート制限より短めに抑えて連打を防ぐ。
 const RESEND_COOLDOWN_SEC = 60;
@@ -77,6 +78,10 @@ export default function SignupPage() {
     }
     if (!isAllowedEmail(form.universityEmail)) {
       showToast(`大学メールは @${ALLOWED_EMAIL_DOMAIN} のアドレスのみ登録できます`, "error");
+      return;
+    }
+    if (parseEntranceYear(form.universityEmail) === null) {
+      showToast("大学メールから入学年を判別できませんでした。アドレスをご確認ください", "error");
       return;
     }
     if (!isValidEmail(form.recoveryEmail)) {

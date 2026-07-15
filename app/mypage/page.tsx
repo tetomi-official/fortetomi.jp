@@ -16,7 +16,7 @@ import {
 import { reservationBadgeClass, yen, formatSlot } from "@/lib/labels";
 import { sellerNet, PLATFORM_FEE_RATE, PAYOUT_FEE_YEN } from "@/lib/constants";
 import { decodePaymentQR } from "@/lib/payments";
-import { canReserve } from "@/lib/prerelease";
+import { canReserve, canChangeLoginEmail } from "@/lib/prerelease";
 import MessagesPanel from "@/components/MessagesPanel";
 import SupportPanel from "@/components/SupportPanel";
 import BarcodeScanner from "@/components/BarcodeScanner";
@@ -52,6 +52,12 @@ export default function MyPage() {
       showToast("ログイン用メールアドレスを変更しました", "success");
     } else if (q.get("email_change") === "await") {
       showToast("もう一方のメールに届いた確認リンクも開くと切替が完了します", "success");
+    } else if (q.get("recovery_verified") === "1") {
+      showToast("復旧用メールアドレスを確認しました", "success");
+    } else if (q.get("recovery_verify") === "invalid") {
+      showToast("確認リンクが無効か期限切れです。もう一度お試しください。", "error");
+    } else if (q.get("recovery_verify") === "error") {
+      showToast("確認処理に失敗しました。時間をおいてお試しください。", "error");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -270,6 +276,7 @@ export default function MyPage() {
   const [emailSubmitting, setEmailSubmitting] = useState(false);
   const [recoveryInput, setRecoveryInput] = useState(user?.recovery_email ?? "");
   const [recoverySubmitting, setRecoverySubmitting] = useState(false);
+  const [verifySending, setVerifySending] = useState(false);
 
   if (!ready) return <main className="page-main" style={{ background: "var(--bg-gray)" }} />;
 
@@ -348,6 +355,33 @@ export default function MyPage() {
       return;
     }
     showToast("復旧用アドレスを更新しました", "success");
+  };
+
+  // 復旧用アドレス宛に確認メールを送る。リンクを開くと検証済みになる。
+  const handleSendRecoveryVerify = async () => {
+    if (verifySending) return;
+    setVerifySending(true);
+    try {
+      const res = await fetch("/api/recovery-email/verify/request", { method: "POST" });
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        error?: string;
+        alreadyVerified?: boolean;
+      };
+      if (!res.ok) {
+        showToast(data.error ?? "送信に失敗しました", "error");
+        return;
+      }
+      if (data.alreadyVerified) {
+        showToast("この復旧用アドレスはすでに確認済みです", "success");
+        return;
+      }
+      showToast("復旧用アドレス宛に確認メールを送りました。リンクを開くと確認が完了します。", "success");
+    } catch {
+      showToast("送信に失敗しました。時間をおいてお試しください。", "error");
+    } finally {
+      setVerifySending(false);
+    }
   };
 
   const onLogout = async () => {
@@ -1031,28 +1065,39 @@ export default function MyPage() {
                       </h4>
                       <p style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 12 }}>
                         現在のログインID：<strong>{user.email}</strong>
-                        <br />
-                        卒業などで大学メールが使えなくなる前に、個人のメールアドレスへ切り替えてください。
+                        {canChangeLoginEmail && (
+                          <>
+                            <br />
+                            卒業などで大学メールが使えなくなる前に、個人のメールアドレスへ切り替えてください。
+                          </>
+                        )}
                       </p>
-                      <form className="profile-form" onSubmit={handleChangeLoginEmail}>
-                        <div className="form-group">
-                          <label>新しいログイン用メールアドレス</label>
-                          <input
-                            type="email"
-                            autoComplete="email"
-                            autoCapitalize="none"
-                            autoCorrect="off"
-                            spellCheck={false}
-                            inputMode="email"
-                            placeholder="example@gmail.com"
-                            value={newLoginEmail}
-                            onChange={(e) => setNewLoginEmail(e.target.value)}
-                          />
-                        </div>
-                        <button type="submit" className="btn-navy" disabled={emailSubmitting || !newLoginEmail}>
-                          <i className="fas fa-envelope" /> {emailSubmitting ? "送信中…" : "確認メールを送る"}
-                        </button>
-                      </form>
+                      {canChangeLoginEmail ? (
+                        <form className="profile-form" onSubmit={handleChangeLoginEmail}>
+                          <div className="form-group">
+                            <label>新しいログイン用メールアドレス</label>
+                            <input
+                              type="email"
+                              autoComplete="email"
+                              autoCapitalize="none"
+                              autoCorrect="off"
+                              spellCheck={false}
+                              inputMode="email"
+                              placeholder="example@gmail.com"
+                              value={newLoginEmail}
+                              onChange={(e) => setNewLoginEmail(e.target.value)}
+                            />
+                          </div>
+                          <button type="submit" className="btn-navy" disabled={emailSubmitting || !newLoginEmail}>
+                            <i className="fas fa-envelope" /> {emailSubmitting ? "送信中…" : "確認メールを送る"}
+                          </button>
+                        </form>
+                      ) : (
+                        <p style={{ fontSize: 13, color: "var(--text-muted)", margin: 0 }}>
+                          <i className="fas fa-lock" style={{ marginRight: 6 }} />
+                          メールアドレスの切替は現在準備中です。ご利用いただけるようになるまで、しばらくお待ちください。
+                        </p>
+                      )}
                     </div>
 
                     <div style={{ marginTop: 24, paddingTop: 24, borderTop: "1px solid var(--border, #e5e7eb)" }}>
@@ -1061,7 +1106,51 @@ export default function MyPage() {
                       </h4>
                       <p style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 12 }}>
                         ログインできなくなった際の復旧に使う、個人の連絡先です。
+                        卒業後の復旧で使えるようにするには、確認メールのリンクを開いて「確認済み」にしておく必要があります。
                       </p>
+                      {user.recovery_email && (
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 10,
+                            flexWrap: "wrap",
+                            padding: "10px 12px",
+                            marginBottom: 12,
+                            borderRadius: 8,
+                            fontSize: 13,
+                            background: user.recovery_email_verified ? "#f0fdf4" : "#fefce8",
+                            border: `1px solid ${user.recovery_email_verified ? "#86efac" : "#fde047"}`,
+                            color: user.recovery_email_verified ? "#166534" : "#854d0e",
+                          }}
+                        >
+                          <span style={{ fontWeight: 700 }}>
+                            {user.recovery_email_verified ? (
+                              <>
+                                <i className="fas fa-circle-check" style={{ marginRight: 6 }} />
+                                確認済み
+                              </>
+                            ) : (
+                              <>
+                                <i className="fas fa-triangle-exclamation" style={{ marginRight: 6 }} />
+                                未確認
+                              </>
+                            )}
+                          </span>
+                          {!user.recovery_email_verified && (
+                            <button
+                              type="button"
+                              className="btn-navy"
+                              onClick={handleSendRecoveryVerify}
+                              disabled={verifySending}
+                              style={{ padding: "5px 14px", fontSize: 13 }}
+                            >
+                              <i className="fas fa-envelope" />{" "}
+                              {verifySending ? "送信中…" : "確認メールを送る"}
+                            </button>
+                          )}
+                        </div>
+                      )}
                       <form className="profile-form" onSubmit={handleSaveRecovery}>
                         <div className="form-group">
                           <label>復旧用メールアドレス</label>

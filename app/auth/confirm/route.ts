@@ -2,7 +2,7 @@ import { type EmailOtpType } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { nextAcademicYearBoundary } from "@/lib/enrollment";
+import { graduationBoundary, parseEntranceYear } from "@/lib/enrollment";
 import { SESSION_EXP_COOKIE, SHORT_DURATION_MS } from "@/lib/supabase/session";
 
 // verifyOtp で張ったセッションが、ログイン保持ゲート（PB-011: proxy/AuthProvider）に
@@ -52,22 +52,38 @@ export async function GET(request: NextRequest) {
         return redirectWithSession(request, "/mypage?email_changed=1");
       }
 
-      // 大学メールの在籍確認完了＝登録完了。次の年度末まで在籍を有効にする。
+      // 大学メールの在籍確認完了＝登録完了。在籍期間は大学メール先頭の入学年コード
+      // （例 a24…）から算出し、卒業年（入学＋4年）の4月1日まで有効にする。
       // enrollment_* はユーザー権限では書けない特権列なので service role で更新する
       //   （ユーザーセッションで更新できると、本人が在籍ステータスを自己付与できてしまう）。
       if (type === "signup") {
         const {
           data: { user },
         } = await supabase.auth.getUser();
-        if (user) {
-          const admin = createAdminClient();
-          await admin
-            .from("profiles")
-            .update({
-              enrollment_verified: true,
-              enrollment_valid_until: nextAcademicYearBoundary(new Date()).toISOString(),
-            })
-            .eq("id", user.id);
+        if (!user) {
+          // セッション未確立。切り分け用に痕跡を残す（在籍は自己修復に委ねる）。
+          console.error("[auth/confirm] signup confirmed but getUser returned null");
+          return redirectWithSession(request, "/?welcome=1&enroll=pending");
+        }
+        const entranceYear = parseEntranceYear(user.email);
+        if (entranceYear === null) {
+          // 登録時に弾いているので通常ここには来ない。念のためログのみ。
+          console.error("[auth/confirm] entrance year unparseable:", user.email, user.id);
+          return redirectWithSession(request, "/?welcome=1&enroll=pending");
+        }
+        const admin = createAdminClient();
+        const { error: enrollErr } = await admin
+          .from("profiles")
+          .update({
+            enrollment_verified: true,
+            enrollment_valid_until: graduationBoundary(entranceYear).toISOString(),
+          })
+          .eq("id", user.id);
+        if (enrollErr) {
+          // スマホではトーストを見落としやすいので痕跡を残す（signUp と同方針）。
+          // ログイン自体は成立しているので、次回ロードで自己修復ルートが拾う。
+          console.error("[auth/confirm] enrollment update failed:", enrollErr.message, user.id);
+          return redirectWithSession(request, "/?welcome=1&enroll=pending");
         }
         return redirectWithSession(request, "/?welcome=1");
       }
