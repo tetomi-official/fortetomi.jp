@@ -154,8 +154,11 @@ function clearLegacyDemo() {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
-  // 在籍自己修復を叩くのはセッションあたり一度だけ（ループ防止）。
-  const healTriedRef = useRef(false);
+  // 在籍自己修復はセッションあたり一度だけ叩く（ループ防止）。
+  // 真偽フラグだと、同時に走る2つの hydrate のうち片方が fetch 完了前に
+  // フラグを立て、もう片方が heal をスキップして「在籍なし」で上書きしてしまう。
+  // 共有プロミスにして、両方の hydrate が同じ heal 結果を待ってから setUser する。
+  const healPromiseRef = useRef<Promise<boolean> | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -173,20 +176,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async function hydrate(session: Session) {
       let u = rowToUser(session, flattenProfile(await fetchProfile(session.user.id)));
 
-      // 在籍が無効かつ未試行なら、setUser より前にサーバー側の自己修復を試す。
-      // 先に付与を済ませてから最終値を一度だけセットするので、バナーが一瞬出て消える
+      // 在籍が無効なら、setUser より前にサーバー側の自己修復を試す。
+      // 先に付与を済ませてから最終値をセットするので、バナーが一瞬出て消える
       // ちらつきを防げる。confirm 済みだが在籍付与に取りこぼしたユーザーを救済する。
       // 卒業生・未confirm・許可外ドメインはサーバー側で弾かれ healed:false になる。
-      if (!healTriedRef.current && !isEnrollmentActive(u.enrollment_valid_until)) {
-        healTriedRef.current = true;
-        try {
-          const res = await fetch("/api/enrollment/heal", { method: "POST" });
-          const json = (await res.json().catch(() => ({}))) as { healed?: boolean };
-          if (json?.healed) {
-            u = rowToUser(session, flattenProfile(await fetchProfile(session.user.id)));
-          }
-        } catch {
-          /* noop: 失効ユーザーは既存の /reverify 導線に委ねる */
+      // heal は共有プロミスで1回だけ叩き、同時に走る hydrate も同じ結果を待つ。
+      // これで、遅い heal 経路より先に速い経路が「在籍なし」で上書きする競合を防ぐ。
+      if (!isEnrollmentActive(u.enrollment_valid_until)) {
+        if (!healPromiseRef.current) {
+          healPromiseRef.current = (async () => {
+            try {
+              const res = await fetch("/api/enrollment/heal", { method: "POST" });
+              const json = (await res.json().catch(() => ({}))) as { healed?: boolean };
+              return Boolean(json?.healed);
+            } catch {
+              // noop: 失効ユーザーは既存の /reverify 導線に委ねる
+              return false;
+            }
+          })();
+        }
+        const healed = await healPromiseRef.current;
+        if (healed) {
+          u = rowToUser(session, flattenProfile(await fetchProfile(session.user.id)));
         }
       }
 
