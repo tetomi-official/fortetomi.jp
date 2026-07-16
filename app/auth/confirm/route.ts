@@ -71,18 +71,33 @@ export async function GET(request: NextRequest) {
           console.error("[auth/confirm] entrance year unparseable:", user.email, user.id);
           return redirectWithSession(request, "/?welcome=1&enroll=pending");
         }
-        const admin = createAdminClient();
-        const { error: enrollErr } = await admin
+        // service role key 未設定だと createAdminClient は throw する。ここで捕まえないと
+        // 500 のエラー画面で止まるが、verifyOtp 済みでセッションは既に張られているため
+        // 「ログインできるのに在籍だけ無い」状態になる。登録完了へは進ませ、痕跡を残す。
+        let admin: ReturnType<typeof createAdminClient>;
+        try {
+          admin = createAdminClient();
+        } catch (e) {
+          console.error("[auth/confirm] admin client unavailable:", e, user.id);
+          return redirectWithSession(request, "/?welcome=1&enroll=pending");
+        }
+        const { data: updated, error: enrollErr } = await admin
           .from("profiles")
           .update({
             enrollment_verified: true,
             enrollment_valid_until: graduationBoundary(entranceYear).toISOString(),
           })
-          .eq("id", user.id);
+          .eq("id", user.id)
+          .select("id");
         if (enrollErr) {
           // スマホではトーストを見落としやすいので痕跡を残す（signUp と同方針）。
           // ログイン自体は成立しているので、次回ロードで自己修復ルートが拾う。
           console.error("[auth/confirm] enrollment update failed:", enrollErr.message, user.id);
+          return redirectWithSession(request, "/?welcome=1&enroll=pending");
+        }
+        // 0 行更新はエラーにならないので、付与できたことを行数で確認する。
+        if (!updated || updated.length !== 1) {
+          console.error("[auth/confirm] enrollment update matched no row:", user.id);
           return redirectWithSession(request, "/?welcome=1&enroll=pending");
         }
         return redirectWithSession(request, "/?welcome=1");

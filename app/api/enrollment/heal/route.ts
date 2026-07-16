@@ -50,7 +50,15 @@ export async function POST() {
     return NextResponse.json({ healed: false, reason: "rate_limited" }, { status: 429 });
   }
 
-  const admin = createAdminClient();
+  // service role key 未設定なら throw する。素通しすると 500 の HTML ボディになり
+  // クライアント側で無言のまま握り潰されるので、理由を明示して JSON で返す。
+  let admin: ReturnType<typeof createAdminClient>;
+  try {
+    admin = createAdminClient();
+  } catch (e) {
+    console.error("[enrollment/heal] admin client unavailable:", e);
+    return NextResponse.json({ healed: false, reason: "admin_unavailable" }, { status: 500 });
+  }
 
   // 既に有効なら何もしない（冪等・期限の二重書き換え防止）。
   const { data: prof, error: readErr } = await admin
@@ -62,21 +70,34 @@ export async function POST() {
     console.error("[enrollment/heal] read failed:", readErr.message, user.id);
     return NextResponse.json({ error: "internal" }, { status: 500 });
   }
-  if (isEnrollmentActive(prof?.enrollment_valid_until)) {
+  // 行が無いのは「失効」ではなく異常（トリガ未実行・行削除など）。
+  // update は 0 行でもエラーにならないので、ここで弾かないと healed:true の嘘になる。
+  if (!prof) {
+    console.error("[enrollment/heal] profiles row missing:", user.id);
+    return NextResponse.json({ healed: false, reason: "profile_missing" }, { status: 500 });
+  }
+  if (isEnrollmentActive(prof.enrollment_valid_until)) {
     return NextResponse.json({ healed: false, reason: "already_active" });
   }
 
   // service role で在籍を付与（/auth/confirm と同一値）。
-  const { error: updErr } = await admin
+  // .select() を付けて実際に更新できた行を確認する（0 行更新はエラーにならないため、
+  // これが無いと「付与していないのに healed:true」を返してしまう）。
+  const { data: updated, error: updErr } = await admin
     .from("profiles")
     .update({
       enrollment_verified: true,
       enrollment_valid_until: validUntil.toISOString(),
     })
-    .eq("id", user.id);
+    .eq("id", user.id)
+    .select("id");
   if (updErr) {
     console.error("[enrollment/heal] update failed:", updErr.message, user.id);
     return NextResponse.json({ error: "internal" }, { status: 500 });
+  }
+  if (!updated || updated.length !== 1) {
+    console.error("[enrollment/heal] update matched no row:", user.id);
+    return NextResponse.json({ healed: false, reason: "update_no_row" }, { status: 500 });
   }
 
   return NextResponse.json({ healed: true });
