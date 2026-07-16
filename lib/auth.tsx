@@ -187,10 +187,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           healPromiseRef.current = (async () => {
             try {
               const res = await fetch("/api/enrollment/heal", { method: "POST" });
-              const json = (await res.json().catch(() => ({}))) as { healed?: boolean };
-              return Boolean(json?.healed);
-            } catch {
-              // noop: 失効ユーザーは既存の /reverify 導線に委ねる
+              // 500 は HTML ボディを返すので JSON parse が失敗する。res.ok を見ずに
+              // 握り潰すと「設定漏れで在籍が付かない」が無言でバナーになるため、
+              // ステータスと reason を必ず残す（rate_limited/graduated/profile_missing の切り分け用）。
+              const json = (await res.json().catch(() => ({}))) as {
+                healed?: boolean;
+                reason?: string;
+              };
+              if (!res.ok) {
+                console.warn("[enrollment/heal] failed:", res.status, json?.reason ?? "(no body)");
+                return false;
+              }
+              if (!json?.healed) {
+                console.warn("[enrollment/heal] not healed:", json?.reason ?? "(no reason)");
+                return false;
+              }
+              return true;
+            } catch (e) {
+              // 失効ユーザーは既存の /reverify 導線に委ねるが、通信断は痕跡を残す
+              console.warn("[enrollment/heal] request error:", e);
               return false;
             }
           })();
