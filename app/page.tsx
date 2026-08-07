@@ -59,7 +59,7 @@ const FAQ = [
   },
   {
     q: "誰でも利用できますか？",
-    a: "大学メールで在籍確認を行うため、対象大学（現在はGLOMAC）の学生のみご利用いただけます。今後拡張予定です。",
+    a: "大学メールで在籍確認を行うため、対象大学の学生のみご利用いただけます。今後拡張予定です。",
   },
   {
     q: "支払い方法は？",
@@ -149,7 +149,6 @@ export default function HomePage() {
         <div className="hero-bg-img" />
         <div className="hero-bg-overlay" />
         <div className="hero-inner">
-          <p className="hero-eyebrow">【GLOMAC専用】教科書取引サービス</p>
           <div className="hero-logo-block" aria-label="TETOMI">
             <span className="hero-logo-main">TETOMI</span>
             <span className="hero-logo-tagline">手から手へ、教科書とつながりを</span>
@@ -178,7 +177,7 @@ export default function HomePage() {
       <div className="ticker-section" aria-hidden="true">
         <div className="ticker-track">
           {Array.from({ length: 2 }).map((_, rep) =>
-            ["TEXTBOOK", "CONNECT", "TETOMI", "GLOMAC", "CAMPUS", "HAND TO HAND"].map((w, i) => (
+            ["TEXTBOOK", "CONNECT", "TETOMI", "CAMPUS", "HAND TO HAND"].map((w, i) => (
               <span key={`${rep}-${i}`} style={{ display: "contents" }}>
                 <span className="ticker-item">{w}</span>
                 <span className="ticker-item accent">×</span>

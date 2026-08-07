@@ -351,7 +351,7 @@ export default function DetailPage() {
                 <div className="seller-av-lg">{(seller?.name ?? "?").charAt(0)}</div>
                 <div className="seller-info-col">
                   <h4>{seller?.name ?? listing.seller_name}</h4>
-                  <p>{`${seller?.faculty ?? ""} ${seller?.grade ?? ""}`.trim() || "GLOMAC学生"}</p>
+                  <p>{`${seller?.faculty ?? ""} ${seller?.grade ?? ""}`.trim()}</p>
                   <div className="seller-rating-row">
                     <i className="fas fa-star" />
                     <span>{seller?.rating ?? "5.0"}</span>

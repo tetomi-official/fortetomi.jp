@@ -6,13 +6,7 @@ export default function Footer() {
       <div className="footer-top">
         <div>
           <div className="footer-brand-name">TETOMI</div>
-          <p className="footer-brand-tagline">
-            手から手へ、教科書とつながりを。
-            <br />
-            GLOMAC専用 教科書手渡し取引サービス
-            <br />
-            送料ゼロ・手数料10%
-          </p>
+          <p className="footer-brand-tagline">手から手へ、教科書とつながりを。</p>
         </div>
         <div className="footer-col">
           <h4>Service</h4>
@@ -27,7 +21,7 @@ export default function Footer() {
         </div>
       </div>
       <div className="footer-bottom" style={{ maxWidth: "var(--max-w)", margin: "0 auto" }}>
-        <p>© 2025 TETOMI for GLOMAC. All rights reserved.</p>
+        <p>© 2025 TETOMI. All rights reserved.</p>
         <div className="footer-policies">
           <Link href="/terms">利用規約</Link>
           <Link href="/privacy">プライバシーポリシー</Link>

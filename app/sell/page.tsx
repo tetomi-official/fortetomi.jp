@@ -702,7 +702,7 @@ export default function SellPage() {
                       <div>
                         <div style={{ fontSize: 15, fontWeight: 700, color: "var(--navy)" }}>{user.name}</div>
                         <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
-                          {`${user.faculty} ${user.grade}`.trim() || "GLOMAC学生"}
+                          {`${user.faculty} ${user.grade}`.trim()}
                         </div>
                       </div>
                     </div>

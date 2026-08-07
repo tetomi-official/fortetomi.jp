@@ -405,7 +405,7 @@ export default function MyPage() {
                 <div className="sidebar-profile">
                   <div className="sidebar-avatar">{(user.name || "?").charAt(0)}</div>
                   <div className="sidebar-name">{user.name}</div>
-                  <div className="sidebar-univ">{`${user.faculty} ${user.grade}`.trim() || "GLOMAC学生"}</div>
+                  <div className="sidebar-univ">{`${user.faculty} ${user.grade}`.trim()}</div>
                   <div className="sidebar-rating">
                     <i className="fas fa-star" />
                     <span>{user.rating}</span>
@@ -489,7 +489,7 @@ export default function MyPage() {
               <div className="sidebar-profile">
                 <div className="sidebar-avatar">{(user.name || "?").charAt(0)}</div>
                 <div className="sidebar-name">{user.name}</div>
-                <div className="sidebar-univ">{`${user.faculty} ${user.grade}`.trim() || "GLOMAC学生"}</div>
+                <div className="sidebar-univ">{`${user.faculty} ${user.grade}`.trim()}</div>
                 <div className="sidebar-rating">
                   <i className="fas fa-star" />
                   <span>{user.rating}</span>
