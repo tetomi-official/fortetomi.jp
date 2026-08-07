@@ -7,7 +7,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "TETOMI【教科書取引サービス】",
     short_name: "TETOMI",
     description:
-      "GLOMAC専用の教科書を手渡しで取引するサービス。送料ゼロ・手数料10%。",
+      "教科書を手渡しで取引するサービス。送料ゼロ・手数料10%。",
     start_url: "/",
     scope: "/",
     display: "standalone",

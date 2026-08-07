@@ -10,7 +10,7 @@ import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 export const metadata: Metadata = {
   title: "TETOMI【教科書取引サービス】",
   description:
-    "GLOMAC専用の教科書を手渡しで取引するサービス。送料ゼロ・手数料10%。TETOMIから学部内に新たなつながりを。",
+    "教科書を手渡しで取引するサービス。送料ゼロ・手数料10%。TETOMIから学部内に新たなつながりを。",
   // iOS で「ホーム画面に追加」時に standalone 起動させる（Apple 系メタ）。
   appleWebApp: {
     capable: true,

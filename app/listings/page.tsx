@@ -106,11 +106,7 @@ export default function ListingsPage() {
             <span>Books</span>
           </div>
           <h1>教科書一覧</h1>
-          <p>
-            {ready && user?.faculty
-              ? `${user.faculty}の出品教科書を検索・フィルター`
-              : "GLOMAC内の出品教科書を検索・フィルター"}
-          </p>
+          {ready && user?.faculty ? <p>{`${user.faculty}の出品教科書を検索・フィルター`}</p> : null}
           {ready &&
             (user ? (
               <p
