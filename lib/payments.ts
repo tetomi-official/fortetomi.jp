@@ -1,20 +1,17 @@
-import { createClient } from "@/lib/supabase/client";
-
 // 決済（PB-036）クライアント側ヘルパー。
-// payment_customers は RLS で本人の行のみ SELECT 可能。書き込みは API（service_role）経由。
+// payment_customers への書き込みは API（service_role）経由。カード登録済みかの判定も
+// 「どの決済会社のIDが入っていれば有効か」が環境変数で決まるため、サーバーに任せる。
 
-/** ログイン中ユーザーが支払いカードを登録済みかを返す。 */
+/** ログイン中ユーザーが、今の決済会社で課金できるカードを登録済みかを返す。 */
 export async function hasRegisteredCard(): Promise<boolean> {
-  const supabase = createClient();
-  const { data, error } = await supabase
-    .from("payment_customers")
-    .select("user_id")
-    .maybeSingle();
-  if (error) {
-    console.error("hasRegisteredCard failed:", error.message);
+  try {
+    const res = await fetch("/api/payments/status");
+    const data = (await res.json().catch(() => null)) as { cardReady?: boolean } | null;
+    if (!res.ok || !data) return false;
+    return data.cardReady === true;
+  } catch {
     return false;
   }
-  return !!data;
 }
 
 /** 受け渡しQR用のワンタイム nonce をサーバーから取得する（買い手）。 */

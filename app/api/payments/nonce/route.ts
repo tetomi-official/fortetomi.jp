@@ -3,6 +3,8 @@ import { createHash, randomBytes } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { getProvider, providerConfigError } from "@/lib/payment-provider";
+import { loadStoredCustomer } from "@/lib/payment-provider/customers";
 
 // 受け渡しQR用のワンタイム nonce を発行する（買い手本人）。PB-036 Phase 1。
 //  - 生の nonce は返り値（QRに載せる）だけに存在し、DB には SHA-256 ハッシュのみ保存する。
@@ -16,6 +18,11 @@ function sha256(v: string): string {
 }
 
 export async function POST(req: Request) {
+  const cfgErr = providerConfigError();
+  if (cfgErr) {
+    return NextResponse.json({ error: cfgErr }, { status: 500 });
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -63,13 +70,11 @@ export async function POST(req: Request) {
     );
   }
 
-  // カード登録済みでなければQRを出さない（受け渡し時に課金できないため）。
-  const { data: customer } = await admin
-    .from("payment_customers")
-    .select("user_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-  if (!customer) {
+  // 今の決済会社で課金できるカードが無ければQRを出さない。
+  // 「行があるか」ではなく「その決済会社のIDが入っているか」で見る。決済会社を
+  // 切り替えた直後に、課金できないQRを買い手へ渡してしまうのを防ぐため。
+  const customer = await loadStoredCustomer(user.id);
+  if (!getProvider().hasUsableCard(customer)) {
     return NextResponse.json(
       { error: "先に支払いカードの登録が必要です", needsCard: true },
       { status: 400 },

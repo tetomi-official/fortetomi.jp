@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { markReservationPaid } from "@/lib/payment-provider/reconcile";
 
 // PAY.jp Webhook 受信（PB-036 Phase 2）。
 //
@@ -80,31 +80,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ received: true });
   }
 
-  // 4) 予約を突合し、未決済なら補正（冪等）
+  // 4) 予約を突合し、未決済なら補正（冪等。書き込みは reconcile.ts に集約）
   try {
-    const admin = createAdminClient();
-    const { data: reservation } = await admin
-      .from("reservations")
-      .select("id, listing_id, paid_at")
-      .eq("id", reservationId)
-      .maybeSingle();
-    if (reservation && !reservation.paid_at) {
-      const { error: updErr } = await admin
-        .from("reservations")
-        .update({
-          charge_id: chargeId,
-          paid_at: new Date().toISOString(),
-          status: "完了",
-          payment_nonce_hash: null,
-        })
-        .eq("id", reservationId)
-        .is("paid_at", null); // 二重更新防止（同時到達しても片方だけ）
-      if (updErr) {
-        console.error("webhook reconcile: reservation update failed:", updErr.message, chargeId);
-      } else if (reservation.listing_id) {
-        await admin.from("listings").update({ status: "完了" }).eq("id", reservation.listing_id);
-        console.info("webhook reconciled reservation from charge:", reservationId, chargeId);
-      }
+    const marked = await markReservationPaid({ reservationId, chargeId });
+    if (!marked.ok) {
+      console.error("webhook reconcile: reservation update failed:", marked.error, chargeId);
+    } else if (!marked.alreadyPaid) {
+      console.info("webhook reconciled reservation from charge:", reservationId, chargeId);
     }
   } catch (e) {
     // 補正に失敗しても 200 を返す（PAY.jp の再送で次の機会に再試行される）。
