@@ -8,7 +8,8 @@ PAY.jp 本番申請（PB-049）にあたって整理した。各項目を「**�
 
 最終更新: 2026-09-06（Stripe 併存対応を追記）
 
-決済会社は PAY.jp と Stripe が併存しており、`NEXT_PUBLIC_PAYMENT_PROVIDER` で切り替わる。
+決済会社は PAY.jp と Stripe が併存しており、`NEXT_PUBLIC_PAYMENT_PROVIDER` で切り替わる
+（**既定は Stripe**。PAY.jp は退路として実装を残している）。
 以下の対策は**どちらの決済会社でも成立する**ように作ってある。決済会社ごとに実現方法が
 異なる箇所（3DSの掛け方、Webhookの検証方式など）は各項目に併記した。
 

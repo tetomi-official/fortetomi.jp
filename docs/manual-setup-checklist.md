@@ -183,8 +183,9 @@
 
 ## H. Stripe（決済会社の第2の選択肢 / Connect）
 
-PAY.jp と併存する形で実装済み。**`NEXT_PUBLIC_PAYMENT_PROVIDER` を切り替えるだけ**で
-どちらの決済会社でも動く（既定は `payjp`。未設定なら今までどおり PAY.jp）。
+**現在の既定は Stripe。** PAY.jp を使わない方針になったため（2026-09）、
+環境変数が未設定なら Stripe が選ばれる。PAY.jp の実装は退路として残してあり、
+戻すときは `NEXT_PUBLIC_PAYMENT_PROVIDER=payjp` を明示する。
 
 日本の C2C は Stripe Connect が必須（Connect 外の C2C は禁止業種）。そのため
 出品者ひとりひとりに Stripe の連結アカウントを作り、本人確認と銀行口座の登録を
@@ -228,8 +229,11 @@ PAY.jp と併存する形で実装済み。**`NEXT_PUBLIC_PAYMENT_PROVIDER` を�
   課金の直前に Stripe へ直接問い合わせる作りにしてある。
 
 ### H-5. 決済会社の切り替え ☐
-- `.env.local` と本番環境変数に `NEXT_PUBLIC_PAYMENT_PROVIDER=stripe` を設定して再デプロイ。
-- ⚠ `NEXT_PUBLIC_*` はビルド時に埋め込まれるため、**再デプロイが必要**。
+- 既定が Stripe なので、**新規に設定する変数は無い**（H-3・H-4 のキーが入っていれば動く）。
+- PAY.jp に戻す場合のみ `NEXT_PUBLIC_PAYMENT_PROVIDER=payjp` を設定する。
+- ⚠ `NEXT_PUBLIC_*` はビルド時に埋め込まれるため、切り替えには**再デプロイが必要**。
+- ⚠ Stripe のキー（H-3）が未設定のまま本番に出ると、決済APIが 500 を返して止まる。
+  黙って PAY.jp で動いてしまうより安全な倒れ方だが、**設定漏れに注意**。
 - ⚠ **PAY.jp でカード登録済みの買い手は、登録し直しが必要**になる
   （決済会社をまたいでカード情報を移すことはできない）。利用の少ない時間帯に行うこと。
 
@@ -254,14 +258,14 @@ PAY.jp と併存する形で実装済み。**`NEXT_PUBLIC_PAYMENT_PROVIDER` を�
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase | 設定済み | — |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase | 設定済み | — |
 | `SUPABASE_SERVICE_ROLE_KEY` | 決済/再認証API（admin） | 設定済み | 本番環境変数にも設定 |
-| `NEXT_PUBLIC_PAYJP_PUBLIC_KEY` | 決済(公開) | プレースホルダ | **テストキー設定（A-2）** |
-| `PAYJP_SECRET_KEY` | 決済(秘密) | プレースホルダ | **テストキー設定（A-2）** |
+| `NEXT_PUBLIC_PAYJP_PUBLIC_KEY` | PAY.jp(公開) | 設定済み | PAY.jp に戻す場合のみ必要 |
+| `PAYJP_SECRET_KEY` | PAY.jp(秘密) | 設定済み | PAY.jp に戻す場合のみ必要 |
 | `PAYJP_3DS_REQUIRED` | 3DS必須化(任意) | 未設定＝既定で必須 | 通常は未設定でOK。開発で無効化する時だけ `false`（A-4） |
 | `PAYJP_WEBHOOK_TOKEN` | Webhook検証(秘密) | 未設定 | **設定（A-5）**。PAY.jp側の `X-Payjp-Webhook-Token` と一致 |
 | `RESEND_API_KEY` | 再認証メール送信 | 未設定 | B-3（ドメイン認証後） |
 | `REVERIFY_MAIL_FROM` | 送信元（任意） | 未設定 | 任意 |
 | `NEXT_PUBLIC_SITE_URL` | 確認リンクorigin／Connectの戻り先 | 未設定 | 本番URL。**Stripe では Connect の戻り先にも使うため本番では必須** |
-| `NEXT_PUBLIC_PAYMENT_PROVIDER` | 決済会社の切替 | 未設定＝`payjp` | Stripe に切り替えるとき `stripe`（H-5） |
+| `NEXT_PUBLIC_PAYMENT_PROVIDER` | 決済会社の切替 | 未設定＝`stripe` | 通常は未設定でOK。PAY.jp に戻すときだけ `payjp`（H-5） |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe(公開) | 未設定 | **テストキー設定（H-3）** |
 | `STRIPE_SECRET_KEY` | Stripe(秘密) | 未設定 | **テストキー設定（H-3）** |
 | `STRIPE_WEBHOOK_SECRET` | Stripe Webhook署名 | 未設定 | **設定（H-4）** |
