@@ -218,3 +218,28 @@ export async function refreshConnectAccountStatus(
   await upsertConnectAccount(userId, existing.stripeAccountId, s);
   return { state: computeState(s), ...s };
 }
+
+/**
+ * Webhook から呼ぶ状態同期。Webhook が知っているのは acct_ だけなので、
+ * そこから user_id を引いてキャッシュを更新する。
+ * 該当行が無ければ何もしない（他プラットフォームのアカウント等）。
+ */
+export async function syncConnectAccountFromWebhook(
+  secretKey: string,
+  stripeAccountId: string,
+): Promise<void> {
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("connect_accounts")
+    .select("user_id")
+    .eq("stripe_account_id", stripeAccountId)
+    .maybeSingle();
+  if (!data) return;
+
+  const stripe = getStripeClient(secretKey);
+  const account = (await stripe.v2.core.accounts.retrieve(stripeAccountId, {
+    include: [...INCLUDE],
+  })) as unknown as V2Account;
+
+  await upsertConnectAccount(data.user_id, stripeAccountId, readStatus(account));
+}
