@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { loadStripe, type Stripe as StripeJs } from "@stripe/stripe-js";
 import {
   Elements,
@@ -166,6 +166,11 @@ export default function PaymentFormStripe({
     return null;
   });
   const [done, setDone] = useState(false);
+  // React の開発モード（Strict Mode）はマウント時に effect を意図的に2回実行する。
+  // ガード無しだと SetupIntent が2つ作られ、後勝ちの clientSecret が
+  // <Elements> に渡って「clientSecret is not a mutable property」の警告と
+  // 実質的な二重初期化を招く。1回目の実行だけ実処理させる。
+  const startedRef = useRef(false);
 
   async function handleSucceeded(setupIntentId: string) {
     const result = await finalizeRegistration(setupIntentId);
@@ -179,6 +184,8 @@ export default function PaymentFormStripe({
 
   useEffect(() => {
     if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) return;
+    if (startedRef.current) return;
+    startedRef.current = true;
 
     if (redirectReturn) {
       // URLからパラメータを取り除く（再読み込みで二重処理させない）。
