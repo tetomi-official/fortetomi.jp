@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getProvider, providerConfigError } from "@/lib/payment-provider";
 import { loadStoredCustomer } from "@/lib/payment-provider/customers";
-import { loadConnectAccountRow } from "@/lib/payment-provider/stripe-connect";
+import { isSellerReadyToReceive } from "@/lib/payment-provider/stripe-connect";
 
 // 受け渡しQR用のワンタイム nonce を発行する（買い手本人）。PB-036 Phase 1。
 //  - 生の nonce は返り値（QRに載せる）だけに存在し、DB には SHA-256 ハッシュのみ保存する。
@@ -88,8 +88,11 @@ export async function POST(req: Request) {
   // 見るのは「送金を受け取れるか」だけ（銀行口座への入金がまだでも課金は成立し、
   // 売上は出品者の Stripe 残高に貯まる）。
   if (provider.requiresSellerOnboarding) {
-    const sellerAccount = await loadConnectAccountRow(reservation.seller_id);
-    if (!sellerAccount?.transfersEnabled) {
+    const seller = await isSellerReadyToReceive(
+      process.env.STRIPE_SECRET_KEY ?? "",
+      reservation.seller_id,
+    );
+    if (!seller.ready) {
       return NextResponse.json(
         {
           error: "出品者の受取口座の設定が完了していません。出品者にご確認ください。",

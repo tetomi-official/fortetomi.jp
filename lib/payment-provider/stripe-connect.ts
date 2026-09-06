@@ -243,3 +243,34 @@ export async function syncConnectAccountFromWebhook(
 
   await upsertConnectAccount(data.user_id, stripeAccountId, readStatus(account));
 }
+
+/**
+ * 「今この瞬間、出品者は送金を受け取れるか」を Stripe に直接聞く。
+ *
+ * DBのキャッシュだけで判断すると、Stripe 側で口座が停止されたことに気づけず、
+ * 買い手が待ち合わせ場所で「課金できないQR」を出すことになる。ここは頻度が低く
+ * （買い手がQRを出すときだけ）、正しさが最優先の地点なので毎回問い合わせる。
+ *
+ * Stripe に届かないときはキャッシュ値にフォールバックする。決済会社の一時的な
+ * 不調で、正常な取引まで止めてしまわないため。
+ */
+export async function isSellerReadyToReceive(
+  secretKey: string,
+  userId: string,
+): Promise<{ ready: boolean; stripeAccountId: string | null }> {
+  const existing = await loadConnectAccountRow(userId);
+  if (!existing) return { ready: false, stripeAccountId: null };
+
+  try {
+    const stripe = getStripeClient(secretKey);
+    const account = (await stripe.v2.core.accounts.retrieve(existing.stripeAccountId, {
+      include: [...INCLUDE],
+    })) as unknown as V2Account;
+    const s = readStatus(account);
+    await upsertConnectAccount(userId, existing.stripeAccountId, s);
+    return { ready: s.transfersEnabled, stripeAccountId: existing.stripeAccountId };
+  } catch (e) {
+    console.error("connect status refresh failed (falling back to cache):", e);
+    return { ready: existing.transfersEnabled, stripeAccountId: existing.stripeAccountId };
+  }
+}

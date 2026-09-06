@@ -22,6 +22,17 @@ import { syncConnectAccountFromWebhook } from "@/lib/payment-provider/stripe-con
 //
 // 応答方針: 署名検証の失敗だけ 400。それ以外は常に 200 を返す
 // （Stripe は 2xx 以外を最大3日間再送し続けるため、こちらの都合で溜めない）。
+//
+// 出品者の口座状態について（stripe listen で実測して分かったこと）:
+//   Accounts v2 のアカウントを更新しても、従来の account.updated は飛んでこない。
+//   v2 は `v2.core.account.updated` という「薄いイベント」を別系統で出す
+//   （object: "v2.core.event"、本体は related_object.id だけ持つ）。
+//   これを本番で受けるには v2 のイベント宛先を別途作り、別の署名シークレットを
+//   管理する必要がある。
+//   一方で、口座状態が本当に効くのは「QRを出す直前」と「課金の直前」の2点だけで、
+//   そこでは isSellerReadyToReceive() が Stripe に直接問い合わせている。
+//   つまりキャッシュの鮮度に依存していないので、この Webhook 無しでも正しく動く。
+//   薄いイベントの購読は、必要になったら足せばよい（今は増やさない）。
 export const runtime = "nodejs";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -139,10 +150,9 @@ export async function POST(req: Request) {
         await handleDisputeCreated(event.data.object);
         break;
       case "account.updated":
-        // 出品者の口座状態が変わった（本人確認の通過・追加要求など）。
-        // ※ Accounts v2 でどのイベント名が飛ぶかは stripe listen で要確認。
-        //   届かなくても /api/payments/connect/status がその場で取り直すので、
-        //   これはあくまでキャッシュを新鮮に保つための補助。
+        // Accounts v1 のアカウント更新。TETOMI は v2 で作るのでこの経路は通常来ない
+        // （stripe listen で実測。v2 は後述のとおり別系統のイベントを出す）。
+        // 万一 v1 のアカウントが混ざった場合の保険として残す。
         await syncConnectAccountFromWebhook(secretKey, event.data.object.id);
         break;
       default:
