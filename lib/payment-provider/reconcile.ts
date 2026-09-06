@@ -9,6 +9,7 @@
 // ===================================================
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { ProviderName } from "./config";
 
 export type MarkPaidResult = {
   /** 更新できた、または既に決済済みで何もする必要が無かった。 */
@@ -25,6 +26,9 @@ export type MarkPaidResult = {
 export async function markReservationPaid(args: {
   reservationId: string;
   chargeId: string;
+  provider?: ProviderName;
+  /** Stripe の PaymentIntent(pi_)。PAY.jp では null。charge_id には入れない。 */
+  paymentIntentId?: string | null;
 }): Promise<MarkPaidResult> {
   const admin = createAdminClient();
 
@@ -35,6 +39,11 @@ export async function markReservationPaid(args: {
       paid_at: new Date().toISOString(),
       status: "完了",
       payment_nonce_hash: null,
+      payment_provider: args.provider ?? null,
+      payment_intent_id: args.paymentIntentId ?? null,
+      // 成立したので、途中で記録した失敗状態は消す。
+      payment_status: null,
+      payment_error_code: null,
     })
     .eq("id", args.reservationId)
     .is("paid_at", null) // 二重更新防止（同時到達しても片方だけ）
@@ -54,4 +63,58 @@ export async function markReservationPaid(args: {
     await admin.from("listings").update({ status: "完了" }).eq("id", listingId);
   }
   return { ok: true, alreadyPaid: false, error: null };
+}
+
+/**
+ * 課金が成立しなかったことを記録する。
+ * 既に決済済みの行は触らない（Webhook が前後して届いても、成立を上書きしない）。
+ */
+export async function markReservationPaymentFailed(args: {
+  reservationId: string;
+  provider: ProviderName;
+  paymentIntentId?: string | null;
+  status: "requires_action" | "failed" | "disputed";
+  errorCode?: string | null;
+}): Promise<void> {
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("reservations")
+    .update({
+      payment_provider: args.provider,
+      payment_intent_id: args.paymentIntentId ?? null,
+      payment_status: args.status,
+      payment_error_code: args.errorCode ?? null,
+    })
+    .eq("id", args.reservationId)
+    .is("paid_at", null);
+  if (error) {
+    console.error("failed to record payment failure:", error.message, args.reservationId);
+  }
+}
+
+/**
+ * 受け渡しQRのワンタイム nonce を「1文で」奪う。
+ *
+ * 検証してから消費するまでの間に隙間があると、同じQRを2回読んだときに
+ * 両方が検証を通過して二重課金になる。この UPDATE ... WHERE hash = ? は
+ * 最初の1回しか行に当たらないので、後続は0行＝取り損ねたと判定できる。
+ *
+ * 戻り値 false は「他の処理が先に取った（＝処理中か、もう課金済み）」。
+ */
+export async function claimPaymentNonce(
+  reservationId: string,
+  nonceHash: string,
+): Promise<boolean> {
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from("reservations")
+    .update({ payment_nonce_hash: null })
+    .eq("id", reservationId)
+    .eq("payment_nonce_hash", nonceHash)
+    .select("id");
+  if (error) {
+    console.error("failed to claim payment nonce:", error.message, reservationId);
+    return false;
+  }
+  return !!data && data.length > 0;
 }

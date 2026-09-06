@@ -5,7 +5,13 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getProvider, providerConfigError } from "@/lib/payment-provider";
 import { loadStoredCustomer } from "@/lib/payment-provider/customers";
-import { markReservationPaid } from "@/lib/payment-provider/reconcile";
+import { loadConnectAccountRow } from "@/lib/payment-provider/stripe-connect";
+import { applicationFeeAmount } from "@/lib/payment-provider/fees";
+import {
+  claimPaymentNonce,
+  markReservationPaid,
+  markReservationPaymentFailed,
+} from "@/lib/payment-provider/reconcile";
 
 // 受け渡し課金。PB-036 Phase 1（QRモデル）。
 // フロー：出品者が対面で「買い手が表示したQR（生 nonce）」を読み取り、このAPIを呼ぶ。
@@ -107,6 +113,33 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "買い手のカードが登録されていません" }, { status: 409 });
   }
 
+  // 4.5) 出品者が送金を受け取れるか。nonce 発行時にも見ているが、QR発行後に
+  //      口座が無効化されることがあるので、課金の直前にもう一度確認する。
+  //      判定は「送金を受け取れるか」だけ。銀行口座への入金がまだでも課金は成立し、
+  //      売上は出品者の Stripe 残高に貯まる（案A・PO決定）。
+  let sellerAccountId: string | null = null;
+  if (provider.requiresSellerOnboarding) {
+    const sellerAccount = await loadConnectAccountRow(reservation.seller_id);
+    if (!sellerAccount?.transfersEnabled) {
+      return NextResponse.json(
+        { error: "出品者の受取口座の設定が完了していません。出品者にご確認ください。", sellerNotReady: true },
+        { status: 409 },
+      );
+    }
+    sellerAccountId = sellerAccount.stripeAccountId;
+  }
+
+  // 4.6) nonce を原子的に奪う。ここを通れたリクエストだけが課金に進む。
+  //      検証（上）と消費（ここ）の間に隙間があると、同じQRの二度読みで
+  //      両方が課金に進んでしまう。取り損ねたら他が処理中とみなす。
+  const claimed = await claimPaymentNonce(reservation.id, nonceHash);
+  if (!claimed) {
+    return NextResponse.json(
+      { error: "この取引は処理中です。少し待って、必要なら買い手にQRを再表示してもらってください。" },
+      { status: 409 },
+    );
+  }
+
   // 5) 課金（決済会社の実装に委譲）。charge() は例外を投げない。
   const outcome = await provider.charge({
     reservationId: reservation.id,
@@ -114,8 +147,8 @@ export async function POST(req: Request) {
     buyerUserId: reservation.buyer_id,
     sellerUserId: reservation.seller_id,
     customer,
-    sellerAccountId: null,
-    applicationFeeJpy: 0,
+    sellerAccountId,
+    applicationFeeJpy: provider.requiresSellerOnboarding ? applicationFeeAmount(amount) : 0,
     // 同じQRを二度読みしても同じ課金として扱わせるためのキー。
     idempotencyKey: `${provider.name}:charge:${reservation.id}:${nonceHash.slice(0, 16)}`,
     description: `reservation:${reservation.id}`,
@@ -126,15 +159,33 @@ export async function POST(req: Request) {
     },
   });
 
+  // 課金に至らなかった場合、nonce は上で消費済み。買い手にQRを出し直してもらう
+  // 必要があるため、どの分岐でもその旨が伝わる文言にしている。
   if (outcome.kind === "error") {
     return NextResponse.json({ error: outcome.message }, { status: outcome.httpStatus });
   }
   if (outcome.kind === "declined") {
-    return NextResponse.json({ error: outcome.message }, { status: 402 });
+    await markReservationPaymentFailed({
+      reservationId: reservation.id,
+      provider: provider.name,
+      status: "failed",
+      errorCode: outcome.code || null,
+    });
+    return NextResponse.json(
+      { error: `${outcome.message}（買い手にQRを再表示してもらってください）` },
+      { status: 402 },
+    );
   }
   if (outcome.kind === "requires_action") {
     // 買い手のカード会社が本人認証を求めた。買い手はその場にいるので復旧できる。
-    // 復旧フローの実装は S6。ここでは意味の分かるエラーとして返す。
+    // 復旧フロー（買い手の端末で3DSを出す）の実装は S6。
+    await markReservationPaymentFailed({
+      reservationId: reservation.id,
+      provider: provider.name,
+      paymentIntentId: outcome.paymentIntentId,
+      status: "requires_action",
+      errorCode: "authentication_required",
+    });
     return NextResponse.json(
       {
         error: "買い手のカード会社による本人認証が必要です。買い手の画面で認証を完了してください。",
@@ -144,10 +195,12 @@ export async function POST(req: Request) {
     );
   }
 
-  // 6) 成功：決済結果を記録し、取引を完了へ。nonce は消費（再利用防止）。
+  // 6) 成功：決済結果を記録し、取引を完了へ。
   const marked = await markReservationPaid({
     reservationId: reservation.id,
     chargeId: outcome.chargeId,
+    provider: provider.name,
+    paymentIntentId: outcome.paymentIntentId,
   });
   if (!marked.ok) {
     // 課金は成立しているため、記録失敗はサーバーログに残し 500 で通知（手動突合が必要）。

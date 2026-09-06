@@ -82,7 +82,7 @@ export async function POST(req: Request) {
 
   // 4) 予約を突合し、未決済なら補正（冪等。書き込みは reconcile.ts に集約）
   try {
-    const marked = await markReservationPaid({ reservationId, chargeId });
+    const marked = await markReservationPaid({ reservationId, chargeId, provider: "payjp" });
     if (!marked.ok) {
       console.error("webhook reconcile: reservation update failed:", marked.error, chargeId);
     } else if (!marked.alreadyPaid) {
