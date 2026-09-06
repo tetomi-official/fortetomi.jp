@@ -7,6 +7,7 @@
 
 import { PAYMENT_PROVIDER } from "./config";
 import { createPayjpProvider } from "./payjp";
+import { createStripeProvider } from "./stripe";
 import type { PaymentProvider } from "./types";
 
 /**
@@ -15,9 +16,10 @@ import type { PaymentProvider } from "./types";
  */
 export function providerConfigError(): string | null {
   if (PAYMENT_PROVIDER === "stripe") {
-    // Stripe 実装はまだ入っていない。ここで止めないと、stripe を指定したのに
-    // PAY.jp に課金が飛ぶという最悪の取り違えが起きる。
-    return "決済の設定が未完了です（Stripe 実装は未提供）";
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return "決済の設定が未完了です（STRIPE_SECRET_KEY 未設定）";
+    }
+    return null;
   }
   if (!process.env.PAYJP_SECRET_KEY) {
     return "決済の設定が未完了です（PAYJP_SECRET_KEY 未設定）";
@@ -27,6 +29,9 @@ export function providerConfigError(): string | null {
 
 /** 現在の決済会社の実装を返す。providerConfigError() が null であることが前提。 */
 export function getProvider(): PaymentProvider {
+  if (PAYMENT_PROVIDER === "stripe") {
+    return createStripeProvider(process.env.STRIPE_SECRET_KEY ?? "");
+  }
   return createPayjpProvider(process.env.PAYJP_SECRET_KEY ?? "");
 }
 

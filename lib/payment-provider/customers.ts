@@ -17,16 +17,15 @@ export async function loadStoredCustomer(userId: string): Promise<StoredCustomer
   const admin = createAdminClient();
   const { data } = await admin
     .from("payment_customers")
-    .select("user_id, payjp_customer_id")
+    .select("user_id, payjp_customer_id, stripe_customer_id, stripe_payment_method_id")
     .eq("user_id", userId)
     .maybeSingle();
   if (!data) return null;
   return {
     userId: data.user_id,
     payjpCustomerId: data.payjp_customer_id ?? null,
-    // Stripe 用の列はマイグレーション13で追加する。それまでは常に null。
-    stripeCustomerId: null,
-    stripePaymentMethodId: null,
+    stripeCustomerId: data.stripe_customer_id ?? null,
+    stripePaymentMethodId: data.stripe_payment_method_id ?? null,
   };
 }
 
@@ -40,7 +39,15 @@ export async function saveRegisteredCard(
     user_id: userId,
     updated_at: new Date().toISOString(),
   };
-  if (ids.payjpCustomerId) row.payjp_customer_id = ids.payjpCustomerId;
+  if (ids.payjpCustomerId) {
+    row.payjp_customer_id = ids.payjpCustomerId;
+    row.provider = "payjp";
+  }
+  if (ids.stripeCustomerId) {
+    row.stripe_customer_id = ids.stripeCustomerId;
+    row.provider = "stripe";
+  }
+  if (ids.stripePaymentMethodId) row.stripe_payment_method_id = ids.stripePaymentMethodId;
 
   const { error } = await admin.from("payment_customers").upsert(row);
   return { error: error?.message ?? null };

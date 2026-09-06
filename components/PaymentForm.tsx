@@ -13,6 +13,7 @@ import { PAYMENT_PROVIDER } from "@/lib/payment-provider/config";
 // next/dynamic + ssr:false で読むので、使わない側の決済SDKはブラウザに届かない。
 
 const PaymentFormPayjp = dynamic(() => import("./PaymentFormPayjp"), { ssr: false });
+const PaymentFormStripe = dynamic(() => import("./PaymentFormStripe"), { ssr: false });
 
 export type PaymentFormProps = {
   onRegistered?: () => void;
@@ -22,16 +23,7 @@ export type PaymentFormProps = {
 
 export default function PaymentForm(props: PaymentFormProps) {
   if (PAYMENT_PROVIDER === "stripe") {
-    // Stripe 版は S2 で追加する。設定だけ先に切り替えられた場合に、
-    // PAY.jp のフォームを黙って出さないよう明示的に止める。
-    return (
-      <div className="form-card">
-        <h2>支払いカードの登録</h2>
-        <p className="form-hint">
-          決済の設定が未完了です。しばらくしてからお試しください。
-        </p>
-      </div>
-    );
+    return <PaymentFormStripe {...props} />;
   }
   return <PaymentFormPayjp {...props} />;
 }
