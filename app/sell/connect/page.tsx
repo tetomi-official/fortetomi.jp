@@ -6,11 +6,11 @@ import { useAuth } from "@/lib/auth";
 
 // 出品者の受取口座（Stripe Connect）登録ハブ。
 //  - 未作成: 「口座登録をはじめる」→ Stripe がホストする本人確認・口座入力へ全画面遷移
-//  - 手続き中・要対応: 「登録を続ける」→ 新しいオンボーディングリンクを発行して再遷移
-//  - 審査中: Stripe側の審査待ち。手動で状態を確認できるようにする
+//  - 手続き中: 「登録を続ける」→ 新しいオンボーディングリンクを発行して再遷移
+//  - 審査中: 出品者側の入力は済み、Stripeの確認待ち。手動で状態を確認できるようにする
 //  - 利用可能: 完了。受け渡し課金を受けられる状態
 type ConnectStatus = {
-  state: "未作成" | "手続き中" | "審査中" | "利用可能" | "要対応";
+  state: "未作成" | "手続き中" | "審査中" | "利用可能";
   requirementsDue?: string[];
   disabledReason?: string | null;
 };
@@ -21,8 +21,6 @@ function stateMessage(state: ConnectStatus["state"]): string {
       return "受け渡し課金を受け取るには、Stripeでの口座登録が必要です。";
     case "手続き中":
       return "口座登録が完了していません。続きから再開できます。";
-    case "要対応":
-      return "追加の確認が必要です。続きから対応してください。";
     case "審査中":
       return "Stripeによる審査中です。しばらくお待ちください。";
     case "利用可能":
@@ -115,8 +113,8 @@ export default function SellConnectPage() {
     <div className="form-card">
       <h2>受取口座の登録</h2>
       {status && <p className="form-hint">{stateMessage(status.state)}</p>}
-      {status?.state === "要対応" && status.requirementsDue && status.requirementsDue.length > 0 && (
-        <p className="form-hint">不足項目: {status.requirementsDue.join(", ")}</p>
+      {status?.state === "手続き中" && status.requirementsDue && status.requirementsDue.length > 0 && (
+        <p className="form-hint">未入力の項目: {status.requirementsDue.length}件</p>
       )}
       {error && <p style={{ color: "#c0392b", fontSize: 14, margin: "12px 0" }}>{error}</p>}
 

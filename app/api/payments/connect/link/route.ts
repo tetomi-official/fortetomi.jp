@@ -40,8 +40,7 @@ export async function POST() {
 
   const secretKey = process.env.STRIPE_SECRET_KEY ?? "";
   try {
-    const linkType = existing.detailsSubmitted ? "account_update" : "account_onboarding";
-    const onboardingUrl = await createOnboardingLink(secretKey, existing.stripeAccountId, linkType);
+    const onboardingUrl = await createOnboardingLink(secretKey, existing.stripeAccountId);
     return NextResponse.json({ onboardingUrl });
   } catch (e) {
     console.error("connect link creation failed:", e);

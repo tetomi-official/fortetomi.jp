@@ -7,7 +7,7 @@ import { PAYMENT_PROVIDER } from "@/lib/payment-provider/config";
 // 出品者への「受取口座の登録がまだ」ソフトな誘導。出品の作成自体は止めない
 // （実際に止めるのは受け渡し課金の直前＝/api/payments/nonce・charge のサーバー側チェック）。
 // PAY.jp では出品者ごとの口座登録が要らないので、Stripe のときだけ意味を持つ。
-type ConnectState = "未作成" | "手続き中" | "審査中" | "利用可能" | "要対応";
+type ConnectState = "未作成" | "手続き中" | "審査中" | "利用可能";
 
 async function fetchState(): Promise<ConnectState | null> {
   try {

@@ -2,11 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { PAYMENT_PROVIDER, providerConfigError } from "@/lib/payment-provider";
-import {
-  createOnboardingLink,
-  ensureConnectAccount,
-  loadConnectAccountRow,
-} from "@/lib/payment-provider/stripe-connect";
+import { createOnboardingLink, ensureConnectAccount } from "@/lib/payment-provider/stripe-connect";
 
 // 出品者の Stripe Connect（Express アカウント）作成＋最初のオンボーディングリンク発行。
 // 既にアカウントがあれば作らず、リンクだけ新規発行する（再訪時もこのルートで良い）。
@@ -38,11 +34,16 @@ export async function POST() {
   }
 
   const secretKey = process.env.STRIPE_SECRET_KEY ?? "";
+  const displayName =
+    typeof user.user_metadata?.name === "string" ? user.user_metadata.name : null;
   try {
-    const accountId = await ensureConnectAccount(secretKey, user.id, user.email ?? null);
-    const existing = await loadConnectAccountRow(user.id);
-    const linkType = existing?.detailsSubmitted ? "account_update" : "account_onboarding";
-    const onboardingUrl = await createOnboardingLink(secretKey, accountId, linkType);
+    const accountId = await ensureConnectAccount(
+      secretKey,
+      user.id,
+      user.email ?? null,
+      displayName,
+    );
+    const onboardingUrl = await createOnboardingLink(secretKey, accountId);
     return NextResponse.json({ onboardingUrl });
   } catch (e) {
     console.error("connect account creation failed:", e);

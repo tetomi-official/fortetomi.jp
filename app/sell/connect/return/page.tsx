@@ -8,7 +8,7 @@ import { useAuth } from "@/lib/auth";
 // account.updated Webhook がまだ届いていない可能性があるので、ここで一度
 // 状態を取り直す（GET /connect/status がその場で Stripe から取り直す）。
 type ConnectStatus = {
-  state: "未作成" | "手続き中" | "審査中" | "利用可能" | "要対応";
+  state: "未作成" | "手続き中" | "審査中" | "利用可能";
   requirementsDue?: string[];
 };
 
@@ -73,11 +73,11 @@ export default function SellConnectReturnPage() {
         <>
           <h2>登録が完了していません</h2>
           <p className="form-hint">
-            入力が途中で終わっているか、追加の確認が必要です
+            入力が途中で終わっています
             {status.requirementsDue && status.requirementsDue.length > 0
-              ? `（不足項目: ${status.requirementsDue.join(", ")}）`
+              ? `（未入力の項目: ${status.requirementsDue.length}件）`
               : ""}
-            。
+            。登録画面から続きを入力してください。
           </p>
         </>
       )}
