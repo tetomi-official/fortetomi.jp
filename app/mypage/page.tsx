@@ -85,6 +85,8 @@ export default function MyPage() {
   const [listingBusyId, setListingBusyId] = useState<string | null>(null);
   // PB-036：出品者が受け渡しQRを読み取るスキャナの開閉。
   const [scanning, setScanning] = useState(false);
+  // 受け渡し課金でカード会社が買い手の本人確認を求めた予約。消えないパネルを出す。
+  const [authWaitId, setAuthWaitId] = useState<string | null>(null);
 
   useEffect(() => {
     // 未ログイン時はログインゲートを早期 return するため、ここでの初期化は不要。
@@ -163,8 +165,17 @@ export default function MyPage() {
       const data = (await res.json().catch(() => null)) as {
         chargeId?: string;
         error?: string;
+        requiresAction?: boolean;
       } | null;
       if (!res.ok || !data?.chargeId) {
+        if (data?.requiresAction) {
+          // カード会社が買い手の本人確認を求めた。買い手は目の前にいるので、
+          // 買い手の端末で確認してもらえばその場で完了する。
+          // トーストだと消えてしまい「何をすればいいか」が伝わらないため、
+          // 消えないパネルとして出す。
+          setAuthWaitId(decoded.reservationId);
+          return;
+        }
         showToast(data?.error ?? "決済に失敗しました", "error");
         return;
       }
@@ -174,6 +185,7 @@ export default function MyPage() {
     } finally {
       setResBusyId(null);
     }
+    setAuthWaitId(null);
     showToast("決済が完了しました。取引完了です。", "success");
     // 完了・売り切れを反映するため再取得。
     if (user) {
@@ -183,6 +195,43 @@ export default function MyPage() {
       ]);
       setSent(s);
       setReceived(rc);
+    }
+  };
+
+  // 買い手が端末で本人確認を終えたかを確認する。確定の記録はサーバー側が
+  // Stripe から取り直して行う（クライアントの申告は信用しない）。
+  const refreshAuthWait = async () => {
+    if (!authWaitId) return;
+    try {
+      const res = await fetch("/api/payments/stripe/confirm-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reservationId: authWaitId }),
+      });
+      const data = (await res.json().catch(() => null)) as {
+        paid?: boolean;
+        error?: string;
+      } | null;
+      if (!res.ok) {
+        showToast(data?.error ?? "状態を確認できませんでした", "error");
+        return;
+      }
+      if (!data?.paid) {
+        showToast("まだ本人確認が完了していません。買い手の画面をご確認ください。", "");
+        return;
+      }
+      setAuthWaitId(null);
+      showToast("決済が完了しました。取引完了です。", "success");
+      if (user) {
+        const [s, rc] = await Promise.all([
+          fetchSentReservations(user.id),
+          fetchReceivedReservations(user.id),
+        ]);
+        setSent(s);
+        setReceived(rc);
+      }
+    } catch {
+      showToast("通信エラーが発生しました", "error");
     }
   };
 
@@ -811,6 +860,26 @@ export default function MyPage() {
                     <h3>受け取った購入希望</h3>
                   </div>
                   <div className="panel-body">
+                    {authWaitId && (
+                      <div
+                        className="form-card"
+                        style={{ borderColor: "#f59e0b", background: "#fffbeb", marginBottom: 16 }}
+                      >
+                        <h2>買い手の本人確認を待っています</h2>
+                        <p className="form-hint">
+                          カード会社が買い手の本人確認を求めています。買い手の端末の
+                          支払い画面に確認ボタンが出ているので、その場で完了してもらってください。
+                          完了すると決済が確定します。
+                        </p>
+                        <button
+                          className="btn-outline btn-full"
+                          style={{ marginTop: 12 }}
+                          onClick={() => void refreshAuthWait()}
+                        >
+                          状態を確認する
+                        </button>
+                      </div>
+                    )}
                     {received.length === 0 ? (
                       <EmptyBlock icon={<span style={{ fontSize: "4rem" }}>📬</span>} title="受け取った購入希望はありません">
                         <p>出品中の教科書に購入希望が届くとここに表示されます。</p>

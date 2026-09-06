@@ -95,6 +95,13 @@ export interface Reservation {
   charge_id?: string;
   /** 決済完了時刻（ミリ秒）。未決済は undefined。 */
   paid_at?: number;
+  /**
+   * 課金が成立しなかったときの状態（PB-036 / Stripe S6）。成立時・未着手時は undefined。
+   *  - requires_action: カード会社が本人認証を要求。買い手の端末で完了させれば復旧できる。
+   *  - failed:          拒否された。買い手にQRを出し直してもらう。
+   *  - disputed:        チャージバック。運営対応。
+   */
+  payment_status?: "requires_action" | "failed" | "disputed";
 }
 
 /** 取引メッセージ（PB-041）。1 予約（reservation）= 1 スレッド。 */

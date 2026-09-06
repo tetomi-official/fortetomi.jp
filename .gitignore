@@ -32,6 +32,8 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# 値を含まない「見本」だけは追跡する（.env* に巻き込まれて除外されていた）
+!.env.example
 
 # vercel
 .vercel

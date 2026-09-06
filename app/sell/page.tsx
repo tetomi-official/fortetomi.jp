@@ -10,6 +10,7 @@ import { createListing, updateListing, uploadListingImages, fetchListingById } f
 import { lookupBook } from "@/lib/booklookup";
 import { fetchCoursesByIsbn, facultiesFromCourses, type SyllabusCourse } from "@/lib/syllabus";
 import BarcodeScanner from "@/components/BarcodeScanner";
+import ConnectStatusBanner from "@/components/ConnectStatusBanner";
 import type { Condition } from "@/lib/types";
 
 const MIN_IMAGES = 2;
@@ -332,27 +333,30 @@ export default function SellPage() {
       <main className="page-main" style={{ background: "var(--bg-gray)" }}>
         <div className="sell-container">
           {done ? (
-            <div className="form-card" style={{ textAlign: "center", padding: "56px 32px" }}>
-              <div style={{ fontSize: "2.2rem", marginBottom: 20, color: "var(--navy)" }}>
-                <i className="fas fa-check-circle" />
+            <>
+              <div className="form-card" style={{ textAlign: "center", padding: "56px 32px" }}>
+                <div style={{ fontSize: "2.2rem", marginBottom: 20, color: "var(--navy)" }}>
+                  <i className="fas fa-check-circle" />
+                </div>
+                <h2 style={{ fontSize: "1.5rem", fontWeight: 900, color: "var(--navy)", marginBottom: 12, border: "none", padding: 0 }}>
+                  {editId ? "出品を更新しました！" : "出品が完了しました！"}
+                </h2>
+                <p style={{ color: "var(--text-muted)", fontSize: 14, lineHeight: 1.8, marginBottom: 32 }}>
+                  {editId ? "変更内容が保存されました。" : "出品が正常に登録されました。"}
+                  <br />
+                  購入希望が届き次第、マイページに通知されます。
+                </p>
+                <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+                  <Link href="/listings" className="btn-navy">
+                    <i className="fas fa-list" /> 一覧を見る
+                  </Link>
+                  <Link href="/mypage" className="btn-outline">
+                    <i className="fas fa-user" /> マイページ
+                  </Link>
+                </div>
               </div>
-              <h2 style={{ fontSize: "1.5rem", fontWeight: 900, color: "var(--navy)", marginBottom: 12, border: "none", padding: 0 }}>
-                {editId ? "出品を更新しました！" : "出品が完了しました！"}
-              </h2>
-              <p style={{ color: "var(--text-muted)", fontSize: 14, lineHeight: 1.8, marginBottom: 32 }}>
-                {editId ? "変更内容が保存されました。" : "出品が正常に登録されました。"}
-                <br />
-                購入希望が届き次第、マイページに通知されます。
-              </p>
-              <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-                <Link href="/listings" className="btn-navy">
-                  <i className="fas fa-list" /> 一覧を見る
-                </Link>
-                <Link href="/mypage" className="btn-outline">
-                  <i className="fas fa-user" /> マイページ
-                </Link>
-              </div>
-            </div>
+              <ConnectStatusBanner />
+            </>
           ) : editLoading ? (
             <div className="form-card" style={{ textAlign: "center", padding: "56px 32px" }}>
               <i className="fas fa-spinner fa-spin" style={{ fontSize: "2rem", color: "var(--navy)", opacity: 0.5 }} />

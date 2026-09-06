@@ -13,13 +13,16 @@
     "test:resend": "node --env-file=.env.local scripts/test-resend.mjs"
   },
   "dependencies": {
+    "@stripe/react-stripe-js": "6.9.0",
+    "@stripe/stripe-js": "9.15.0",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.108.1",
     "@zxing/browser": "^0.2.0",
     "@zxing/library": "^0.22.0",
     "next": "16.2.7",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "stripe": "22.6.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

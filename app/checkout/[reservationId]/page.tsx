@@ -9,6 +9,7 @@ import { hasRegisteredCard } from "@/lib/payments";
 import { yen } from "@/lib/labels";
 import PaymentForm from "@/components/PaymentForm";
 import PaymentQR from "@/components/PaymentQR";
+import PaymentAuthPrompt from "@/components/PaymentAuthPrompt";
 import type { Reservation } from "@/lib/types";
 
 // 買い手の受け渡し・支払い画面（PB-036 Phase 1）。
@@ -44,6 +45,24 @@ export default function CheckoutPage() {
     };
   }, [ready, user, params.reservationId]);
 
+  // 受け渡し中の状態変化を拾う。出品者がQRを読み取った結果（成立・本人認証待ち）は
+  // 買い手の画面には自動で伝わらないので、QR表示中だけ短い間隔で見に行く。
+  // 対面で相手を待たせている場面なので、更新を待たせない方を優先する。
+  useEffect(() => {
+    if (!ready || !user) return;
+    const target = reservation;
+    if (!target || target.paid_at || target.status === "完了") return;
+    if (target.status !== "承認済み") return;
+
+    const id = setInterval(() => {
+      fetchSentReservations(user.id).then((list) => {
+        const fresh = list.find((r) => r.id === params.reservationId);
+        if (fresh) setReservation(fresh);
+      });
+    }, 4000);
+    return () => clearInterval(id);
+  }, [ready, user, params.reservationId, reservation]);
+
   const wrap = (children: React.ReactNode) => (
     <main style={{ maxWidth: 520, margin: "40px auto", padding: "0 16px" }}>{children}</main>
   );
@@ -67,6 +86,20 @@ export default function CheckoutPage() {
             マイページへ
           </Link>
         </div>
+      ) : reservation.payment_status === "requires_action" ? (
+        // 受け渡しの場でカード会社が本人確認を求めた。買い手の端末で完了させれば
+        // その場で決済が終わる（出品者にQRを出し直してもらう必要はない）。
+        <PaymentAuthPrompt
+          reservationId={reservation.id}
+          onPaid={() => {
+            if (user) {
+              void fetchSentReservations(user.id).then((list) => {
+                const fresh = list.find((r) => r.id === reservation.id);
+                if (fresh) setReservation(fresh);
+              });
+            }
+          }}
+        />
       ) : reservation.status !== "承認済み" ? (
         <div className="form-card">
           <h2>出品者の承認待ちです</h2>
