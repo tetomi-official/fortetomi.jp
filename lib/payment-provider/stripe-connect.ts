@@ -36,6 +36,9 @@ export interface ConnectAccountStatus {
 // v2 のレスポンスは include で指定した分だけ返る。必要な範囲だけ取る。
 const INCLUDE = ["configuration.recipient", "requirements"] as const;
 
+// 業種コード（MCC）5942 = 書店。中古教科書の売買に最も近い分類。
+const MCC_BOOK_STORES = "5942";
+
 function siteUrl(): string {
   // 他ルート（reverify/recover）と同じ規約：本番は環境変数を正、無ければ localhost。
   return (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
@@ -141,6 +144,15 @@ export async function ensureConnectAccount(
       dashboard: "express",
       identity: { country: "jp", entity_type: "individual" },
       configuration: {
+        // 業種・事業URL・商品説明は Stripe が必ず要求してくる。出品者に聞くと
+        // 「あなたの事業URLは？」「何を販売していますか？」という、教科書を1冊
+        // 売りたいだけの学生には答えようのない質問になる。答えは常に同じなので
+        // プラットフォーム側で埋めておき、出品者には自分の身元と口座だけ入力させる。
+        // （実測: 出品者の入力項目が 25 → 22 件に減る）
+        //
+        // ※ これにより merchant 構成が applied になるが capabilities は空のまま＝
+        //   出品者に「決済を受け付ける」権限は付かない。設定を確認済み。
+        merchant: { mcc: MCC_BOOK_STORES },
         recipient: {
           capabilities: { stripe_balance: { stripe_transfers: { requested: true } } },
         },
@@ -149,6 +161,10 @@ export async function ensureConnectAccount(
         currency: "jpy",
         locales: ["ja-JP"],
         responsibilities: { fees_collector: "application", losses_collector: "application" },
+        profile: {
+          business_url: siteUrl(),
+          product_description: "大学の教科書の個人間売買（中古書籍）",
+        },
       },
       metadata: { user_id: userId },
       include: [...INCLUDE],
