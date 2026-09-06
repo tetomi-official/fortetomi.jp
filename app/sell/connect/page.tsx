@@ -79,6 +79,27 @@ export default function SellConnectPage() {
     });
   }, [ready, user]);
 
+  // Stripe の管理画面を開く。リンクは使い捨てなので押されるたびに発行する。
+  async function openDashboard() {
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/payments/connect/login-link", { method: "POST" });
+      const data = (await res.json().catch(() => null)) as
+        | { url?: string; error?: string }
+        | null;
+      if (!res.ok || !data?.url) {
+        setError(data?.error ?? "管理画面を開けませんでした");
+        setSubmitting(false);
+        return;
+      }
+      window.location.href = data.url;
+    } catch {
+      setError("通信エラーが発生しました");
+      setSubmitting(false);
+    }
+  }
+
   async function startOnboarding() {
     setSubmitting(true);
     setError(null);
@@ -119,9 +140,24 @@ export default function SellConnectPage() {
       {error && <p style={{ color: "#c0392b", fontSize: 14, margin: "12px 0" }}>{error}</p>}
 
       {status?.state === "利用可能" ? (
-        <Link href="/sell" className="btn-navy btn-full" style={{ marginTop: 16 }}>
-          出品にもどる
-        </Link>
+        <>
+          {/* 売上の残高・入金予定・口座変更は Stripe 側の画面で行う。
+              TETOMI は売上金を預からないので、こちらに残高画面は持たない。 */}
+          <button
+            className="btn-navy btn-full"
+            style={{ marginTop: 16 }}
+            onClick={openDashboard}
+            disabled={submitting}
+          >
+            {submitting ? "開いています…" : "売上・入金を確認する"}
+          </button>
+          <p className="form-hint" style={{ marginTop: 8 }}>
+            残高、入金の予定と履歴、銀行口座の変更は Stripe の画面で行えます。
+          </p>
+          <Link href="/sell" className="btn-outline btn-full" style={{ marginTop: 12 }}>
+            出品にもどる
+          </Link>
+        </>
       ) : status?.state === "審査中" ? (
         <button className="btn-outline btn-full" style={{ marginTop: 16 }} onClick={() => void refreshStatus()}>
           状態を確認する
