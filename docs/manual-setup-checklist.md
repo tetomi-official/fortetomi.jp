@@ -181,6 +181,72 @@
 
 ---
 
+## H. Stripe（決済会社の第2の選択肢 / Connect）
+
+PAY.jp と併存する形で実装済み。**`NEXT_PUBLIC_PAYMENT_PROVIDER` を切り替えるだけ**で
+どちらの決済会社でも動く（既定は `payjp`。未設定なら今までどおり PAY.jp）。
+
+日本の C2C は Stripe Connect が必須（Connect 外の C2C は禁止業種）。そのため
+出品者ひとりひとりに Stripe の連結アカウントを作り、本人確認と銀行口座の登録を
+してもらう必要がある。この負担は PAY.jp の Payouts型より重い。
+
+### H-1. DBマイグレーションの適用 ☐
+- [`docs/supabase-migration-13-stripe.sql`](./supabase-migration-13-stripe.sql)
+  - `payment_customers` に Stripe 用の列を追加（PAY.jp の列は消さず共存）
+  - `reservations` に `payment_provider` / `payment_intent_id` / `payment_status` などを追加
+  - `connect_accounts`（出品者の受取口座）を新規作成
+- [`docs/supabase-migration-14-connect-accounts-v2.sql`](./supabase-migration-14-connect-accounts-v2.sql)
+  - Stripe が新規連携での Accounts v1 を廃止したため、v2 の形に合わせる
+  - `charges_enabled` → `transfers_enabled` に改名、`details_submitted` を削除
+- 実行方法は A-1 と同じ（Supabase SQL Editor）。**13 → 14 の順で適用すること。**
+
+### H-2. Connect の有効化 ☐
+- Stripe ダッシュボードで Connect を有効化する（一度きり）。
+  未有効だと連結アカウントの作成が
+  `You can only configure Connect...` で拒否される。
+- 業態の質問には「マーケットプレイス」で回答する。
+
+### H-3. Stripe キーの設定 ☐
+- ダッシュボード（テストモード）→ 開発者 → APIキー から取得し `.env.local` へ：
+  - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`（`pk_test_...`）
+  - `STRIPE_SECRET_KEY`（`sk_test_...`。**`NEXT_PUBLIC_` を付けないこと**）
+
+### H-4. Webhook の設定 ☐
+- 送信先：`https://tetomi.jp/api/payments/stripe/webhook`
+- 受け取るイベント：`payment_intent.succeeded` / `payment_intent.payment_failed`
+  / `charge.dispute.created`
+- 発行された署名シークレット（`whsec_...`）を `STRIPE_WEBHOOK_SECRET` に設定。
+- ローカルで試す場合は Stripe CLI（ブラウザログイン不要。テストキーで動く）：
+  ```bash
+  npm install -g @stripe/cli
+  export STRIPE_API_KEY=<sk_test_...>
+  stripe listen --forward-to localhost:3000/api/payments/stripe/webhook
+  ```
+  出力された `whsec_...` を `.env.local` に入れる。
+- ℹ️ 出品者の口座状態は Webhook に依存していない。Accounts v2 は従来の
+  `account.updated` を出さない（別系統の「薄いイベント」になる）ため、QR発行と
+  課金の直前に Stripe へ直接問い合わせる作りにしてある。
+
+### H-5. 決済会社の切り替え ☐
+- `.env.local` と本番環境変数に `NEXT_PUBLIC_PAYMENT_PROVIDER=stripe` を設定して再デプロイ。
+- ⚠ `NEXT_PUBLIC_*` はビルド時に埋め込まれるため、**再デプロイが必要**。
+- ⚠ **PAY.jp でカード登録済みの買い手は、登録し直しが必要**になる
+  （決済会社をまたいでカード情報を移すことはできない）。利用の少ない時間帯に行うこと。
+
+### H-6. 法定ページの整合 ☐ **本番前に必須**
+- **利用規約の「振込申請」「売上残高」まわりが Stripe の実際の動きと食い違う。**
+  詳細と代替案は [`docs/stripe-legal-review.md`](./stripe-legal-review.md) にまとめてある。
+- 特に第11条2項（振込手数料250円）と第12条（売上金の管理および振込）は、
+  Stripe を本番で有効にする前に必ず直すこと。
+
+### H-7. 出品者への案内（運用） ☐
+- 口座登録には**公的な写真付き身分証**が要る（運転免許証／パスポート／
+  マイナンバーカード／在留カード）。**学生証は使えない。**
+- 免許を持っていない学生はマイナンバーカードかパスポートが必要になるため、
+  出品前の案内で先に伝えないと途中で詰まる。
+
+---
+
 ## 環境変数まとめ（`.env.local` と本番環境変数の両方に）
 
 | 変数 | 用途 | 現状 | 必要な作業 |
@@ -194,9 +260,14 @@
 | `PAYJP_WEBHOOK_TOKEN` | Webhook検証(秘密) | 未設定 | **設定（A-5）**。PAY.jp側の `X-Payjp-Webhook-Token` と一致 |
 | `RESEND_API_KEY` | 再認証メール送信 | 未設定 | B-3（ドメイン認証後） |
 | `REVERIFY_MAIL_FROM` | 送信元（任意） | 未設定 | 任意 |
-| `NEXT_PUBLIC_SITE_URL` | 確認リンクorigin（任意） | 未設定 | 任意（本番URL） |
+| `NEXT_PUBLIC_SITE_URL` | 確認リンクorigin／Connectの戻り先 | 未設定 | 本番URL。**Stripe では Connect の戻り先にも使うため本番では必須** |
+| `NEXT_PUBLIC_PAYMENT_PROVIDER` | 決済会社の切替 | 未設定＝`payjp` | Stripe に切り替えるとき `stripe`（H-5） |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe(公開) | 未設定 | **テストキー設定（H-3）** |
+| `STRIPE_SECRET_KEY` | Stripe(秘密) | 未設定 | **テストキー設定（H-3）** |
+| `STRIPE_WEBHOOK_SECRET` | Stripe Webhook署名 | 未設定 | **設定（H-4）** |
+| `STRIPE_3DS_REQUIRED` | 3DS要求(任意) | 未設定＝既定で要求 | 通常は未設定でOK。※日本のガイドライン該当時はこの値に関係なく Stripe が3DSを出す |
 
-> 本番（Vercel等）ではサーバー専用変数（`SUPABASE_SERVICE_ROLE_KEY` / `PAYJP_SECRET_KEY` / `PAYJP_WEBHOOK_TOKEN` / `RESEND_API_KEY`）を**サーバー環境変数**として設定し、`NEXT_PUBLIC_` を付けないこと。
+> 本番（Vercel等）ではサーバー専用変数（`SUPABASE_SERVICE_ROLE_KEY` / `PAYJP_SECRET_KEY` / `PAYJP_WEBHOOK_TOKEN` / `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` / `RESEND_API_KEY`）を**サーバー環境変数**として設定し、`NEXT_PUBLIC_` を付けないこと。
 
 ---
 

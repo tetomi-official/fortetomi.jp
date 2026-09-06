@@ -243,11 +243,12 @@ export default function TermsPage() {
         </li>
       </ol>
 
-      <h2>第19条（PAY.JP Platform ユーザー利用規約への同意）</h2>
+      <h2>第19条（決済会社の利用規約への同意）</h2>
       <p>
-        出品者は、本サービスにおける決済および売上金の振込に関して、PAY.JP Platform（Payouts）ユーザー利用規約（
-        <a href={LEGAL_INFO.payjpPayoutsTermsUrl} target="_blank" rel="noopener noreferrer">
-          {LEGAL_INFO.payjpPayoutsTermsUrl}
+        出品者は、本サービスにおける決済および売上金の受け取りに関して、
+        {LEGAL_INFO.sellerAgreementName}（
+        <a href={LEGAL_INFO.sellerAgreementUrl} target="_blank" rel="noopener noreferrer">
+          {LEGAL_INFO.sellerAgreementUrl}
         </a>
         ）に同意するものとします。
       </p>
