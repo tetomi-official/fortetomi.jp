@@ -1,6 +1,6 @@
 // 購入予約まわり（T03 / T04 / T05）
-import { apiAs, clickText, go, hasText, wait, waitForText } from "../helpers.mjs";
-import { admin, must } from "../db.mjs";
+import { apiAs, clickText, go, hasText, waitForText } from "../helpers.mjs";
+import { admin, must, waitFor } from "../db.mjs";
 import { HANDOVER_TIME, PICKUP_LOCATION } from "../constants.mjs";
 
 /** 購入希望モーダルを開いて候補日を2件選び、確認画面まで進める。 */
@@ -69,19 +69,26 @@ export const T03 = {
 
     await clickText(page, "button", "購入希望を送る");
     await waitForText(page, "購入希望", 20000);
-    await wait(1500);
 
-    const rows = await must(
-      admin()
-        .from("reservations")
-        .select("*")
-        .eq("listing_id", state.listingId)
-        .order("created_at", { ascending: false })
-        .limit(1),
-      "reservations(作成確認)",
-    );
-    if (!rows.length) throw new Error("画面は送信できたのに、reservations に行がありません");
-    const r = rows[0];
+    // 書き込みはサーバー経由なので、クリック直後にはまだ入っていない。
+    // 固定の待ち時間ではなく、行ができるまで見に行く。
+    const r = await waitFor(
+      async () => {
+        const rows = await must(
+          admin()
+            .from("reservations")
+            .select("*")
+            .eq("listing_id", state.listingId)
+            .order("created_at", { ascending: false })
+            .limit(1),
+          "reservations(作成確認)",
+        );
+        return rows[0] ?? null;
+      },
+      { timeout: 20000, interval: 300, what: "購入希望の作成" },
+    ).catch(() => {
+      throw new Error("画面は送信できたのに、reservations に行がありません");
+    });
     state.reservationId = r.id;
     state.sellerId = r.seller_id;
     log(`予約ID ${r.id}`);
@@ -124,7 +131,9 @@ export const T04 = {
 
     // 「受け取った購入希望」に実際に並ぶか
     await clickText(seller.page, ".sidebar-nav-item", "受け取った購入希望");
-    await wait(1200);
+    await seller.page
+      .waitForFunction(() => !!document.querySelector(".res-card"), { timeout: 15000, polling: 300 })
+      .catch(() => {});
     if (!(await hasText(seller.page, "[E2E]"))) {
       throw new Error("「受け取った購入希望」にテストの購入希望が並びません");
     }

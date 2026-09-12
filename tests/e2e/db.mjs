@@ -86,3 +86,33 @@ export async function waitFor(fn, { timeout = 15000, interval = 500, what = "条
     await new Promise((r) => setTimeout(r, interval));
   }
 }
+
+/**
+ * 予約が期待した状態になるまで待つ。
+ *
+ * 画面の操作 → サーバー → DB という順で伝わるため、クリック直後には
+ * まだ変わっていない。固定の待ち時間で見ると、その日の速さ次第で落ちる
+ * （実際 T07 がそれで落ちた）。**結果が出るまで見に行く**形にする。
+ *
+ * @param 条件 予約の行を受け取って、期待どおりなら true を返す関数
+ * @returns 条件を満たした時点の行と、かかった時間
+ */
+export async function 予約が待つ(id, 条件, { timeout = 20000, what = "予約の更新" } = {}) {
+  const t0 = Date.now();
+  let 最後 = null;
+  const row = await waitFor(
+    async () => {
+      最後 = await reservation(id);
+      return 条件(最後) ? 最後 : null;
+    },
+    { timeout, interval: 300, what },
+  ).catch(() => null);
+  if (!row) {
+    const e = new Error(
+      `${what}が ${timeout}ms 以内に起きませんでした（いまの状態: ${最後?.status ?? "不明"}）`,
+    );
+    e.last = 最後;
+    throw e;
+  }
+  return { row, ms: Date.now() - t0 };
+}

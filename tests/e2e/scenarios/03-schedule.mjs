@@ -1,15 +1,23 @@
 // 日程調整と取引確定（T06 / T07 / T08 / T09 / T11）
 import { ACCOUNTS, clickText, findByText, go, hasText, wait } from "../helpers.mjs";
-import { admin, listing, must, reservation } from "../db.mjs";
+import { admin, listing, must, reservation, 予約が待つ } from "../db.mjs";
 import { asUser } from "../as-user.mjs";
 import { 予約を置く, 出品を置く, 日付 } from "../fixtures.mjs";
 import { HANDOVER_TIME } from "../constants.mjs";
 
-/** マイページの指定タブを開く。 */
+/** マイページの指定タブを開き、中身が描かれるまで待つ。 */
 async function タブを開く(page, label) {
   await go(page, "/mypage");
   await clickText(page, ".sidebar-nav-item", label);
-  await wait(1200);
+  // 一覧の読み込みが終わるまで待つ（固定の待ち時間だと遅い日に落ちる）。
+  // 件数0のときは空の案内が出るので、そちらも待ち受ける。
+  await page
+    .waitForFunction(
+      () => !!document.querySelector(".res-card") || !!document.querySelector(".empty-state"),
+      { timeout: 15000, polling: 300 },
+    )
+    .catch(() => {});
+  await wait(300);
 }
 
 export const T06 = {
@@ -23,10 +31,12 @@ export const T06 = {
       throw new Error("「この日時で確定」のボタンが出品者の画面にありません");
     }
     await clickText(seller.page, "button", "この日時で確定");
-    await wait(2000);
-
-    const r = await reservation(state.reservationId);
-    if (r.status !== "承認済み") throw new Error(`確定しても「承認済み」になりません: ${r.status}`);
+    const { row: r, ms } = await 予約が待つ(
+      state.reservationId,
+      (x) => x.status === "承認済み",
+      { what: "候補の確定（承認済みへ）" },
+    );
+    log(`確定が反映されるまで ${ms}ms`);
     if (typeof r.selected_slot !== "number") {
       throw new Error(`選んだ候補（selected_slot）が記録されていません: ${r.selected_slot}`);
     }
@@ -108,12 +118,11 @@ export const T07 = {
     );
     await wait(400);
     await clickText(seller.page, "button", "この日程で提案する");
-    await wait(2000);
-
-    let 提案後 = await reservation(r.id);
-    if (提案後.status !== "日程調整中") {
-      throw new Error(`逆提案しても「日程調整中」になりません: ${提案後.status}`);
-    }
+    const 提案 = await 予約が待つ(r.id, (x) => x.status === "日程調整中", {
+      what: "逆提案（日程調整中へ）",
+    });
+    let 提案後 = 提案.row;
+    log(`逆提案が反映されるまで ${提案.ms}ms`);
     if (!提案後.proposed_date) throw new Error("提案した日程（proposed_date）が保存されていません");
     if (提案後.proposed_location !== 提案場所) {
       throw new Error(`提案した場所が保存されていません: ${提案後.proposed_location}（受け取り場所は変更できるべき）`);
@@ -135,12 +144,11 @@ export const T07 = {
       throw new Error("買い手の画面に提案された受け取り場所が出ていません");
     }
     await clickText(buyer.page, "button", "この日程で承諾");
-    await wait(2000);
-
-    提案後 = await reservation(r.id);
-    if (提案後.status !== "承認済み") {
-      throw new Error(`買い手が承諾しても「承認済み」になりません: ${提案後.status}`);
-    }
+    const 承諾 = await 予約が待つ(r.id, (x) => x.status === "承認済み", {
+      what: "逆提案の承諾（承認済みへ）",
+    });
+    提案後 = 承諾.row;
+    log(`承諾が反映されるまで ${承諾.ms}ms`);
     log("逆提案 → 承諾 → 承認済み まで通った");
   },
 };

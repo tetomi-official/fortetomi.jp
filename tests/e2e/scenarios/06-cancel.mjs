@@ -1,13 +1,22 @@
 // キャンセルとステータスの歯止め（T20 / T21 / T26）
 import { ACCOUNTS, apiAs, clickText, findByText, go, wait } from "../helpers.mjs";
-import { reservation } from "../db.mjs";
+import { reservation, 予約が待つ } from "../db.mjs";
 import { asUser } from "../as-user.mjs";
 import { 予約を置く, 出品を置く } from "../fixtures.mjs";
 
+/** マイページの指定タブを開き、中身が描かれるまで待つ。 */
 async function タブを開く(page, label) {
   await go(page, "/mypage");
   await clickText(page, ".sidebar-nav-item", label);
-  await wait(1200);
+  // 一覧の読み込みが終わるまで待つ（固定の待ち時間だと遅い日に落ちる）。
+  // 件数0のときは空の案内が出るので、そちらも待ち受ける。
+  await page
+    .waitForFunction(
+      () => !!document.querySelector(".res-card") || !!document.querySelector(".empty-state"),
+      { timeout: 15000, polling: 300 },
+    )
+    .catch(() => {});
+  await wait(300);
 }
 
 /** キャンセル確認用の取引を1つ用意する。 */
@@ -32,10 +41,10 @@ export const T20 = {
       throw new Error("買い手の画面に取り下げのボタンがありません");
     }
     await clickText(buyer.page, "button", "キャンセル");
-    await wait(2000);
-    const 後1 = await reservation(r1.id);
-    if (後1.status !== "キャンセル") throw new Error(`買い手の取り下げが効きません: ${後1.status}`);
-    log("買い手の取り下げ → キャンセル");
+    const 取り下げ = await 予約が待つ(r1.id, (x) => x.status === "キャンセル", {
+      what: "買い手の取り下げ",
+    });
+    log(`買い手の取り下げ → キャンセル（${取り下げ.ms}ms）`);
 
     // --- 出品者が断る ---
     const r2 = await 取引を用意("申請中");
@@ -44,10 +53,10 @@ export const T20 = {
       throw new Error("出品者の画面に断るボタンがありません");
     }
     await clickText(seller.page, "button", "断る");
-    await wait(2000);
-    const 後2 = await reservation(r2.id);
-    if (後2.status !== "キャンセル") throw new Error(`出品者の「断る」が効きません: ${後2.status}`);
-    log("出品者の「断る」 → キャンセル");
+    const 断る = await 予約が待つ(r2.id, (x) => x.status === "キャンセル", {
+      what: "出品者の「断る」",
+    });
+    log(`出品者の「断る」 → キャンセル（${断る.ms}ms）`);
   },
 };
 
