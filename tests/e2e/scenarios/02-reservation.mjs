@@ -83,6 +83,7 @@ export const T03 = {
     if (!rows.length) throw new Error("画面は送信できたのに、reservations に行がありません");
     const r = rows[0];
     state.reservationId = r.id;
+    state.sellerId = r.seller_id;
     log(`予約ID ${r.id}`);
 
     if (r.status !== "申請中") throw new Error(`作成直後のステータスが「申請中」ではありません: ${r.status}`);
@@ -166,33 +167,50 @@ export const T05 = {
 
 export const T04c = {
   id: "T04c",
-  title: "取引の通知が送られる（購入希望・日程確定・取りやめ）",
-  needs: ["reservationId"],
-  async run({ buyer, state, log }) {
-    // 通知APIは予約をDBから読み直し、当事者かどうかと今のステータスを確かめてから送る。
-    // メール本体は MAIL_DRY_RUN=1 で実際には飛ばさない（宛先がシードの架空アドレスのため）。
-    const 送れた = await apiAs(buyer.page, "/api/notifications/reservation", {
-      body: { reservationId: state.reservationId, event: "created" },
+  title: "予約の書き込みはサーバーが検査する（通知と同じリクエストの中）",
+  needs: ["reservationId", "listingId"],
+  async run({ buyer, seller, state, log }) {
+    // 買い手が自分で「承認済み」にしようとする（申請中→承認済みは出品者だけ）
+    const 自分で承認 = await apiAs(buyer.page, "/api/reservations", {
+      method: "PATCH",
+      body: { id: state.reservationId, status: "承認済み" },
     });
-    if (送れた.status !== 200 || 送れた.json?.ok !== true) {
-      throw new Error(`購入希望の通知が送れません: ${送れた.status} ${JSON.stringify(送れた.json)}`);
+    if (自分で承認.status !== 409) {
+      throw new Error(`買い手が自分で承認できてしまいます: ${自分で承認.status}`);
     }
-    log("購入希望の通知: 送信された");
-
-    // 状態と食い違う出来事は送らない（嘘の通知を出せないこと）。
-    const 食い違い = await apiAs(buyer.page, "/api/notifications/reservation", {
-      body: { reservationId: state.reservationId, event: "cancelled" },
-    });
-    if (食い違い.status !== 409) {
-      throw new Error(`キャンセルしていないのに取りやめの通知が通ります: ${食い違い.status}`);
+    if (!/申請中|承認済み/.test(自分で承認.json?.error ?? "")) {
+      throw new Error(`エラーが日本語で返っていません: ${自分で承認.json?.error}`);
     }
-    log(`状態と食い違う通知は拒否された: ${食い違い.json?.error}`);
+    log(`買い手の自己承認は拒否された: ${自分で承認.json.error}`);
 
-    // 知らない出来事は受け付けない。
-    const 不正 = await apiAs(buyer.page, "/api/notifications/reservation", {
-      body: { reservationId: state.reservationId, event: "全員に送る" },
+    // 出品者が自分の出品に購入希望を出そうとする
+    const 自分に購入 = await apiAs(seller.page, "/api/reservations", {
+      body: {
+        listingId: state.listingId,
+        sellerId: state.sellerId,
+        price: state.listingPrice,
+        slots: [{ date: "2099-01-01", time: HANDOVER_TIME }],
+        preferredLocation: PICKUP_LOCATION,
+      },
     });
-    if (不正.status !== 404) throw new Error(`知らない event が通ります: ${不正.status}`);
-    log("知らない event は拒否された");
+    if (自分に購入.status !== 400) {
+      throw new Error(`自分の出品に購入希望を出せてしまいます: ${自分に購入.status}`);
+    }
+    log(`自分の出品への購入希望は拒否された: ${自分に購入.json?.error}`);
+
+    // 候補が空・場所が空など、形がおかしい本文は受け付けない
+    const 形が変 = await apiAs(buyer.page, "/api/reservations", {
+      body: { listingId: state.listingId, sellerId: state.sellerId, price: 100, slots: [], preferredLocation: "" },
+    });
+    if (形が変.status !== 400) throw new Error(`候補ゼロでも通ります: ${形が変.status}`);
+    log(`形のおかしい本文は拒否された: ${形が変.json?.error}`);
+
+    // 存在しない予約
+    const 無い = await apiAs(buyer.page, "/api/reservations", {
+      method: "PATCH",
+      body: { id: "00000000-0000-0000-0000-000000000000", status: "キャンセル" },
+    });
+    if (無い.status !== 404) throw new Error(`存在しない予約が通ります: ${無い.status}`);
+    log("存在しない予約は404");
   },
 };

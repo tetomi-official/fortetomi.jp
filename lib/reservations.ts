@@ -66,27 +66,34 @@ function rowToReservation(row: ReservationRow): Reservation {
 }
 
 /**
- * 取引の通知メールをサーバーへ依頼する（PB-031 / A-1）。
+ * 予約の書き込みはサーバー（/api/reservations）経由で行う。
  *
- * 予約の書き込みはブラウザから直接 Supabase へ行う設計なので、書き込みが
- * 成功したあとにここから知らせる。画面ごとに書くと呼び忘れるため、
- * 書き込みと同じ場所（このデータ層）にまとめている。
+ * 以前はここから Supabase を直接叩き、そのあとに別のリクエストで通知を頼んでいた。
+ * その形だと「書き込めたのにメールだけ飛ばない」隙間ができるため、
+ * **書き込みとメール送信を1回のリクエストにまとめた**。
  *
- * 送れなくても操作そのものは成功しているので、失敗は握りつぶしてログだけ残す。
- * サーバー側が予約を読み直して当事者と状態を確かめるので、ここから嘘の通知は出せない。
+ * 安全性は変わっていない。サーバー側も anon キー＋本人の Cookie で書き込むので、
+ * RLS も列レベル権限も、ステータス遷移のトリガーも同じに効く。
  */
-async function notifyReservation(
-  reservationId: string,
-  event: "created" | "approved" | "rescheduled" | "cancelled",
-): Promise<void> {
+async function callReservationApi(
+  method: "POST" | "PATCH",
+  body: Record<string, unknown>,
+): Promise<{ data: { id?: string | null } | null; error: string | null }> {
   try {
-    await fetch("/api/notifications/reservation", {
-      method: "POST",
+    const res = await fetch("/api/reservations", {
+      method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reservationId, event }),
+      body: JSON.stringify(body),
     });
-  } catch (e) {
-    console.error("notifyReservation failed:", e);
+    const json = (await res.json().catch(() => null)) as
+      | { id?: string | null; ok?: boolean; error?: string }
+      | null;
+    if (!res.ok) {
+      return { data: null, error: json?.error ?? "通信に失敗しました" };
+    }
+    return { data: json ?? {}, error: null };
+  } catch {
+    return { data: null, error: "通信エラーが発生しました" };
   }
 }
 
@@ -128,19 +135,9 @@ export async function updateReservationStatus(
   id: string,
   status: ReservationStatus,
 ): Promise<{ error: string | null }> {
-  const supabase = createClient();
-  const { error } = await supabase
-    .from("reservations")
-    .update({ status })
-    .eq("id", id);
-  if (error) {
-    console.error("updateReservationStatus failed:", error.message);
-    return { error: error.message };
-  }
-  // 相手に伝わるべきものだけ通知する（申請中・完了はここを通らない）。
-  if (status === "承認済み") void notifyReservation(id, "approved");
-  if (status === "キャンセル") void notifyReservation(id, "cancelled");
-  return { error: null };
+  const { error } = await callReservationApi("PATCH", { id, status });
+  if (error) console.error("updateReservationStatus failed:", error);
+  return { error };
 }
 
 /**
@@ -152,17 +149,9 @@ export async function selectCandidateSlot(
   id: string,
   index: number,
 ): Promise<{ error: string | null }> {
-  const supabase = createClient();
-  const { error } = await supabase
-    .from("reservations")
-    .update({ selected_slot: index, status: "承認済み" })
-    .eq("id", id);
-  if (error) {
-    console.error("selectCandidateSlot failed:", error.message);
-    return { error: error.message };
-  }
-  void notifyReservation(id, "approved");
-  return { error: null };
+  const { error } = await callReservationApi("PATCH", { id, selectedSlot: index });
+  if (error) console.error("selectCandidateSlot failed:", error);
+  return { error };
 }
 
 export type ProposeRescheduleInput = {
@@ -180,22 +169,16 @@ export async function proposeReschedule(
   id: string,
   input: ProposeRescheduleInput,
 ): Promise<{ error: string | null }> {
-  const supabase = createClient();
-  const { error } = await supabase
-    .from("reservations")
-    .update({
-      proposed_date: input.proposedDate,
-      proposed_time: input.proposedTime,
-      proposed_location: input.proposedLocation,
-      status: "日程調整中",
-    })
-    .eq("id", id);
-  if (error) {
-    console.error("proposeReschedule failed:", error.message);
-    return { error: error.message };
-  }
-  void notifyReservation(id, "rescheduled");
-  return { error: null };
+  const { error } = await callReservationApi("PATCH", {
+    id,
+    proposed: {
+      date: input.proposedDate,
+      time: input.proposedTime,
+      location: input.proposedLocation,
+    },
+  });
+  if (error) console.error("proposeReschedule failed:", error);
+  return { error };
 }
 
 export type CreateReservationInput = {
@@ -208,33 +191,24 @@ export type CreateReservationInput = {
   message?: string;
 };
 
-/** 購入希望を作成。buyerId は送信者（= ログインユーザー）の id。 */
+/**
+ * 購入希望を作成する。
+ * buyerId は互換のために受け取るだけで、実際にはサーバーがログイン中の本人を使う
+ * （クライアントの申告で他人名義の購入希望を作られないようにするため）。
+ */
 export async function createReservation(
   input: CreateReservationInput,
   buyerId: string,
 ): Promise<{ error: string | null }> {
-  const supabase = createClient();
-  // preferred_date/time は NOT NULL のため、第1希望（先頭候補）を投入して互換を保つ。
-  const [first] = input.slots;
-  const { data, error } = await supabase
-    .from("reservations")
-    .insert({
-      listing_id: input.listingId,
-      buyer_id: buyerId,
-      seller_id: input.sellerId,
-      price: input.price,
-      preferred_date: first.date,
-      preferred_time: first.time,
-      preferred_location: input.preferredLocation,
-      candidate_slots: input.slots,
-      message: input.message?.trim() || null,
-    })
-    .select("id");
-  if (error) {
-    console.error("createReservation failed:", error.message);
-    return { error: error.message };
-  }
-  const created = (data as { id: string }[] | null)?.[0];
-  if (created) void notifyReservation(created.id, "created");
-  return { error: null };
+  void buyerId;
+  const { error } = await callReservationApi("POST", {
+    listingId: input.listingId,
+    sellerId: input.sellerId,
+    price: input.price,
+    slots: input.slots,
+    preferredLocation: input.preferredLocation,
+    message: input.message ?? "",
+  });
+  if (error) console.error("createReservation failed:", error);
+  return { error };
 }
