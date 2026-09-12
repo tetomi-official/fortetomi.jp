@@ -1,5 +1,5 @@
 // 購入予約まわり（T03 / T04 / T05）
-import { clickText, go, hasText, wait, waitForText } from "../helpers.mjs";
+import { apiAs, clickText, go, hasText, wait, waitForText } from "../helpers.mjs";
 import { admin, must } from "../db.mjs";
 import { HANDOVER_TIME, PICKUP_LOCATION } from "../constants.mjs";
 
@@ -161,5 +161,38 @@ export const T05 = {
           "  買い手は購入希望を送る時点で「いつ請求されるのか」が分かりません。",
       );
     }
+  },
+};
+
+export const T04c = {
+  id: "T04c",
+  title: "取引の通知が送られる（購入希望・日程確定・取りやめ）",
+  needs: ["reservationId"],
+  async run({ buyer, state, log }) {
+    // 通知APIは予約をDBから読み直し、当事者かどうかと今のステータスを確かめてから送る。
+    // メール本体は MAIL_DRY_RUN=1 で実際には飛ばさない（宛先がシードの架空アドレスのため）。
+    const 送れた = await apiAs(buyer.page, "/api/notifications/reservation", {
+      body: { reservationId: state.reservationId, event: "created" },
+    });
+    if (送れた.status !== 200 || 送れた.json?.ok !== true) {
+      throw new Error(`購入希望の通知が送れません: ${送れた.status} ${JSON.stringify(送れた.json)}`);
+    }
+    log("購入希望の通知: 送信された");
+
+    // 状態と食い違う出来事は送らない（嘘の通知を出せないこと）。
+    const 食い違い = await apiAs(buyer.page, "/api/notifications/reservation", {
+      body: { reservationId: state.reservationId, event: "cancelled" },
+    });
+    if (食い違い.status !== 409) {
+      throw new Error(`キャンセルしていないのに取りやめの通知が通ります: ${食い違い.status}`);
+    }
+    log(`状態と食い違う通知は拒否された: ${食い違い.json?.error}`);
+
+    // 知らない出来事は受け付けない。
+    const 不正 = await apiAs(buyer.page, "/api/notifications/reservation", {
+      body: { reservationId: state.reservationId, event: "全員に送る" },
+    });
+    if (不正.status !== 404) throw new Error(`知らない event が通ります: ${不正.status}`);
+    log("知らない event は拒否された");
   },
 };

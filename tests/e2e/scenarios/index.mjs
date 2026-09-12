@@ -1,7 +1,7 @@
 // シナリオの実行順。前のシナリオが作ったもの（出品ID・予約ID）を次が使うため、
 // 並べ替えるときは needs の依存に気をつけること。
 import { T01, T02 } from "./01-listing.mjs";
-import { T03, T04, T05 } from "./02-reservation.mjs";
+import { T03, T04, T04c, T05 } from "./02-reservation.mjs";
 import { T06, T07, T08, T09, T11 } from "./03-schedule.mjs";
 import { T12, T12b } from "./04-card.mjs";
 import { T10, T10b, T13, T14, T15, T17, T18, T19, T23, T24 } from "./05-payment.mjs";
@@ -11,7 +11,7 @@ export const SCENARIOS = [
   // 出品
   T01, T02,
   // 購入予約
-  T03, T04, T05,
+  T03, T04, T04c, T05,
   // 日程調整・取引確定
   T06, T11, T09, T07, T08,
   // カード登録

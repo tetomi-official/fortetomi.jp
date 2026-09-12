@@ -65,6 +65,31 @@ function rowToReservation(row: ReservationRow): Reservation {
   };
 }
 
+/**
+ * 取引の通知メールをサーバーへ依頼する（PB-031 / A-1）。
+ *
+ * 予約の書き込みはブラウザから直接 Supabase へ行う設計なので、書き込みが
+ * 成功したあとにここから知らせる。画面ごとに書くと呼び忘れるため、
+ * 書き込みと同じ場所（このデータ層）にまとめている。
+ *
+ * 送れなくても操作そのものは成功しているので、失敗は握りつぶしてログだけ残す。
+ * サーバー側が予約を読み直して当事者と状態を確かめるので、ここから嘘の通知は出せない。
+ */
+async function notifyReservation(
+  reservationId: string,
+  event: "created" | "approved" | "rescheduled" | "cancelled",
+): Promise<void> {
+  try {
+    await fetch("/api/notifications/reservation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reservationId, event }),
+    });
+  } catch (e) {
+    console.error("notifyReservation failed:", e);
+  }
+}
+
 /** 自分が送った購入希望（買い手視点）を新しい順で取得。 */
 export async function fetchSentReservations(buyerId: string): Promise<Reservation[]> {
   const supabase = createClient();
@@ -112,6 +137,9 @@ export async function updateReservationStatus(
     console.error("updateReservationStatus failed:", error.message);
     return { error: error.message };
   }
+  // 相手に伝わるべきものだけ通知する（申請中・完了はここを通らない）。
+  if (status === "承認済み") void notifyReservation(id, "approved");
+  if (status === "キャンセル") void notifyReservation(id, "cancelled");
   return { error: null };
 }
 
@@ -133,6 +161,7 @@ export async function selectCandidateSlot(
     console.error("selectCandidateSlot failed:", error.message);
     return { error: error.message };
   }
+  void notifyReservation(id, "approved");
   return { error: null };
 }
 
@@ -165,6 +194,7 @@ export async function proposeReschedule(
     console.error("proposeReschedule failed:", error.message);
     return { error: error.message };
   }
+  void notifyReservation(id, "rescheduled");
   return { error: null };
 }
 
@@ -186,20 +216,25 @@ export async function createReservation(
   const supabase = createClient();
   // preferred_date/time は NOT NULL のため、第1希望（先頭候補）を投入して互換を保つ。
   const [first] = input.slots;
-  const { error } = await supabase.from("reservations").insert({
-    listing_id: input.listingId,
-    buyer_id: buyerId,
-    seller_id: input.sellerId,
-    price: input.price,
-    preferred_date: first.date,
-    preferred_time: first.time,
-    preferred_location: input.preferredLocation,
-    candidate_slots: input.slots,
-    message: input.message?.trim() || null,
-  });
+  const { data, error } = await supabase
+    .from("reservations")
+    .insert({
+      listing_id: input.listingId,
+      buyer_id: buyerId,
+      seller_id: input.sellerId,
+      price: input.price,
+      preferred_date: first.date,
+      preferred_time: first.time,
+      preferred_location: input.preferredLocation,
+      candidate_slots: input.slots,
+      message: input.message?.trim() || null,
+    })
+    .select("id");
   if (error) {
     console.error("createReservation failed:", error.message);
     return { error: error.message };
   }
+  const created = (data as { id: string }[] | null)?.[0];
+  if (created) void notifyReservation(created.id, "created");
   return { error: null };
 }

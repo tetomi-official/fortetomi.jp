@@ -9,7 +9,14 @@
 // ===================================================
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { resolveNotifyEmail, sendMail } from "@/lib/mail";
+import {
+  paymentCompletedBuyerMail,
+  paymentCompletedSellerMail,
+  type ReservationMailData,
+} from "@/lib/mail-templates";
 import type { ProviderName } from "./config";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type MarkPaidResult = {
   /** 更新できた、または既に決済済みで何もする必要が無かった。 */
@@ -47,7 +54,7 @@ export async function markReservationPaid(args: {
     })
     .eq("id", args.reservationId)
     .is("paid_at", null) // 二重更新防止（同時到達しても片方だけ）
-    .select("id, listing_id");
+    .select("id, listing_id, buyer_id, seller_id, price");
 
   if (error) {
     return { ok: false, alreadyPaid: false, error: error.message };
@@ -62,7 +69,52 @@ export async function markReservationPaid(args: {
   if (listingId) {
     await admin.from("listings").update({ status: "完了" }).eq("id", listingId);
   }
+
+  // 決済完了の通知（A-1）。ここは課金API・Webhook・3DS復旧のどの経路も必ず通り、
+  // paid_at の見張りで1回しか来ないので、二重送信にならない。
+  // ★メールの失敗で決済処理を壊さない。落ちても課金は成立している。
+  try {
+    await notifyPaymentCompleted(admin, updated[0]);
+  } catch (e) {
+    console.error("決済完了メールの送信に失敗（課金は成立済み）:", e);
+  }
+
   return { ok: true, alreadyPaid: false, error: null };
+}
+
+/** 決済が成立したことを買い手と出品者の双方へ知らせる。 */
+async function notifyPaymentCompleted(
+  admin: SupabaseClient,
+  row: { id: string; listing_id: string | null; buyer_id: string; seller_id: string; price: number },
+): Promise<void> {
+  const [{ data: listing }, { data: buyer }, { data: seller }] = await Promise.all([
+    admin.from("listings").select("title").eq("id", row.listing_id ?? "").maybeSingle(),
+    admin.from("profiles").select("name").eq("id", row.buyer_id).maybeSingle(),
+    admin.from("profiles").select("name").eq("id", row.seller_id).maybeSingle(),
+  ]);
+
+  const data: ReservationMailData = {
+    reservationId: row.id,
+    listingTitle: listing?.title ?? "（削除された教科書）",
+    price: row.price,
+    buyerName: buyer?.name ?? "購入者",
+    sellerName: seller?.name ?? "出品者",
+    location: "",
+  };
+
+  const [買い手宛, 出品者宛] = await Promise.all([
+    resolveNotifyEmail(admin, row.buyer_id),
+    resolveNotifyEmail(admin, row.seller_id),
+  ]);
+
+  await Promise.all([
+    買い手宛
+      ? sendMail({ to: 買い手宛, ...paymentCompletedBuyerMail(data) })
+      : Promise.resolve(console.error(`[notify] 買い手の宛先が分かりません user=${row.buyer_id}`)),
+    出品者宛
+      ? sendMail({ to: 出品者宛, ...paymentCompletedSellerMail(data) })
+      : Promise.resolve(console.error(`[notify] 出品者の宛先が分かりません user=${row.seller_id}`)),
+  ]);
 }
 
 /**
