@@ -34,13 +34,25 @@ export const canChangeLoginEmail = process.env.NEXT_PUBLIC_EMAIL_CHANGE_ENABLED 
 const RESTRICTED: { prefix: string; minPhase: number; isApi?: boolean }[] = [
   { prefix: "/checkout", minPhase: 1 },
   { prefix: "/api/payments", minPhase: 1, isApi: true },
+  // 購入希望の作成・更新。画面のボタンは canReserve で消しているが、
+  // API を直に叩かれても通らないようにここでも塞ぐ。
+  { prefix: "/api/reservations", minPhase: 1, isApi: true },
 ];
+
+// フェーズに関係なく常に通すパス。
+//
+// Webhook は決済会社（PAY.jp / Stripe）のサーバーから届くもので、こちらの
+// 公開フェーズとは無関係。ここに入れておかないと /api/payments 配下として
+// 404 になり、「課金は成立したのに記録が漏れた」ときの補正が効かなくなる。
+// 実際フェーズ0では PAY.jp の Webhook が届いていなかった。
+const ALWAYS_ALLOWED = ["/api/payments/webhook", "/api/payments/stripe/webhook"];
 
 /**
  * 現在のフェーズで遮断すべきルートなら { isApi } を返す（page はリダイレクト / api は 404）。
  * 対象外なら null。
  */
 export function blockedRoute(pathname: string): { isApi: boolean } | null {
+  if (ALWAYS_ALLOWED.includes(pathname)) return null;
   for (const r of RESTRICTED) {
     if (pathname === r.prefix || pathname.startsWith(r.prefix + "/")) {
       if (RELEASE_PHASE < r.minPhase) return { isApi: !!r.isApi };

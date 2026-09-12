@@ -38,7 +38,7 @@ create or replace function public.check_rate_limit(
 language plpgsql
 security definer
 set search_path = public
-as $$
+as $fn$
 declare
   v_count int;
 begin
@@ -68,7 +68,7 @@ begin
 
   return v_count <= p_limit;
 end;
-$$;
+$fn$;
 
 comment on function public.check_rate_limit(text, int, int) is
   'bucket を原子的にインクリメントし、ウィンドウ内カウントが上限以下なら true を返す。lib/rate-limit.ts から呼ぶ。';

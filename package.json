@@ -10,16 +10,23 @@
     "seed:images": "node scripts/seed-images.mjs",
     "seed:bulk": "node scripts/seed-bulk.mjs",
     "scrape:syllabus": "node scripts/scrape-syllabus.mjs",
-    "test:resend": "node --env-file=.env.local scripts/test-resend.mjs"
+    "test:resend": "node --env-file=.env.local scripts/test-resend.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "node tests/e2e/run.mjs",
+    "test:e2e:cleanup": "node --env-file=.env.local tests/e2e/cleanup.mjs"
   },
   "dependencies": {
+    "@stripe/react-stripe-js": "6.9.0",
+    "@stripe/stripe-js": "9.15.0",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.108.1",
     "@zxing/browser": "^0.2.0",
     "@zxing/library": "^0.22.0",
     "next": "16.2.7",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "stripe": "22.6.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -28,7 +35,9 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
+    "puppeteer-core": "^25.4.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^2.1.9"
   }
 }

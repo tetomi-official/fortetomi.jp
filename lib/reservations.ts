@@ -32,6 +32,7 @@ type ReservationRow = {
   created_at: string;
   charge_id: string | null;
   paid_at: string | null;
+  payment_status: string | null;
   listings: { title: string | null } | null;
   buyer: { name: string | null } | null;
   seller: { name: string | null } | null;
@@ -60,7 +61,40 @@ function rowToReservation(row: ReservationRow): Reservation {
     created_at: new Date(row.created_at).getTime(),
     charge_id: row.charge_id ?? undefined,
     paid_at: row.paid_at ? new Date(row.paid_at).getTime() : undefined,
+    payment_status: (row.payment_status as Reservation["payment_status"]) ?? undefined,
   };
+}
+
+/**
+ * 予約の書き込みはサーバー（/api/reservations）経由で行う。
+ *
+ * 以前はここから Supabase を直接叩き、そのあとに別のリクエストで通知を頼んでいた。
+ * その形だと「書き込めたのにメールだけ飛ばない」隙間ができるため、
+ * **書き込みとメール送信を1回のリクエストにまとめた**。
+ *
+ * 安全性は変わっていない。サーバー側も anon キー＋本人の Cookie で書き込むので、
+ * RLS も列レベル権限も、ステータス遷移のトリガーも同じに効く。
+ */
+async function callReservationApi(
+  method: "POST" | "PATCH",
+  body: Record<string, unknown>,
+): Promise<{ data: { id?: string | null } | null; error: string | null }> {
+  try {
+    const res = await fetch("/api/reservations", {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const json = (await res.json().catch(() => null)) as
+      | { id?: string | null; ok?: boolean; error?: string }
+      | null;
+    if (!res.ok) {
+      return { data: null, error: json?.error ?? "通信に失敗しました" };
+    }
+    return { data: json ?? {}, error: null };
+  } catch {
+    return { data: null, error: "通信エラーが発生しました" };
+  }
 }
 
 /** 自分が送った購入希望（買い手視点）を新しい順で取得。 */
@@ -101,16 +135,9 @@ export async function updateReservationStatus(
   id: string,
   status: ReservationStatus,
 ): Promise<{ error: string | null }> {
-  const supabase = createClient();
-  const { error } = await supabase
-    .from("reservations")
-    .update({ status })
-    .eq("id", id);
-  if (error) {
-    console.error("updateReservationStatus failed:", error.message);
-    return { error: error.message };
-  }
-  return { error: null };
+  const { error } = await callReservationApi("PATCH", { id, status });
+  if (error) console.error("updateReservationStatus failed:", error);
+  return { error };
 }
 
 /**
@@ -122,16 +149,9 @@ export async function selectCandidateSlot(
   id: string,
   index: number,
 ): Promise<{ error: string | null }> {
-  const supabase = createClient();
-  const { error } = await supabase
-    .from("reservations")
-    .update({ selected_slot: index, status: "承認済み" })
-    .eq("id", id);
-  if (error) {
-    console.error("selectCandidateSlot failed:", error.message);
-    return { error: error.message };
-  }
-  return { error: null };
+  const { error } = await callReservationApi("PATCH", { id, selectedSlot: index });
+  if (error) console.error("selectCandidateSlot failed:", error);
+  return { error };
 }
 
 export type ProposeRescheduleInput = {
@@ -149,21 +169,16 @@ export async function proposeReschedule(
   id: string,
   input: ProposeRescheduleInput,
 ): Promise<{ error: string | null }> {
-  const supabase = createClient();
-  const { error } = await supabase
-    .from("reservations")
-    .update({
-      proposed_date: input.proposedDate,
-      proposed_time: input.proposedTime,
-      proposed_location: input.proposedLocation,
-      status: "日程調整中",
-    })
-    .eq("id", id);
-  if (error) {
-    console.error("proposeReschedule failed:", error.message);
-    return { error: error.message };
-  }
-  return { error: null };
+  const { error } = await callReservationApi("PATCH", {
+    id,
+    proposed: {
+      date: input.proposedDate,
+      time: input.proposedTime,
+      location: input.proposedLocation,
+    },
+  });
+  if (error) console.error("proposeReschedule failed:", error);
+  return { error };
 }
 
 export type CreateReservationInput = {
@@ -176,28 +191,24 @@ export type CreateReservationInput = {
   message?: string;
 };
 
-/** 購入希望を作成。buyerId は送信者（= ログインユーザー）の id。 */
+/**
+ * 購入希望を作成する。
+ * buyerId は互換のために受け取るだけで、実際にはサーバーがログイン中の本人を使う
+ * （クライアントの申告で他人名義の購入希望を作られないようにするため）。
+ */
 export async function createReservation(
   input: CreateReservationInput,
   buyerId: string,
 ): Promise<{ error: string | null }> {
-  const supabase = createClient();
-  // preferred_date/time は NOT NULL のため、第1希望（先頭候補）を投入して互換を保つ。
-  const [first] = input.slots;
-  const { error } = await supabase.from("reservations").insert({
-    listing_id: input.listingId,
-    buyer_id: buyerId,
-    seller_id: input.sellerId,
+  void buyerId;
+  const { error } = await callReservationApi("POST", {
+    listingId: input.listingId,
+    sellerId: input.sellerId,
     price: input.price,
-    preferred_date: first.date,
-    preferred_time: first.time,
-    preferred_location: input.preferredLocation,
-    candidate_slots: input.slots,
-    message: input.message?.trim() || null,
+    slots: input.slots,
+    preferredLocation: input.preferredLocation,
+    message: input.message ?? "",
   });
-  if (error) {
-    console.error("createReservation failed:", error.message);
-    return { error: error.message };
-  }
-  return { error: null };
+  if (error) console.error("createReservation failed:", error);
+  return { error };
 }

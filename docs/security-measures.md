@@ -6,23 +6,34 @@ PAY.jp 本番申請（PB-049）にあたって整理した。各項目を「**�
 決済は「対面でQRを出品者が読み取ると、買い手の保存済みカードに課金される」モデル。
 カード番号は一切自社サーバー／DBを通さない設計になっている。
 
-最終更新: 2026-07-12
+最終更新: 2026-09-06（Stripe 併存対応を追記）
+
+決済会社は PAY.jp と Stripe が併存しており、`NEXT_PUBLIC_PAYMENT_PROVIDER` で切り替わる
+（**既定は Stripe**。PAY.jp は退路として実装を残している）。
+以下の対策は**どちらの決済会社でも成立する**ように作ってある。決済会社ごとに実現方法が
+異なる箇所（3DSの掛け方、Webhookの検証方式など）は各項目に併記した。
 
 ---
 
 ## 1. カード情報の非保持化（トークン化）
 
 - **脅威**: 自社サーバーやDBにカード番号を通す／保存すると、漏えい時に甚大な被害。PCI DSS という重い国際基準の監査対象にもなる。
-- **対策**: ブラウザ上の `payjp.js`（PAY.jp のライブラリ）がカード番号を「トークン（使い捨ての引換券）」に変換し、自社サーバーにはトークンだけが届く。
+- **対策**: ブラウザ上の決済会社のライブラリがカード番号を「トークン（使い捨ての引換券）」に変換し、自社サーバーにはトークンだけが届く。
+  - PAY.jp: `payjp.js` が発行するトークン
+  - Stripe: Stripe Elements が発行する PaymentMethod（`pm_...`）
+    ※ どちらもライブラリは決済会社のドメインから読み込み、自前でバンドルしない。
 - **なぜ効くか**: カード番号が自社システムを一度も通らない＝漏らしようがない。「非保持化」により PCI DSS の重い監査対象から外れる。
-- 実装: [`components/PaymentForm.tsx`](../components/PaymentForm.tsx)、[`app/api/payments/register-card/route.ts`](../app/api/payments/register-card/route.ts)
+- 実装: [`components/PaymentFormPayjp.tsx`](../components/PaymentFormPayjp.tsx)、[`components/PaymentFormStripe.tsx`](../components/PaymentFormStripe.tsx)、[`app/api/payments/register-card/route.ts`](../app/api/payments/register-card/route.ts)
 
 ## 2. EMV 3-Dセキュア（本人認証）＋サーバー再検証
 
 - **脅威**: 盗まれたカード番号での「なりすまし利用」。2025年3月から EC で 3DS が原則必須化。
-- **対策**: カード登録時に `payjp.js` の 3DS（iframe型）でカード会社の本人認証を完了させ、認証済みトークンのみ登録を許可。**さらにサーバー側でも** PAY.jp からトークンを取得して `three_d_secure_status` を再検証する。
-- **なぜ効くか**: 本人認証を通ったカードだけが登録される。クライアント側の検証は改ざん・迂回されうるため、サーバーで再検証して二重に守る（＝クライアントを信用しない設計）。
-- 実装: [`app/api/payments/register-card/route.ts`](../app/api/payments/register-card/route.ts)（`verifyToken3ds`）
+- **対策**: 受け渡し時は買い手が端末を操作していないため 3DS ができない。そこで**カード登録の瞬間**に本人認証を済ませ、以後はその認証済みカードへ課金する。
+  - PAY.jp: `payjp.js` の 3DS（iframe型）で認証させ、サーバーでもトークンを取得し直して `three_d_secure_status` を再検証。
+  - Stripe: サーバー側で SetupIntent に `request_three_d_secure` を指定して要求し、サーバーが SetupIntent を取得し直して `status === "succeeded"` であることを根拠にする。
+- **なぜ効くか**: 本人認証を通ったカードだけが登録される。**どちらもクライアントの申告ではなく、サーバーが決済会社に問い合わせ直した結果を根拠にしている**（クライアント側の検証は改ざん・迂回されうる）。
+- 補足: 万一、受け渡し時にカード会社が追加の本人認証を求めた場合は、買い手が目の前にいるので、買い手の端末で認証してその場で完了させる導線を用意している（[`components/PaymentAuthPrompt.tsx`](../components/PaymentAuthPrompt.tsx)）。このとき配るのは client secret だけで、保存済みカードや顧客IDはブラウザに渡さない。
+- 実装: [`lib/payment-provider/payjp.ts`](../lib/payment-provider/payjp.ts)（`verifyToken3ds`）、[`lib/payment-provider/stripe.ts`](../lib/payment-provider/stripe.ts)（`registerCard`）
 
 ## 3. 秘密鍵のサーバー隔離
 
@@ -57,12 +68,14 @@ PAY.jp 本番申請（PB-049）にあたって整理した。各項目を「**�
 - **なぜ効くか**: DB自身が「誰がどの行を読み書きできるか」を強制するため、アプリのバグがあってもデータ層で守られる。
 - 実装: [`docs/supabase-migration-9-payments.sql`](./supabase-migration-9-payments.sql)
 
-## 8. Webhook の定数時間比較（タイミング攻撃対策）
+## 8. Webhook の真正性検証（なりすまし・タイミング攻撃対策）
 
 - **脅威**: 偽の Webhook を送りつけてDBを不正に「決済完了」にする。トークン比較の速度差から正解を推測される（タイミング攻撃）。
-- **対策**: PAY.jp の `X-Payjp-Webhook-Token` を環境変数と **`timingSafeEqual`（定数時間比較）** で照合。不一致は 401。
-- **なぜ効くか**: 比較にかかる時間が入力に依存しないため、応答時間から秘密を推測できない。Webhook本体は「課金成立したがDB更新に失敗した」ケースの安全網で、冪等（二重処理しない）に設計。
-- 実装: [`app/api/payments/webhook/route.ts`](../app/api/payments/webhook/route.ts)
+- **対策**: 決済会社によって検証方式が根本的に違うため、それぞれの正攻法で検証する。
+  - PAY.jp: `X-Payjp-Webhook-Token` を環境変数と **`timingSafeEqual`（定数時間比較）** で照合。不一致は 401。
+  - Stripe: **生のリクエストボディに対する HMAC 署名**を検証する（`stripe-signature`）。ボディを1文字でも変形すると通らないため、`req.json()` ではなく `req.text()` で受ける。署名の解析・リプレイ防止の時刻許容は自前で書かず SDK の `constructEvent` に任せている（ここは間違っていても気づけない類のコードなので手書きしない）。
+- **なぜ効くか**: 送信元が本物であることを暗号的に確認できる。Webhook本体は「課金は成立したがDB更新に失敗した」ケースの安全網で、`paid_at` が空の行だけを更新する冪等な作りにしてあるため、再送・順序の入れ替わりで二重に記録されることがない。
+- 実装: [`app/api/payments/webhook/route.ts`](../app/api/payments/webhook/route.ts)（PAY.jp）、[`app/api/payments/stripe/webhook/route.ts`](../app/api/payments/stripe/webhook/route.ts)（Stripe）、[`lib/payment-provider/reconcile.ts`](../lib/payment-provider/reconcile.ts)（書き込みの集約）
 
 ## 9. HTTPセキュリティヘッダ（PB-036 Phase 3・今回追加）
 
@@ -90,10 +103,33 @@ PAY.jp 本番申請（PB-049）にあたって整理した。各項目を「**�
 - **脅威**: 平文通信の盗聴・改ざん。
 - **対策**: 本番は Vercel が全ドメインを自動で TLS（HTTPS）化。HSTS（項目9）でHTTP降格も封じる。
 
+## 12. 受け渡しQRの二度読みによる二重課金の防止（Stripe対応時に修正）
+
+- **脅威**: 出品者が同じQRを2回読み取る（通信が遅く再送する／連打する）と、同じ取引に対して2回課金される。
+- **対策**: 2段構え。
+  1. **nonce を1文で奪う**: `UPDATE ... WHERE payment_nonce_hash = ?` を実行し、更新できた1回だけが課金へ進む。取り損ねたリクエストは「処理中」として弾く。
+  2. **冪等キー**: 決済会社への課金要求に、予約IDと nonce から導出した冪等キーを付ける。同じQRなら同じキーになるため、決済会社側でも同一の課金として扱われる。
+- **なぜ効くか**: 従来は「nonce を検証してから消費するまで」に隙間があり、並行した2リクエストが両方とも検証を通過できた。1文にすることで、この隙間そのものを無くしている。冪等キーは万一こちらをすり抜けた場合の最後の砦。
+- 実装: [`lib/payment-provider/reconcile.ts`](../lib/payment-provider/reconcile.ts)（`claimPaymentNonce`）、[`app/api/payments/charge/route.ts`](../app/api/payments/charge/route.ts)
+
+## 13. 出品者の受取可否をその場で確認（Stripe / Connect）
+
+- **脅威**: 出品者の受取口座が決済会社側で停止されているのに気づかず、買い手が受け渡しの現場で「課金できないQR」を出してしまう。
+- **対策**: QRを出す直前と課金の直前の2点で、**キャッシュではなく決済会社に直接問い合わせて**受取可否を確認する。決済会社に届かないときだけキャッシュ値へ退避する。
+- **なぜ効くか**: 口座状態の変化をWebhookで受ける方式だと、宛先の設定ミスや配送の失敗が**エラーを出さずにキャッシュを腐らせる**（気づくのは事故のとき）。問い合わせ方式ならその場で失敗するので、静かに壊れない。退避を用意しているのは、決済会社の一時的な不調で正常な取引まで止めないため。
+- 実装: [`lib/payment-provider/stripe-connect.ts`](../lib/payment-provider/stripe-connect.ts)（`isSellerReadyToReceive`）
+
 ---
 
-## PAY.jp 審査との対応関係
+## 決済会社の審査との対応関係
 
 - 審査で技術的に問われる2本柱＝**カード情報の非保持化（項目1）** と **EMV 3-Dセキュア（項目2）** を満たしている。
 - 審査は「サイトURLを実際に開いて中身を確認」する層があり、特商法表記・利用規約・プライバシーポリシー・販売条件の掲載が必要（[`/legal`](../app/legal/page.tsx)・[`/terms`](../app/terms/page.tsx)・[`/privacy`](../app/privacy/page.tsx)）。
 - HTTPヘッダ（項目9）・レート制限（項目10）は審査の合否項目というより、本番運用で自分を守るためのハードニング。
+
+### Stripe の場合
+
+- 日本の C2C は **Stripe Connect の利用が必須**（Connect 外での C2C は禁止業種に明記されている）。出品者ひとりひとりを連結アカウントとして本人確認する構成にしてある。
+- 出品者の本人確認（公的な写真付き身分証・銀行口座の名義一致）は Stripe がホストする画面で行う。**TETOMI 側では身分証も口座番号も受け取らない・保持しない**。
+- 決済上の売主は TETOMI（`on_behalf_of` を使わない destination charge）。特商法ページの記載と整合している。
+- ⚠ 利用規約の「振込申請」「売上残高」の記述は Stripe の実際の動きと食い違うため、本番切替前に要修正。詳細は [`docs/stripe-legal-review.md`](./stripe-legal-review.md)。

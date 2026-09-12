@@ -32,6 +32,8 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# 値を含まない「見本」だけは追跡する（.env* に巻き込まれて除外されていた）
+!.env.example
 
 # vercel
 .vercel
@@ -40,3 +42,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 node_modules
+
+# 画面フロー資料の生成物（scripts/capture-flow.mjs・build-flow-doc.mjs で作り直せる）
+/docs/screens/
+/docs/flow-sell.html
+
+# 自動E2Eの実行結果（失敗時のスクリーンショット等）。毎回作り直されるので追跡しない。
+tests/e2e/artifacts/
