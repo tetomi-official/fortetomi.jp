@@ -22,6 +22,7 @@ import SupportPanel from "@/components/SupportPanel";
 import BarcodeScanner from "@/components/BarcodeScanner";
 import { BarcodeFormat } from "@zxing/library";
 import type { Listing, Reservation, ReservationStatus } from "@/lib/types";
+import { canTransition } from "@/lib/reservation-flow";
 
 type Tab =
   | "dashboard"
@@ -246,6 +247,26 @@ export default function MyPage() {
     }
     setSent((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
     showToast(okMsg, status === "キャンセル" ? "" : "success");
+  };
+
+  /**
+   * 受け渡し前の取りやめ（A-5）。承認済みの取引は日時まで決まっているので、
+   * 相手に影響が出る。誤操作で消えないよう一度確認を挟む（removeListing と同じ作法）。
+   */
+  const cancelConfirmed = async (r: Reservation, side: "buyer" | "seller") => {
+    const あいて = side === "buyer" ? r.seller_name : r.buyer_name;
+    if (
+      !window.confirm(
+        `「${r.listing_title}」の受け渡しを取りやめます。よろしいですか？\n` +
+          `${あいて}さんとの約束をキャンセルすることになります。`,
+      )
+    )
+      return;
+    if (side === "buyer") {
+      await changeSentResStatus(r.id, "キャンセル", "受け渡しを取りやめました");
+    } else {
+      await changeResStatus(r.id, "キャンセル", "受け渡しを取りやめました");
+    }
   };
 
   // 機能④：出品者が買い手の候補から選んだ index（予約 id → index）。
@@ -840,9 +861,21 @@ export default function MyPage() {
                               </span>
                             ) : (
                               r.status === "承認済み" && (
-                                <Link href={`/checkout/${r.id}`} className="btn-xs btn-xs-navy">
-                                  <i className="fas fa-qrcode" /> 受け取り・支払いへ
-                                </Link>
+                                <>
+                                  <Link href={`/checkout/${r.id}`} className="btn-xs btn-xs-navy">
+                                    <i className="fas fa-qrcode" /> 受け取り・支払いへ
+                                  </Link>
+                                  {/* A-5：受け渡し前の取りやめ。行けなくなったときの逃げ道。 */}
+                                  {canTransition(r.status, "キャンセル", "buyer") && (
+                                    <button
+                                      className="btn-xs btn-xs-danger"
+                                      disabled={resBusyId === r.id}
+                                      onClick={() => cancelConfirmed(r, "buyer")}
+                                    >
+                                      <i className="fas fa-times" /> 受け渡しを取りやめる
+                                    </button>
+                                  )}
+                                </>
                               )
                             )}
                           </div>
@@ -1005,15 +1038,27 @@ export default function MyPage() {
                                   </button>
                                 </>
                               )}
-                              {r.status === "承認済み" && (
-                                <button
-                                  className="btn-xs btn-xs-green"
-                                  disabled={resBusyId === r.id}
-                                  onClick={() => setScanning(true)}
-                                >
-                                  <i className="fas fa-qrcode" />{" "}
-                                  {resBusyId === r.id ? "決済中…" : "QRを読み取って決済"}
-                                </button>
+                              {r.status === "承認済み" && !r.paid_at && (
+                                <>
+                                  <button
+                                    className="btn-xs btn-xs-green"
+                                    disabled={resBusyId === r.id}
+                                    onClick={() => setScanning(true)}
+                                  >
+                                    <i className="fas fa-qrcode" />{" "}
+                                    {resBusyId === r.id ? "決済中…" : "QRを読み取って決済"}
+                                  </button>
+                                  {/* A-5：本が別で売れた等で受け渡せなくなったときの逃げ道。 */}
+                                  {canTransition(r.status, "キャンセル", "seller") && (
+                                    <button
+                                      className="btn-xs btn-xs-danger"
+                                      disabled={resBusyId === r.id}
+                                      onClick={() => cancelConfirmed(r, "seller")}
+                                    >
+                                      <i className="fas fa-times" /> 受け渡しを取りやめる
+                                    </button>
+                                  )}
+                                </>
                               )}
                             </div>
                           </div>

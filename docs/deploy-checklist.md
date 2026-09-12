@@ -58,7 +58,8 @@ gh api repos/tetomi-official/fortetomi.jp/commits/$(git rev-parse origin/main)/s
 
 - [ ] **1. スキーマ適用を確認**（未適用なら順に実行）
   - `docs/supabase-setup.sql`
-  - `docs/supabase-migration-2-profiles-private.sql` 〜 `docs/supabase-migration-12-rate-limits.sql`（番号順）
+  - `docs/supabase-migration-2-profiles-private.sql` 〜 `docs/supabase-migration-15-reservation-status-guard.sql`（番号順）
+  - ※ 13 → 14 は必ずこの順。15 は 14 のあと。
 - [ ] **2. デモデータ投入**
   - `docs/supabase-seed-prod.sql` を SQL Editor に貼り付けて Run（冪等・再実行可）。
   - デモアカウント: `sato@ / tanaka@ / suzuki@ / nakamura@g.chuo-u.ac.jp`（全員 `password123`）。

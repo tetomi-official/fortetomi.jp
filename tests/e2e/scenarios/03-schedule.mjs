@@ -41,7 +41,6 @@ export const T06 = {
 export const T11 = {
   id: "T11",
   title: "取引確定すると出品が「予約済み」になる",
-  expectFail: true, // ★未実装。今は落ちるのが正しい
   needs: ["listingId", "reservationId"],
   async run({ state, log }) {
     const l = await listing(state.listingId);

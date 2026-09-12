@@ -38,9 +38,16 @@ export const T10 = {
     if (!/^[0-9a-f]{64}$/.test(合言葉)) throw new Error(`合言葉の形が違います: ${合言葉}`);
     state.nonce = 合言葉;
 
-    // 画面にQRが描かれているか（zxing が SVG を書き出す）
-    const QRある = await buyer.page.evaluate(() => !!document.querySelector(".form-card svg"));
-    if (!QRある) throw new Error("QRの画像が描かれていません");
+    // 画面にQRが描かれているか（zxing が SVG を書き出す）。
+    // 合言葉を受け取った直後はまだ描画前なので、出てくるまで少し待つ。
+    await buyer.page
+      .waitForFunction(() => !!document.querySelector(".form-card svg"), {
+        timeout: 10000,
+        polling: 300,
+      })
+      .catch(() => {
+        throw new Error("QRの画像が描かれていません");
+      });
 
     // サーバーにはハッシュだけが保存され、生の合言葉は残っていないこと
     const r = await reservation(state.reservationId);

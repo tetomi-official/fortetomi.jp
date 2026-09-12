@@ -5,7 +5,7 @@ import { T03, T04, T05 } from "./02-reservation.mjs";
 import { T06, T07, T08, T09, T11 } from "./03-schedule.mjs";
 import { T12, T12b } from "./04-card.mjs";
 import { T10, T10b, T13, T14, T15, T17, T18, T19, T23, T24 } from "./05-payment.mjs";
-import { T20, T20b, T21, T26 } from "./06-cancel.mjs";
+import { T20, T20b, T21, T26, T27 } from "./06-cancel.mjs";
 
 export const SCENARIOS = [
   // 出品
@@ -21,5 +21,5 @@ export const SCENARIOS = [
   // 決済
   T13, T14, T15, T17, T18, T19, T23,
   // キャンセルと歯止め
-  T20, T20b, T21, T26,
+  T20, T20b, T21, T26, T27,
 ];

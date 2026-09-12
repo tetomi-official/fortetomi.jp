@@ -54,7 +54,6 @@ export const T20 = {
 export const T20b = {
   id: "T20b",
   title: "決済前のキャンセル：承認済み（受け渡し前）も取りやめられる",
-  expectFail: true, // ★未実装。今は落ちるのが正しい
   async run({ buyer, seller, log }) {
     await 取引を用意("承認済み");
 
@@ -122,7 +121,6 @@ export const T21 = {
 export const T26 = {
   id: "T26",
   title: "支払わずに「完了」にはできない",
-  expectFail: true, // ★未実装。今は落ちるのが正しい
   async run({ log }) {
     const r = await 取引を用意("承認済み");
     const client = await asUser(ACCOUNTS.buyer);
@@ -137,5 +135,43 @@ export const T26 = {
       );
     }
     log(`拒否された: ${error?.message ?? 後.status}`);
+  },
+};
+
+export const T27 = {
+  id: "T27",
+  title: "取りやめると出品が「出品中」に戻る",
+  async run({ log }) {
+    // 申請中で置いてから、出品者に承認させる。
+    // （下ごしらえの INSERT ではトリガーが動かないので、実際の操作と同じ経路を通す）
+    const r = await 取引を用意("申請中");
+    const seller = await asUser(ACCOUNTS.seller);
+    const 承認 = await seller.from("reservations").update({ status: "承認済み" }).eq("id", r.id);
+    if (承認.error) throw new Error(`出品者が承認できません: ${承認.error.message}`);
+
+    const { listing } = await import("../db.mjs");
+    let l = await listing(r.listing_id);
+    if (l.status !== "予約済み") throw new Error(`承認しても出品が押さえられません: ${l.status}`);
+    log("承認済み → 出品は予約済み");
+
+    // 買い手が取りやめる → 出品中に戻る
+    const buyer = await asUser(ACCOUNTS.buyer);
+    const { error } = await buyer.from("reservations").update({ status: "キャンセル" }).eq("id", r.id);
+    if (error) throw new Error(`買い手が取りやめられません: ${error.message}`);
+
+    l = await listing(r.listing_id);
+    if (l.status !== "出品中") {
+      throw new Error(
+        `取りやめても出品が戻りません: ${l.status}\n` +
+          "  買い手は他人の出品を直接更新できないため、DBのトリガー側で戻す必要がある。",
+      );
+    }
+    log("キャンセル → 出品は出品中に戻った");
+
+    // 発行済みのQRの合言葉も無効になっていること
+    const 後 = await reservation(r.id);
+    if (後.payment_nonce_hash) {
+      throw new Error("取りやめてもQRの合言葉が残っています（承認済みに戻すと古いQRが効いてしまう）");
+    }
   },
 };
