@@ -18,10 +18,18 @@
 import puppeteer from "puppeteer-core";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
+// 画面操作の部品は自動E2Eと共通（tests/e2e/helpers.mjs）。同じ処理を2か所に
+// 置くと、片方だけ直して食い違う事故が起きるため1本にまとめている。
+import {
+  BASE_URL,
+  CHROME_PATH,
+  clickText,
+  fillByLabel,
+  wait,
+  waitForText,
+  waitToastGone,
+} from "../tests/e2e/helpers.mjs";
 
-const BASE_URL = process.env.BASE_URL ?? "http://localhost:3000";
-const CHROME_PATH =
-  process.env.CHROME_PATH ?? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const OUT_ROOT = path.resolve("docs/screens");
 
 /** 出品写真として添付する画像（表紙・裏表紙の見立て）。 */
@@ -49,68 +57,18 @@ const SAMPLE = {
   condition: "書き込み少し",
 };
 
-const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-
 /** 画面全体を撮って保存する。トーストが自然に消えるのを待ち、dev 用オーバーレイは隠す。 */
 async function shot(page, device, name) {
   await page.evaluate(() => window.scrollTo(0, 0));
   await wait(500); // スムーススクロールが止まるのを待つ
   // 通知トーストが自動で閉じるまで待つ（成功 3.2 秒 / エラー 7 秒）。
-  await page
-    .waitForFunction(
-      () => {
-        const t = document.querySelector(".toast");
-        return !t || t.classList.contains("hidden");
-      },
-      { timeout: 9000, polling: 200 },
-    )
-    .catch(() => {});
+  await waitToastGone(page);
   // Next.js 開発サーバーのインジケータ（左下の丸いバッジ）はプロダクトのUIではないので隠す。
   await page.addStyleTag({ content: "nextjs-portal{display:none !important}" }).catch(() => {});
   await wait(300);
   const file = path.join(OUT_ROOT, device, `${name}.png`);
   await page.screenshot({ path: file, fullPage: true });
   console.log(`  ✓ ${device}/${name}.png`);
-}
-
-/** 指定セレクタのうち、テキストを含む最初の要素をクリックする。 */
-async function clickText(page, selector, text) {
-  const ok = await page.evaluate(
-    (sel, t) => {
-      const el = [...document.querySelectorAll(sel)].find((e) => (e.textContent ?? "").includes(t));
-      if (!el) return false;
-      el.scrollIntoView({ block: "center" });
-      el.click();
-      return true;
-    },
-    selector,
-    text,
-  );
-  if (!ok) throw new Error(`クリック対象が見つかりません: ${selector} 内の「${text}」`);
-  await wait(600);
-}
-
-/** 本文に指定の文字列が出るまで待つ。 */
-async function waitForText(page, text, timeout = 20000) {
-  await page
-    .waitForFunction((t) => document.body.innerText.includes(t), { timeout, polling: 300 }, text)
-    .catch(() => {
-      throw new Error(`画面に「${text}」が現れませんでした（${timeout}ms 待機）`);
-    });
-}
-
-/** label の文字列で .form-group 内の入力欄を特定して入力する。 */
-async function fillByLabel(page, label, value) {
-  const handle = await page.evaluateHandle((l) => {
-    const group = [...document.querySelectorAll(".form-group")].find(
-      (g) => g.querySelector("label")?.textContent?.trim() === l,
-    );
-    return group?.querySelector("input:not([disabled]), textarea") ?? null;
-  }, label);
-  const el = handle.asElement();
-  if (!el) throw new Error(`入力欄が見つかりません: ${label}`);
-  await el.click({ clickCount: 3 });
-  await el.type(value, { delay: 8 });
 }
 
 /** ログイン画面のデモボタンでログインする（パスワードはアプリ内の定数で、ここでは扱わない）。 */
