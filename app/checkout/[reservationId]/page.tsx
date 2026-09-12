@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth";
 import { fetchSentReservations } from "@/lib/reservations";
 import { hasRegisteredCard } from "@/lib/payments";
 import { yen } from "@/lib/labels";
+import { PAYMENT_TIMING_NOTICE } from "@/lib/constants";
 import PaymentForm from "@/components/PaymentForm";
 import PaymentQR from "@/components/PaymentQR";
 import PaymentAuthPrompt from "@/components/PaymentAuthPrompt";
@@ -113,11 +114,17 @@ export default function CheckoutPage() {
           <PaymentQR reservationId={reservation.id} onNeedCard={() => setCardReady(false)} />
         </div>
       ) : (
-        <PaymentForm
-          onRegistered={refreshCard}
-          submitLabel="カードを登録してQRを表示"
-          defaultEmail={user?.email ?? ""}
-        />
+        <>
+          {/* カードを登録した時点では請求されないことを、入力の前に伝える。 */}
+          <p className="form-hint" style={{ marginBottom: 12 }}>
+            <i className="fas fa-circle-info" /> {PAYMENT_TIMING_NOTICE}
+          </p>
+          <PaymentForm
+            onRegistered={refreshCard}
+            submitLabel="カードを登録してQRを表示"
+            defaultEmail={user?.email ?? ""}
+          />
+        </>
       )}
     </>,
   );

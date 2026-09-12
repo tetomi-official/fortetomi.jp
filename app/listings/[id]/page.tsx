@@ -8,6 +8,7 @@ import { fetchCoursesByIsbn, type SyllabusCourse } from "@/lib/syllabus";
 import { createReservation } from "@/lib/reservations";
 import {
   HANDOVER_TIME_LABEL,
+  PAYMENT_TIMING_NOTICE,
   pickupLocationForFaculty,
   upcomingHandoverDates,
 } from "@/lib/constants";
@@ -393,6 +394,8 @@ export default function DetailPage() {
                       購入希望を送ると出品者に通知されます。
                       <br />
                       受け渡し場所・日時はメッセージで調整してください。
+                      <br />
+                      {PAYMENT_TIMING_NOTICE}
                     </>
                   ) : (
                     <>
@@ -506,6 +509,9 @@ export default function DetailPage() {
                     onChange={(e) => setForm({ ...form, message: e.target.value })}
                   />
                 </div>
+                <p className="form-hint" style={{ marginTop: 12 }}>
+                  <i className="fas fa-circle-info" /> {PAYMENT_TIMING_NOTICE}
+                </p>
                 <button type="submit" className="btn-navy btn-full" style={{ marginTop: 8 }}>
                   <i className="fas fa-arrow-right" /> 確認へ進む
                 </button>
@@ -530,6 +536,10 @@ export default function DetailPage() {
                     <div className="meta-value">{form.message.trim() || "（なし）"}</div>
                   </div>
                 </div>
+                {/* 買い手が一番誤解しやすいところ。送信ボタンの直前に必ず出す。 */}
+                <p className="form-hint" style={{ marginTop: 14 }}>
+                  <i className="fas fa-circle-info" /> {PAYMENT_TIMING_NOTICE}
+                </p>
                 <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
                   <button
                     type="button"

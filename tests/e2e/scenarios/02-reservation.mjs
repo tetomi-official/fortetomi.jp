@@ -134,7 +134,6 @@ export const T04 = {
 export const T05 = {
   id: "T05",
   title: "「購入確定ではなく、QR読み取りで決済」の注意書きが出ている",
-  expectFail: true, // ★未実装。今は落ちるのが正しい
   needs: ["listingId"],
   async run({ buyer, state, log }) {
     const page = buyer.page;
