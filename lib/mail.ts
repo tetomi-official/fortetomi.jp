@@ -21,20 +21,32 @@ function mailFrom(): string {
 }
 
 /**
- * メール本文の外枠。既存の再認証メールと同じ見た目に揃える
- * （メールクライアントは外部CSSを読まないので、すべてインラインで書く）。
+ * メール本文の外枠。メールクライアントは外部CSSを読まないので、すべてインラインで書く。
+ * footerHtml を渡すと末尾の注意書きを差し替えられる（認証メールはリンクの
+ * 貼り直し用にURLを載せる必要があるため）。
  */
-export function mailLayout(heading: string, bodyHtml: string): string {
+export function mailLayout(heading: string, bodyHtml: string, footerHtml?: string): string {
+  const footer =
+    footerHtml ??
+    `<p style="font-size:12px;color:#6b7280;margin-top:28px">
+        このメールは TETOMI の取引の状況をお知らせするものです。<br />
+        心当たりがない場合は破棄してください。<br />
+        ${siteUrl()}
+      </p>`;
   return `
     <div style="font-family:sans-serif;line-height:1.8;color:#1f2937">
       <h2 style="color:#1e293b">${heading}</h2>
       ${bodyHtml}
-      <p style="font-size:12px;color:#6b7280;margin-top:28px">
-        このメールは TETOMI の取引の状況をお知らせするものです。<br />
-        心当たりがない場合は破棄してください。<br />
-        ${siteUrl()}
-      </p>
+      ${footer}
     </div>`;
+}
+
+/** 認証系メールの末尾。ボタンが押せない環境のためにURLを素で載せる。 */
+export function mailLinkFallbackFooter(url: string): string {
+  return `<p style="font-size:12px;color:#6b7280">
+        このメールに心当たりがない場合は破棄してください。<br />
+        リンクが開けない場合はこちら：<br />${url}
+      </p>`;
 }
 
 /** 本文中のボタン。既存メールと同じ体裁。 */
@@ -68,17 +80,20 @@ export async function sendMail(mail: {
   to: string;
   subject: string;
   html: string;
+  /** 送らないときにログへ出す補足。認証メールは確認リンクを入れると開発時に使える。 */
+  devHint?: string;
 }): Promise<boolean> {
+  const hint = mail.devHint ? ` ${mail.devHint}` : "";
   // テスト用の空振りモード。自動E2Eはシードアカウント（実在しないアドレス）で
   // 走るので、これが無いと本当に送ってバウンスする。
   if (process.env.MAIL_DRY_RUN === "1") {
-    console.info(`[mail] (送信せず) to=${mail.to} subject=${mail.subject}`);
+    console.info(`[mail] (送信せず) to=${mail.to} subject=${mail.subject}${hint}`);
     return true;
   }
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     // 開発環境で未設定のときはログに出して握りつぶす（既存ルートと同じ扱い）。
-    console.warn(`[mail] RESEND_API_KEY 未設定。to=${mail.to} subject=${mail.subject}`);
+    console.warn(`[mail] RESEND_API_KEY 未設定。to=${mail.to} subject=${mail.subject}${hint}`);
     return true;
   }
   try {
