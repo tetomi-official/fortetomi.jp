@@ -90,6 +90,29 @@ export async function sendMail(mail: {
     console.info(`[mail] (送信せず) to=${mail.to} subject=${mail.subject}${hint}`);
     return true;
   }
+
+  // 宛先の付け替え（テスト用）。端末やメールアドレスを何個も用意しなくても、
+  // 全員ぶんのメールを1つの受信箱で受け取って、実物の見た目を確かめられる。
+  // 本来の宛先は件名の頭と本文の先頭に出すので、どれが誰宛てか分かる。
+  //
+  // ★本番では絶対に設定しないこと。全ユーザーのメールが1人に届き、
+  //   本来の受取人には何も届かなくなる。
+  const redirect = process.env.MAIL_REDIRECT_TO?.trim();
+  let to = mail.to;
+  let subject = mail.subject;
+  let html = mail.html;
+  if (redirect) {
+    console.warn(
+      `[mail] ★宛先を付け替えています（MAIL_REDIRECT_TO）: 本来 ${mail.to} → ${redirect}`,
+    );
+    to = redirect;
+    subject = `[→${mail.to}] ${mail.subject}`;
+    html =
+      `<div style="font-family:sans-serif;background:#fef3c7;border:1px solid #f59e0b;` +
+      `padding:10px 14px;border-radius:8px;margin-bottom:16px;font-size:13px;color:#78350f">` +
+      `これはテスト送信です。本来の宛先: <strong>${mail.to}</strong></div>` +
+      mail.html;
+  }
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     // 開発環境で未設定のときはログに出して握りつぶす（既存ルートと同じ扱い）。
@@ -105,13 +128,13 @@ export async function sendMail(mail: {
       },
       body: JSON.stringify({
         from: mailFrom(),
-        to: mail.to,
-        subject: mail.subject,
-        html: mail.html,
+        to,
+        subject,
+        html,
       }),
     });
     if (!res.ok) {
-      console.error(`[mail] 送信に失敗: ${res.status} to=${mail.to}`);
+      console.error(`[mail] 送信に失敗: ${res.status} to=${to}`);
     }
     return res.ok;
   } catch (e) {
