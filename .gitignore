@@ -46,3 +46,6 @@ node_modules
 # 画面フロー資料の生成物（scripts/capture-flow.mjs・build-flow-doc.mjs で作り直せる）
 /docs/screens/
 /docs/flow-sell.html
+
+# 自動E2Eの実行結果（失敗時のスクリーンショット等）。毎回作り直されるので追跡しない。
+tests/e2e/artifacts/
