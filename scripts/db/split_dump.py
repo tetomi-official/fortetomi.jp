@@ -68,6 +68,10 @@ for s in stmts:
     elif one.startswith("CREATE OR REPLACE FUNCTION") or one.startswith("COMMENT ON FUNCTION"):
         fn = re.search(r'"public"\."(\w+)"', one).group(1)
         if "functions" in SECTIONS: add(f"03_functions/{fname(fn)}.sql", s)
+    elif one.startswith("CREATE POLICY") or "ENABLE ROW LEVEL SECURITY" in one:
+        pt = tbl(one, r'ON "public"\."(\w+)"') or tbl(one, r'ALTER TABLE "public"\."(\w+)"')
+        if pt in SKIP_TABLES: continue
+        if "policies" in SECTIONS: add(f"04_policies/{name(pt)}.sql", s)
     elif one.startswith("CREATE OR REPLACE TRIGGER") or one.startswith("CREATE TRIGGER"):
         if "triggers" in SECTIONS: add(f"06_triggers/{name(t)}.sql", s)
     elif re.match(r'^CREATE (UNIQUE )?INDEX', one):
