@@ -10,20 +10,30 @@ ORDER = ["profiles", "profiles_private", "listings", "reservations", "messages",
          "payment_customers", "connect_accounts", "email_recovery_requests",
          "enrollment_reverifications", "recovery_email_verifications",
          "rate_limits", "syllabus_courses", "syllabus_textbooks"]
+# 関数も依存順（他から呼ばれるものを先に）
+FN_FIRST = ["is_enrollment_active"]
+def fname(fn):
+    return f"{(FN_FIRST.index(fn)+1)*10:03d}_{fn}" if fn in FN_FIRST else f"100_{fn}"
+
 def name(t):
     return f"{(ORDER.index(t)+1)*10:03d}_{t}" if t in ORDER else t
 text = open(SRC).read()
 
-# --- ステートメント単位に分割（$$ ... $$ の中のセミコロンは無視する）---
-stmts, buf, in_dollar = [], [], False
+# --- ステートメント単位に分割 ---
+# 関数本文の囲みは $$ だけでなく $_$ のような名前付きもある。開いた印と同じ印で閉じる。
+stmts, buf, tag = [], [], None
 for line in text.splitlines():
-    if line.count("$$") % 2 == 1:
-        in_dollar = not in_dollar
+    for m in re.finditer(r"\$[A-Za-z_0-9]*\$", line):
+        tok = m.group(0)
+        if tag is None:
+            tag = tok
+        elif tok == tag:
+            tag = None
     buf.append(line)
-    if not in_dollar and line.rstrip().endswith(";"):
-        s = "\n".join(buf).strip()
-        if s:
-            stmts.append(s)
+    if tag is None and line.rstrip().endswith(";"):
+        st = "\n".join(buf).strip()
+        if st:
+            stmts.append(st)
         buf = []
 
 files = collections.defaultdict(list)
@@ -47,6 +57,7 @@ for s in stmts:
          or tbl(one, r'ALTER TABLE ONLY "public"\."(\w+)"')
          or tbl(one, r'ALTER TABLE "public"\."(\w+)"')
          or tbl(one, r'CREATE (?:UNIQUE )?INDEX \S+ ON "public"\."(\w+)"')
+         or tbl(one, r'CREATE (?:OR REPLACE )?TRIGGER \S+ .* ON "public"\."(\w+)"')
          or tbl(one, r'CREATE SEQUENCE IF NOT EXISTS "public"\."(\w+)_id_seq"')
          or tbl(one, r'ALTER SEQUENCE "public"\."(\w+)_id_seq" OWNED BY'))
     if t in SKIP_TABLES:                                             continue
@@ -54,6 +65,11 @@ for s in stmts:
                         "CREATE SEQUENCE", "ALTER SEQUENCE"))
             or "ADD CONSTRAINT" in one or "SET DEFAULT" in one):
         if "tables" in SECTIONS: add(f"02_tables/{name(t)}.sql", s)
+    elif one.startswith("CREATE OR REPLACE FUNCTION") or one.startswith("COMMENT ON FUNCTION"):
+        fn = re.search(r'"public"\."(\w+)"', one).group(1)
+        if "functions" in SECTIONS: add(f"03_functions/{fname(fn)}.sql", s)
+    elif one.startswith("CREATE OR REPLACE TRIGGER") or one.startswith("CREATE TRIGGER"):
+        if "triggers" in SECTIONS: add(f"06_triggers/{name(t)}.sql", s)
     elif re.match(r'^CREATE (UNIQUE )?INDEX', one):
         if "indexes" in SECTIONS: add(f"07_indexes/{name(t)}.sql", s)
 
