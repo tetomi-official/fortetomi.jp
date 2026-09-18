@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore, useMemo } from "react";
 import { fetchListingById, fetchSellerProfile, type SellerProfile } from "@/lib/listings";
 import { fetchCoursesByIsbn, type SyllabusCourse } from "@/lib/syllabus";
 import { createReservation } from "@/lib/reservations";
@@ -24,6 +24,26 @@ const MAX_SLOTS = 3;
 const emptySlot = (): CandidateSlot => ({ date: "", time: HANDOVER_TIME_LABEL });
 
 const LIKE_KEY = "tetomi_likes";
+// 「気になる」を押したことを、同じページの表示に知らせるための合図
+const LIKE_EVENT = "tetomi-likes-change";
+
+// 「気になる」はこの端末の localStorage に保存している。表示はそこから直接読む
+// （読んだ値を state に写すと、最初の表示と食い違ったり二重に描画したりするため）。
+function subscribeLikes(onChange: () => void) {
+  window.addEventListener("storage", onChange); // 別のタブで変わったとき
+  window.addEventListener(LIKE_EVENT, onChange); // このタブで押したとき
+  return () => {
+    window.removeEventListener("storage", onChange);
+    window.removeEventListener(LIKE_EVENT, onChange);
+  };
+}
+function readLikes(): string {
+  try {
+    return localStorage.getItem(LIKE_KEY) || "[]";
+  } catch {
+    return "[]";
+  }
+}
 const condTagMap: Record<string, { label: string; cls: string }> = {
   "新品・未使用": { label: "新品", cls: "cond-new" },
   "書き込みなし": { label: "書き込みなし", cls: "cond-good" },
@@ -45,9 +65,18 @@ export default function DetailPage() {
   const [listing, setListing] = useState<Listing | null>(null);
   const [seller, setSeller] = useState<SellerProfile | null>(null);
   const [courses, setCourses] = useState<SyllabusCourse[]>([]);
-  const [loading, setLoading] = useState(true);
+  // どの出品を読み込み終えたか。今の ID と違えば「読み込み中」。
+  const [loadedId, setLoadedId] = useState<string | null>(null);
+  const loading = loadedId !== params.id;
 
-  const [liked, setLiked] = useState(false);
+  const likesJson = useSyncExternalStore(subscribeLikes, readLikes, () => "[]");
+  const liked = useMemo(() => {
+    try {
+      return (JSON.parse(likesJson) as string[]).includes(params.id);
+    } catch {
+      return false;
+    }
+  }, [likesJson, params.id]);
   const [modalOpen, setModalOpen] = useState(false);
   const [step, setStep] = useState<"input" | "confirm">("input");
   const [submitting, setSubmitting] = useState(false);
@@ -65,17 +94,7 @@ export default function DetailPage() {
     setForm((f) => ({ ...f, slots: f.slots.filter((_, idx) => idx !== i) }));
 
   useEffect(() => {
-    try {
-      const ids: string[] = JSON.parse(localStorage.getItem(LIKE_KEY) || "[]");
-      setLiked(ids.includes(params.id));
-    } catch {
-      /* noop */
-    }
-  }, [params.id]);
-
-  useEffect(() => {
     let active = true;
-    setLoading(true);
     fetchListingById(params.id).then(async (l) => {
       if (!active) return;
       setListing(l);
@@ -84,7 +103,7 @@ export default function DetailPage() {
         // PB-058: この教科書が使われる授業（ISBN照合）。ISBN無し・一致無しは空。
         setCourses(l.isbn ? await fetchCoursesByIsbn(l.isbn) : []);
       }
-      if (active) setLoading(false);
+      if (active) setLoadedId(params.id);
     });
     return () => {
       active = false;
@@ -161,7 +180,7 @@ export default function DetailPage() {
       if (willLike) ids.push(params.id);
       else ids.splice(i, 1);
       localStorage.setItem(LIKE_KEY, JSON.stringify(ids));
-      setLiked(willLike);
+      window.dispatchEvent(new Event(LIKE_EVENT));
       showToast(willLike ? "気になるリストに追加しました" : "気になるリストから削除しました", willLike ? "success" : "");
     } catch {
       /* noop */

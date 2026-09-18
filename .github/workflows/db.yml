@@ -48,6 +48,14 @@ jobs:
       - name: 依存パッケージを入れる
         run: npm ci
 
+      # コードの書き方の検査。エラーがあれば落とす（警告は通す）。
+      - name: lint
+        run: npm run lint
+
+      # 型の検査。DB から生成した型とのずれや、存在しない列名などを見つける。
+      - name: 型チェック
+        run: npx tsc --noEmit -p .
+
       # 手元と同じ Supabase を起動し、migration と seed を当てる。
       # テストに要らない画面やログ収集などは起動しないで時間を縮める：
       #   studio（管理画面）、imgproxy（画像の変換）、edge-runtime（Edge Functions）、

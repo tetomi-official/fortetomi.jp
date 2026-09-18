@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore, useMemo } from "react";
 import { useAuth } from "@/lib/auth";
 import { canSell } from "@/lib/prerelease";
 import { useToast } from "@/components/Toast";
@@ -35,6 +35,15 @@ const condDesc: Record<Condition, string> = {
   "汚れ・ダメージあり": "目立つ汚れ・折れあり",
 };
 
+// ブラウザの戻る・進むで URL が変わったときに読み直す
+function subscribeUrl(onChange: () => void) {
+  window.addEventListener("popstate", onChange);
+  return () => window.removeEventListener("popstate", onChange);
+}
+function readEditId(): string | null {
+  return new URLSearchParams(window.location.search).get("edit");
+}
+
 export default function SellPage() {
   const { user, ready, enrollmentActive } = useAuth();
   const { showToast } = useToast();
@@ -51,10 +60,13 @@ export default function SellPage() {
   const [selectedFaculties, setSelectedFaculties] = useState<string[]>([]);
   // アップロード用に File を保持。プレビューは下の useEffect で生成。
   const [files, setFiles] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>([]);
   // 編集モード：?edit=ID。既存の画像は URL で保持し、追加分だけ File をアップロードする。
-  const [editId, setEditId] = useState<string | null>(null);
-  const [editLoading, setEditLoading] = useState(false);
+  // ?edit=ID は URL から直接読む。サーバーでの最初の表示では null（＝新規）として扱い、
+  // ブラウザで読み直したときに切り替わる（表示の食い違いを起こさない読み方）。
+  const editId = useSyncExternalStore(subscribeUrl, readEditId, () => null);
+  // どの出品を読み込み終えたか。編集モードで、まだ読み終えていなければ「読み込み中」。
+  const [loadedEditId, setLoadedEditId] = useState<string | null>(null);
+  const editLoading = editId !== null && loadedEditId !== editId;
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [condition, setCondition] = useState<Condition | "">("");
   const [form, setForm] = useState({
@@ -69,21 +81,17 @@ export default function SellPage() {
     location: "",
   });
 
-  useEffect(() => {
-    const urls = files.map((f) => URL.createObjectURL(f));
-    setPreviews(urls);
-    return () => urls.forEach((u) => URL.revokeObjectURL(u));
-  }, [files]);
+  // 選んだ写真の表示用 URL。写真が変わったら作り直し、古いものは後片付けする。
+  const previews = useMemo(() => files.map((f) => URL.createObjectURL(f)), [files]);
+  useEffect(() => () => previews.forEach((u) => URL.revokeObjectURL(u)), [previews]);
 
   // 編集モード：?edit=ID があれば既存出品を読み込みフォームへプリフィルする。
   useEffect(() => {
-    const id = new URLSearchParams(window.location.search).get("edit");
+    const id = editId;
     if (!id) return;
-    setEditId(id);
-    setEditLoading(true);
     fetchListingById(id).then((l) => {
       if (!l) {
-        setEditLoading(false);
+        setLoadedEditId(id);
         showToast("編集対象の出品が見つかりませんでした", "error");
         return;
       }
@@ -101,10 +109,10 @@ export default function SellPage() {
       setCondition(l.condition);
       setExistingImages(l.image_urls ?? []);
       setSelectedFaculties(l.faculties ?? []);
-      setEditLoading(false);
+      setLoadedEditId(id);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [editId]);
 
   if (!ready) return <main className="page-main" style={{ background: "var(--bg-gray)" }} />;
 

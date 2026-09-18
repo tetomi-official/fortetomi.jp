@@ -103,7 +103,9 @@ function Conversation({
 }) {
   const reservationId = thread.reservation.id;
   const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(true);
+  // どの取引のメッセージを読み込み終えたか。今の取引と違えば「読み込み中」。
+  const [loadedFor, setLoadedFor] = useState<string | null>(null);
+  const loading = loadedFor !== reservationId;
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -111,11 +113,10 @@ function Conversation({
   // 初回ロード＋リアルタイム購読。相手の新着が即座に反映される。
   useEffect(() => {
     let active = true;
-    setLoading(true);
     fetchMessages(reservationId).then((data) => {
       if (!active) return;
       setMessages(data);
-      setLoading(false);
+      setLoadedFor(reservationId);
     });
     const unsubscribe = subscribeMessages(reservationId, (msg) => {
       // 自分の送信は楽観更新で既に追加済み。重複を避ける。
