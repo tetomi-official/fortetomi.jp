@@ -4,7 +4,7 @@ import type { Message } from "./types";
 // ===================================================
 // 取引メッセージ データアクセス層（PB-041）。
 // 1 予約（reservation）= 1 スレッド。閲覧・送信はその予約の当事者本人のみ
-// （RLS / docs/supabase-migration-9-messages.sql）。
+// （RLS / supabase/schemas/04_policies/050_messages.sql）。
 // ===================================================
 
 type MessageRow = {

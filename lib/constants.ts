@@ -1,5 +1,5 @@
 // 在籍担保のため、登録を許可する大学メールドメイン。
-// ※サーバー側の最終防御は docs/supabase-setup.sql のトリガー。
+// ※サーバー側の最終防御は supabase/schemas/03_functions/100_enforce_email_domain.sql のトリガー。
 //   ここを変えたら SQL 側の許可ドメインも合わせて更新すること。
 export const ALLOWED_EMAIL_DOMAIN = "g.chuo-u.ac.jp";
 

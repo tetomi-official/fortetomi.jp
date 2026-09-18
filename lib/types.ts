@@ -62,11 +62,15 @@ export interface Listing {
   faculties?: string[];
 }
 
-/** 買い手が提示する受け渡し候補（日付＋時刻のセット）。機能④。 */
-export interface CandidateSlot {
+/**
+ * 買い手が提示する受け渡し候補（日付＋時刻のセット）。機能④。
+ * reservations.candidate_slots（jsonb）にそのまま入れるため interface ではなく type にしている
+ * （interface は生成型の Json に代入できない）。
+ */
+export type CandidateSlot = {
   date: string;
   time: string;
-}
+};
 
 export interface Reservation {
   id: string;

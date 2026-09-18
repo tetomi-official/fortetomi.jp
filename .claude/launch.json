@@ -4,9 +4,24 @@
     {
       "name": "tetomi-dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "port": 3000,
       "autoPort": true
+    },
+    {
+      "name": "tetomi-dev-localdb",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:local",
+        "--",
+        "-p",
+        "3100"
+      ],
+      "port": 3100
     }
   ]
 }

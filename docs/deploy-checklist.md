@@ -54,14 +54,14 @@ gh api repos/tetomi-official/fortetomi.jp/commits/$(git rev-parse origin/main)/s
   - **`NEXT_PUBLIC_SITE_URL=https://tetomi.jp`** ← `.env.local` に無いので設定漏れ注意（メールリンク／リダイレクトに影響）
 - [ ] **5. 再デプロイ**（`NEXT_PUBLIC_*` はビルド時に焼き込まれるため env 変更後は必須）
 
-## B. Supabase 設定（本番プロジェクトの SQL Editor で実施）
+## B. Supabase 設定
 
-- [ ] **1. スキーマ適用を確認**（未適用なら順に実行）
-  - `docs/supabase-setup.sql`
-  - `docs/supabase-migration-2-profiles-private.sql` 〜 `docs/supabase-migration-15-reservation-status-guard.sql`（番号順）
-  - ※ 13 → 14 は必ずこの順。15 は 14 のあと。
+- [ ] **1. スキーマ適用を確認**（`supabase/migrations/` がすべて本番に当たっているか）
+  - 手順は [`docs/db-workflow.md`](./db-workflow.md) の 2章 7。
+  - `npx supabase db push --dry-run --db-url "<本番の接続文字列>"` で「当てるものが無い」と出ればよい。残っていれば `--dry-run` を外して当てる。
+  - 接続文字列にはパスワードが入っているので、チャットや git に書かないこと。
 - [ ] **2. デモデータ投入**
-  - `docs/supabase-seed-prod.sql` を SQL Editor に貼り付けて Run（冪等・再実行可）。
+  - `docs/supabase-seed-prod.sql` を本番プロジェクトの SQL Editor に貼り付けて Run（冪等・再実行可）。※ これはデータの投入なので、今も SQL Editor で流す。
   - デモアカウント: `sato@ / tanaka@ / suzuki@ / nakamura@g.chuo-u.ac.jp`（全員 `password123`）。
 - [ ] **3. 書影画像の付与（任意）**
   - 本番の Supabase URL / Service Role Key を環境変数に指定して `npm run seed:images` を実行。

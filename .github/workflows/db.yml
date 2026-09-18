@@ -1,0 +1,83 @@
+# DB とアプリのテストを自動で流す。
+#
+# 手元と同じ Supabase（Docker）を CI の中で立ち上げ、migration を当てたうえで
+# pgTAP・型の生成漏れ・単体テストを確かめる。本番には一切つながない。
+#
+# 【本番への反映（supabase db push）はここに入れていない】
+# 接続文字列という秘密情報が要るうえ、本番に触る操作は人が明示的に行う方針のため。
+# 将来入れる場合の注意：
+#   - 接続文字列は GitHub の secrets に置き、`supabase db push --db-url "$SUPABASE_DB_URL"` で渡す。
+#   - いきなり流さず、先に `--dry-run` で「何が当たるか」を出して人が確認する。
+#   - `--linked` は使えない（cli_login_postgres の件で CLI 経由のログインが通らない）。
+#     必ず `--db-url` を使う。
+
+name: DB
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+
+# 同じブランチで新しく push されたら、古い実行は止めて無駄を省く。
+concurrency:
+  group: db-${{ github.ref }}
+  cancel-in-progress: true
+
+# リポジトリは読むだけ。
+permissions:
+  contents: read
+
+jobs:
+  db:
+    name: DB テスト・型・単体テスト
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      # ソースを取ってくる。
+      - uses: actions/checkout@v4
+
+      # Node 20 を用意し、npm のダウンロードをキャッシュして速くする。
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # package-lock.json どおりに入れる（Supabase CLI もここで入る）。
+      - name: 依存パッケージを入れる
+        run: npm ci
+
+      # 手元と同じ Supabase を起動し、migration と seed を当てる。
+      # テストに要らない画面やログ収集などは起動しないで時間を縮める：
+      #   studio（管理画面）、imgproxy（画像の変換）、edge-runtime（Edge Functions）、
+      #   logflare / vector（ログ収集。config.toml でも止めてある）、
+      #   supavisor（接続の取りまとめ。config.toml でも止めてある）、mailpit（メールの受け箱）
+      # storage-api と postgres-meta は止めない。migration が storage.buckets に行を入れ
+      # storage.objects にポリシーを張るため、また型の生成が postgres-meta を使うため。
+      # gotrue（auth のテーブルを作る）や realtime なども、要らないと言い切れないので動かす。
+      - name: Supabase を起動する
+        run: npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,mailpit
+
+      # 権限（RLS）などの pgTAP テストを流す。
+      - name: DB のテスト（pgTAP）
+        run: npx supabase test db
+
+      # DB の形と lib/database.types.ts がずれていないか確かめる。
+      # migration を変えたのに型を作り直し忘れていると、ここで落ちる。
+      - name: 型の生成漏れを確かめる
+        run: |
+          npx supabase gen types typescript --local > lib/database.types.ts
+          if ! git diff --exit-code lib/database.types.ts; then
+            echo "::error file=lib/database.types.ts::DB の形と型ファイルがずれています。手元で npm run db:types を実行し、lib/database.types.ts をコミットしてください。"
+            exit 1
+          fi
+
+      # 計算やルールの単体テスト（vitest）。
+      - name: 単体テスト（vitest）
+        run: npm test
+
+      # 後片付け。失敗しても最後まで実行する。
+      - name: Supabase を止める
+        if: always()
+        run: npx supabase stop --no-backup

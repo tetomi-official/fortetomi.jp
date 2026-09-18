@@ -156,7 +156,7 @@ async function main() {
     .order("created_at", { ascending: true });
   if (error) throw new Error(`fetch listings: ${error.message}`);
   if (!listings?.length) {
-    console.log("[seed-images] listings が空です。先に docs/supabase-seed.sql を投入してください。");
+    console.log("[seed-images] listings が空です。先に supabase/seed.sql を投入してください（手元なら npm run db:reset）。");
     return;
   }
 

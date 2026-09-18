@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/Toast";
 
-// デモ用のシード済みアカウント（docs/supabase-seed.sql・password123）。
+// デモ用のシード済みアカウント（supabase/seed.sql・password123）。
 // プレリリース中は PAY.jp 審査担当者が閲覧確認できるよう 1 アカウントに限定する。
 const DEMO_ACCOUNTS = [
   { email: "sato@g.chuo-u.ac.jp", name: "佐藤 花子", faculty: "経済学部", grade: "2年" },
