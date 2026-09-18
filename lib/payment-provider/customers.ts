@@ -11,6 +11,7 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { RegisteredCardIds, StoredCustomer } from "./types";
+import type { TablesInsert } from "@/lib/database.types";
 
 /** 買い手の保存済みカード情報を読む。未登録なら null。 */
 export async function loadStoredCustomer(userId: string): Promise<StoredCustomer | null> {
@@ -35,7 +36,7 @@ export async function saveRegisteredCard(
   ids: RegisteredCardIds,
 ): Promise<{ error: string | null }> {
   const admin = createAdminClient();
-  const row: Record<string, unknown> = {
+  const row: TablesInsert<"payment_customers"> = {
     user_id: userId,
     updated_at: new Date().toISOString(),
   };

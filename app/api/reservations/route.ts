@@ -4,6 +4,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { canTransition } from "@/lib/reservation-flow";
 import { notifyReservationEvent, type ReservationEvent } from "@/lib/notify-reservation";
 import type { CandidateSlot, ReservationStatus } from "@/lib/types";
+import type { TablesUpdate } from "@/lib/database.types";
 
 // ===================================================
 // 購入希望の作成と更新
@@ -177,7 +178,7 @@ export async function PATCH(req: Request) {
   }
 
   // --- 何をするのかを決める ---
-  let patch: Record<string, unknown>;
+  let patch: TablesUpdate<"reservations">;
   let event: ReservationEvent | null;
   let 次のステータス: ReservationStatus;
 
