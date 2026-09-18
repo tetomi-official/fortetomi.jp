@@ -23,6 +23,7 @@ import BarcodeScanner from "@/components/BarcodeScanner";
 import { BarcodeFormat } from "@zxing/library";
 import type { Listing, Reservation, ReservationStatus } from "@/lib/types";
 import { canTransition } from "@/lib/reservation-flow";
+import { loginHref } from "@/lib/redirect";
 
 type Tab =
   | "dashboard"
@@ -365,7 +366,7 @@ export default function MyPage() {
                 <p style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 24 }}>
                   マイページを利用するにはログインしてください。
                 </p>
-                <Link href="/login" className="btn-navy">
+                <Link href={loginHref("/mypage")} className="btn-navy">
                   <i className="fas fa-sign-in-alt" /> ログイン / 登録
                 </Link>
               </div>

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { fetchActionRequiredCount } from "@/lib/notifications";
+import { loginHref } from "@/lib/redirect";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -85,7 +86,7 @@ export default function Navbar() {
             <span className="link-ja">よくある質問</span>
           </Link>
           {!user && (
-            <Link href="/login" className="btn-login-nav" style={{ textDecoration: "none" }}>
+            <Link href={loginHref(pathname)} className="btn-login-nav" style={{ textDecoration: "none" }}>
               ログイン
             </Link>
           )}
