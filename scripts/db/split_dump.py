@@ -68,6 +68,18 @@ for s in stmts:
     elif one.startswith("CREATE OR REPLACE FUNCTION") or one.startswith("COMMENT ON FUNCTION"):
         fn = re.search(r'"public"\."(\w+)"', one).group(1)
         if "functions" in SECTIONS: add(f"03_functions/{fname(fn)}.sql", s)
+    elif one.startswith(("GRANT", "REVOKE", "ALTER DEFAULT PRIVILEGES", "ALTER PUBLICATION")):
+        if "grants" not in SECTIONS: continue
+        if re.search(r'"public"\."(books|users)"|books_id_seq|users_id_seq', one): continue
+        if one.startswith("ALTER PUBLICATION"):
+            if "ADD TABLE" in one: add("09_grants/900_publication.sql", s)
+            continue
+        if "ON SCHEMA" in one or one.startswith("ALTER DEFAULT PRIVILEGES"):
+            add("09_grants/000_schema.sql", s); continue
+        if "ON FUNCTION" in one:
+            add("09_grants/200_functions.sql", s); continue
+        gt = tbl(one, r'ON TABLE "public"\."(\w+)"') or tbl(one, r'ON SEQUENCE "public"\."(\w+)_id_seq"')
+        add(f"09_grants/{name(gt) if gt else '800_other'}.sql", s)
     elif one.startswith("CREATE POLICY") or "ENABLE ROW LEVEL SECURITY" in one:
         pt = tbl(one, r'ON "public"\."(\w+)"') or tbl(one, r'ALTER TABLE "public"\."(\w+)"')
         if pt in SKIP_TABLES: continue
