@@ -3,8 +3,8 @@
 import { T01, T02 } from "./01-listing.mjs";
 import { T03, T04, T04c, T05 } from "./02-reservation.mjs";
 import { T06, T07, T08, T09, T11 } from "./03-schedule.mjs";
-import { T12, T12b } from "./04-card.mjs";
-import { T10, T10b, T13, T14, T15, T17, T18, T19, T23, T24 } from "./05-payment.mjs";
+import { T12, T12b, T12c } from "./04-card.mjs";
+import { T10, T10b, T13, T13c, T14, T15, T17, T18, T19, T23, T24 } from "./05-payment.mjs";
 import { T20, T20b, T21, T26, T27 } from "./06-cancel.mjs";
 import { T28, T29 } from "./07-enrollment.mjs";
 
@@ -25,4 +25,10 @@ export const SCENARIOS = [
   T20, T20b, T21, T26, T27,
   // 在籍期限切れ
   T28, T29,
+  // 断られるカード（separate: 名前を指定したときだけ流す）。
+  // 同じブラウザで断られるカードを何度も試すと、Stripe の「カードの総当たり対策」が働いて
+  // カード入力欄が出なくなることがある。全体の実行とは分け、新しいブラウザで単独で流す：
+  //   npm run test:e2e -- T12c T13c
+  // 続けて何度も流すと同じ理由で落ちることがあるので、そのときは少し時間をおく。
+  T12c, T13c,
 ];

@@ -1,6 +1,7 @@
 // QR発行・決済・手数料・売り切れ（T10 / T13 / T14 / T15 / T19 / T23 / T24）
-import { ACCOUNTS, apiAs, go, hasText, wait, waitForText } from "../helpers.mjs";
-import { admin, listing, must, reservation, waitFor } from "../db.mjs";
+import { ACCOUNTS, VIEWPORTS, apiAs, clickText, go, hasText, wait, waitForText } from "../helpers.mjs";
+import { admin, listing, must, reservation, userIdByEmail, waitFor, 回数制限をリセット } from "../db.mjs";
+import { TEST_CARDS, カードを入力, 本人認証を通す } from "../stripe-ui.mjs";
 import { stripeClient } from "../stripe-api.mjs";
 import { applicationFee, sellerNet } from "../constants.mjs";
 import { 予約を置く, 出品を置く } from "../fixtures.mjs";
@@ -359,5 +360,79 @@ export const T23 = {
     });
     if (ng.status !== 400) throw new Error(`署名が違うのに ${ng.status} で受け入れられました`);
     log("署名が違うWebhookは400で弾かれる");
+  },
+};
+
+export const T13c = {
+  id: "T13c",
+  separate: true, // 全体の実行には含めない（scenarios/index.mjs の注意を参照）
+  title: "登録は通ったカードがQR読み取りで断られたとき、日本語の文言が返り、決済済みにならない",
+  async run({ buyer, seller, log }) {
+    const buyerId = await userIdByEmail(ACCOUNTS.buyer.email);
+    const 試すもの = [
+      { 名前: "Radarがブロック（0019）", number: TEST_CARDS.Radarがブロック },
+      { 名前: "課金で断られる（0341）", number: TEST_CARDS.登録は通るが課金で断られる },
+    ];
+    const 問題 = [];
+    try {
+      for (const t of 試すもの) {
+        const l = await 出品を置く({
+          sellerEmail: ACCOUNTS.seller.email,
+          title: `課金で断られる確認 ${t.名前}`,
+          price: 900,
+          faculties: [ACCOUNTS.buyer.faculty],
+        });
+        const r = await 予約を置く({ listing: l, buyerEmail: ACCOUNTS.buyer.email, status: "承認済み" });
+
+        // 買い手のカードをこのカードに差し替える（画面から登録する）
+        await must(
+          admin().from("payment_customers").delete().eq("user_id", buyerId).select("user_id"),
+          "payment_customers(外す)",
+        );
+        await 回数制限をリセット(`card:${buyerId}`);
+        // カードごとに新しいタブで開く（前のカードの Stripe の入力欄が残っていると、
+        // 次の入力欄をうまく見つけられないことがあるため）。ログイン状態は同じまま。
+        const page = await buyer.context.newPage();
+        await page.setViewport(VIEWPORTS.pc);
+        page.setDefaultTimeout(20000);
+        let 合言葉;
+        try {
+          await go(page, `/checkout/${r.id}`);
+          await waitForText(page, "支払いカードの登録", 30000);
+          // 断られた直後は Stripe の入力欄が出るのが遅いことがあるので、長めに待つ
+          await カードを入力(page, { number: t.number, timeout: 60000 });
+          await clickText(page, "button", "カードを登録");
+          await 本人認証を通す(page);
+          await waitForText(page, "受け渡し用QR", 45000).catch(() => {
+            throw new Error(`${t.名前}: 登録の時点で断られ、QRまで進めませんでした`);
+          });
+          合言葉 = await QR画面を開いて合言葉を取る(page, r.id);
+        } catch (e) {
+          const 画面 = await page.evaluate(() => document.body.innerText.slice(0, 400)).catch(() => "");
+          throw new Error(`${e.message}\n  そのときの画面:\n${画面}`);
+        } finally {
+          await page.close();
+        }
+        const res = await apiAs(seller.page, "/api/payments/charge", {
+          body: { reservationId: r.id, nonce: 合言葉 },
+        });
+        const 文 = res.json?.error ?? "";
+        if (res.ok) {
+          問題.push(`${t.名前}: 断られるはずの課金が通ってしまった`);
+          continue;
+        }
+        if (res.status >= 500) 問題.push(`${t.名前}: サーバーエラー（${res.status}）になった`);
+        if (!/[ぁ-んァ-ヶ一-龠]/.test(文)) 問題.push(`${t.名前}: 日本語の文言になっていない（${文}）`);
+        if (/[a-z]+_[a-z_]+/i.test(文)) 問題.push(`${t.名前}: エラーコードがそのまま出ている（${文}）`);
+
+        const 後 = await reservation(r.id);
+        if (後.paid_at || 後.status === "完了") 問題.push(`${t.名前}: 断られたのに決済済みになっている`);
+        log(`${t.名前} → ${res.status}「${文}」（記録: ${後.payment_status ?? "なし"}）`);
+      }
+    } finally {
+      // 断られるカードを残すと、手で確かめるときに紛らわしいので外しておく
+      await admin().from("payment_customers").delete().eq("user_id", buyerId);
+    }
+    if (問題.length) throw new Error(問題.join("\n"));
   },
 };

@@ -1,8 +1,105 @@
 // カード登録と本人認証（T12）
 import { clickText, go, waitForText } from "../helpers.mjs";
 import { TEST_CARDS, カードを入力, 本人認証を通す } from "../stripe-ui.mjs";
-import { admin, must, userIdByEmail } from "../db.mjs";
+import { admin, must, userIdByEmail, 回数制限をリセット } from "../db.mjs";
+import { 予約を置く, 出品を置く } from "../fixtures.mjs";
 import { ACCOUNTS } from "../helpers.mjs";
+
+/** カード登録フォームに出ている赤字のエラー文を読む（出ていなければ null）。 */
+async function エラー文を読む(page, { timeout = 30000 } = {}) {
+  const 文 = await page
+    .waitForFunction(
+      () => {
+        const el = [...document.querySelectorAll(".form-card p")].find((p) =>
+          (p.getAttribute("style") ?? "").includes("192, 57, 43") ||
+          (p.getAttribute("style") ?? "").toLowerCase().includes("c0392b"),
+        );
+        return el?.textContent?.trim() || false;
+      },
+      { timeout, polling: 300 },
+    )
+    .then((h) => h.jsonValue())
+    .catch(() => null);
+  return 文;
+}
+
+/** 買い手に見せてよい文言か（日本語で、コードや英語がそのまま出ていない）。 */
+function 文言の問題(文) {
+  if (!文) return "エラー文が画面に出ていない";
+  if (!/[ぁ-んァ-ヶ一-龠]/.test(文)) return "日本語になっていない";
+  if (/[a-z]+_[a-z_]+/i.test(文)) return "エラーコードがそのまま出ている";
+  if (/[A-Za-z]{4,}(\s+[A-Za-z]{3,}){2,}/.test(文)) return "英語の文がそのまま出ている";
+  return null;
+}
+
+export const T12c = {
+  id: "T12c",
+  separate: true, // 全体の実行には含めない（scenarios/index.mjs の注意を参照）
+  title: "カード登録で断られたとき・本人確認をやめたときに、日本語の文言が出る（エラー画面にならない）",
+  async run({ buyer, log }) {
+    const page = buyer.page;
+    const buyerId = await userIdByEmail(ACCOUNTS.buyer.email);
+    // 自分専用の「承認済み」の取引を用意する（前のシナリオに頼らず単独で流せるように）
+    const l = await 出品を置く({
+      sellerEmail: ACCOUNTS.seller.email,
+      title: "カード登録の失敗確認",
+      price: 800,
+      faculties: [ACCOUNTS.buyer.faculty],
+    });
+    const r = await 予約を置く({ listing: l, buyerEmail: ACCOUNTS.buyer.email, status: "承認済み" });
+    // カード未登録の状態から始める（登録済みだとフォームが出ない）。
+    await must(admin().from("payment_customers").delete().eq("user_id", buyerId).select("user_id"), "payment_customers(外す)");
+    await 回数制限をリセット(`card:${buyerId}`);
+
+    // Radar でブロックされるカード（0019）は、登録の時点では通ってしまい、
+    // QR読み取りで課金するときに初めて断られる。そちらは T13c で見る。
+    // 本人確認のカードを先に試す。断られたカードの直後だと、Stripe が不正対策の
+    // 確認を挟むことがあり、本人確認の画面の出方が不安定になるため。
+    const 試すもの = [
+      { 名前: "本人確認を途中でやめる（3155）", number: TEST_CARDS.本人認証が必要, 失敗させる: true, 期待: /認証|本人|確認/ },
+      { 名前: "残高不足（9995）", number: TEST_CARDS.残高不足, 期待: /残高|不足|利用できません|使用できません|拒否/ },
+    ];
+
+    const 問題 = [];
+    for (const t of 試すもの) {
+      await go(page, `/checkout/${r.id}`);
+      await waitForText(page, "支払いカードの登録", 30000);
+      // 断られた直後は Stripe の入力欄が出るのが遅いことがあるので、長めに待つ
+      await カードを入力(page, { number: t.number, timeout: 60000 }).catch(async (e) => {
+        const 画面 = await page.evaluate(() => document.body.innerText.slice(0, 400)).catch(() => "");
+        throw new Error(`${t.名前}: ${e.message}\n  そのときの画面:\n${画面}`);
+      });
+      await clickText(page, "button", "カードを登録");
+      if (t.失敗させる) {
+        const 押した = await 本人認証を通す(page, { 失敗させる: true, timeout: 45000 });
+        if (!押した) 問題.push(`${t.名前}: 本人確認の画面（失敗させるボタン）が出なかった`);
+      }
+
+      const 文 = await エラー文を読む(page);
+      const 画面 = await page.evaluate(() => document.body.innerText);
+      if (/Internal Server Error|Application error|\b500\b/.test(画面)) {
+        問題.push(`${t.名前}: エラー画面になった`);
+        continue;
+      }
+      const ng = 文言の問題(文);
+      if (ng) {
+        問題.push(`${t.名前}: ${ng}（${文 ?? "表示なし"}）`);
+        continue;
+      }
+      if (!t.期待.test(文)) log(`※ ${t.名前}: 何が起きたかが伝わりにくいかも`);
+      log(`${t.名前} →「${文}」`);
+    }
+
+    // 断られたカードが登録済み扱いになっていないこと
+    const rows = await must(
+      admin().from("payment_customers").select("user_id").eq("user_id", buyerId),
+      "payment_customers(確認)",
+    );
+    if (rows.length) 問題.push("断られたカードなのに登録済みとして保存されている");
+
+    if (問題.length) throw new Error(問題.join("\n"));
+  },
+};
 
 export const T12 = {
   id: "T12",
@@ -20,6 +117,7 @@ export const T12 = {
       .delete()
       .eq("user_id", buyerId);
     if (削除失敗) throw new Error(`前回のカード登録を外せません: ${削除失敗.message}`);
+    await 回数制限をリセット(`card:${buyerId}`);
     log("カード未登録の状態に戻してから試す");
 
     await go(page, `/checkout/${state.reservationId}`);
