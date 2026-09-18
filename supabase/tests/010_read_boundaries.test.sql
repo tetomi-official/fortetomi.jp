@@ -5,7 +5,7 @@
 -- ログインしていない人の出品一覧が空になった。なので両側を確かめる。
 begin;
 \ir _helpers/helpers.psql
-select plan(26);
+select plan(31);
 
 -- ---- 準備：A と B が取引中、C は無関係、D は在籍切れ ----
 select pg_temp.make_user('aaaaaaaa-0000-0000-0000-000000000001', 'test-a@g.chuo-u.ac.jp', '出品者A');
@@ -44,7 +44,25 @@ select lives_ok($$ select public.is_university_email_taken('x@g.chuo-u.ac.jp') $
 
 -- 見せない
 select throws_ok($$ select * from public.profiles $$, '42501', null,
-  'ログインなし：プロフィールは読めない');
+  'ログインなし：プロフィールを全部の列では読めない（在籍期限などは渡さない）');
+select throws_ok($$ select enrollment_valid_until from public.profiles $$, '42501', null,
+  'ログインなし：在籍期限の列は読めない');
+
+-- 出品者の情報（出品一覧・詳細をログインなしで見られるように）
+select is(
+  pg_temp.try_count($q$ select l.id, p.name from public.listings l
+                        join public.profiles p on p.id = l.seller_id
+                        where l.id = '11111111-aaaa-0000-0000-000000000001' $q$),
+  1, 'ログインなし：出品と出品者名を一緒に読める（一覧・詳細の読み方）');
+select lives_ok($$ select id, name, faculty, grade, rating, rating_count from public.profiles
+                   where id = 'aaaaaaaa-0000-0000-0000-000000000001' $$,
+  'ログインなし：詳細の出品者欄（名前・学部・学年・評価）を読める');
+select is(
+  pg_temp.try_count($q$ select 1 from public.profiles where id = 'cccccccc-0000-0000-0000-000000000003' $q$),
+  0, 'ログインなし：出品していない人のプロフィールは見えない');
+select is(
+  pg_temp.try_count($q$ select 1 from public.profiles where id = 'dddddddd-0000-0000-0000-000000000004' $q$),
+  0, 'ログインなし：在籍が切れた出品者のプロフィールは見えない');
 select throws_ok($$ select * from public.profiles_private $$, '42501', null,
   'ログインなし：個人情報は読めない');
 select throws_ok($$ select * from public.reservations $$, '42501', null,
