@@ -38,9 +38,16 @@ npm run dev:local   # 手元の Supabase につないで next dev を起動
    新しいフォルダを作ったら `config.toml` の `schema_paths` にも足す。
 2. **migration を作る。**
    ```bash
-   npx supabase db diff -f <変更の名前>     # 例: add_listing_memo
+   npm run db:sync -- <変更の名前>     # 例: npm run db:sync -- add_listing_memo
    ```
-   `supabase/migrations/<日時>_<変更の名前>.sql` ができる。
+   中身は `supabase db schema declarative sync --no-apply --name <変更の名前>`。
+   「migrations を全部当てた姿」と「schemas に書いた姿」を比べて、差を
+   `supabase/migrations/<日時>_<変更の名前>.sql` に書き出す（手元の DB は変えない）。
+
+   > **`supabase db diff` は使わない。** 名前が似ているが、あちらは「migrations」と
+   > 「今動いている手元の DB」を比べるもので、`supabase/schemas/` を見ない。
+   > schemas を直しただけでは「No schema changes found」になる（2026-09-18 に手順を試して判明）。
+
 3. **できたファイルを必ず読む。** diff はよく間違える（→ 3章）。
    足りない文・順番がおかしい文は手で直す。
 4. **手元で当て直して、テストを通す。**
@@ -64,14 +71,14 @@ npm run dev:local   # 手元の Supabase につないで next dev を起動
 
 ## 3. diff では正しく出ないもの（手で直す）
 
-`db diff` は「schemas から作った DB」と「migrations から作った DB」の差を取るだけなので、
-次のものは出なかったり、おかしな形で出たりする。今回の移行で実際に起きたこと。
+migration を自動で作る道具は、次のものを出さなかったり、おかしな形で出したりする。今回の移行で実際に起きたこと。
+(a)(b) は最初の migration（baseline）を `db diff` で作ったときに起きた。`declarative sync` でも、**権限の文が出たら順番と中身を必ず読む**こと。
 
 | 起きたこと | 理由 | 対処 |
 |---|---|---|
 | (a) 余計な権限が残る | public にテーブルや関数を作った瞬間、Supabase が anon・authenticated に全権限を自動で付ける。diff はこれをはがす文を出さない | `schemas/09_grants/001_revoke_defaults.sql` で最初に全部はがし、そのあと必要な権限だけ付け直す。新しいテーブル・関数を足したらここにも足す |
 | (b) 列ごとの権限が消える | diff の出力順が悪く、「列ごとの権限を付ける」→「テーブルの権限をはがす」の順になり、後の文で列の権限まで消えた | baseline の権限の部分を `schemas/09_grants/` の内容で差し替えた。権限を触る migration は、はがす文を先・付ける文を後に並べ直す |
-| (c) バケットが出ない | Storage のバケットは `storage.buckets` の「行」（データ）なので、構造の差を取る diff には出ない | バケットを足す・変えるときは migration に `insert into storage.buckets ...` を手で書く（`schemas/08_storage/010_buckets.sql` も直す） |
+| (c) バケットは schemas に書けない | Storage のバケットは `storage.buckets` の「行」（データ）。`declarative sync` は schemas にデータの文があると「declarative files must not contain data statements」で止まる | バケットは migration にだけ書く（今の定義は `20260918040927_baseline.sql` の末尾）。足す・変えるときは migration に `insert` / `update` を手で書く。`schemas/08_storage/010_buckets.sql` は説明だけ |
 | (d) 二度流すと失敗する | publication（リアルタイム配信）への追加は、すでに入っていればエラーになる | `schemas/09_grants/900_publication.sql` のように「すでにあれば何もしない」形で書く |
 | (e) auth.users のトリガーが無い | public の外（auth スキーマ）にあるので、本番の中身を書き出しても含まれない | `schemas/06_triggers/900_auth_users.sql` に手で書いた。触るときは migration にも手で書く |
 
