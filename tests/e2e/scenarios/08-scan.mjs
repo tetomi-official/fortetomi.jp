@@ -4,7 +4,7 @@
 // 読み取り画面（BarcodeScanner）・決済・両方の画面の切り替わりを、本物と同じ道筋で通す。
 // 明るさ・手ぶれ・実機のカメラは見られないので、そこは手動テストに残す。
 import path from "node:path";
-import { ACCOUNTS, BASE_URL, clickText, go, hasText, launch, login, openPersona, wait, waitForText } from "../helpers.mjs";
+import { ACCOUNTS, BASE_URL, clickText, go, hasText, launch, login, openPersona, shot, wait, waitForText } from "../helpers.mjs";
 import { reservation, waitFor } from "../db.mjs";
 import { 予約を置く, 出品を置く } from "../fixtures.mjs";
 import { QR画面を開いて合言葉を取る } from "./05-payment.mjs";
@@ -59,8 +59,9 @@ export const T30 = {
       const 開始 = Date.now();
       await clickText(seller.page, "button", "QRを読み取って決済");
       await waitForText(seller.page, "決済が完了しました", 45000).catch(async () => {
-        const 画面 = await seller.page.evaluate(() => document.body.innerText.slice(0, 500));
-        throw new Error(`出品者の画面に決済完了が出ません。画面:\n${画面}`);
+        const 証拠 = await shot(seller.page, artifacts, "T30-scanner");
+        const 読み取り画面 = await seller.page.evaluate(() => document.querySelector(".modal")?.innerText ?? "（読み取り画面は閉じている）");
+        throw new Error(`出品者の画面に決済完了が出ません。読み取り画面: ${読み取り画面}\n  証拠: ${証拠}`);
       });
       const 出品者側 = Date.now() - 開始;
       log(`出品者：ボタンを押してから「決済が完了しました」まで ${(出品者側 / 1000).toFixed(1)} 秒`);

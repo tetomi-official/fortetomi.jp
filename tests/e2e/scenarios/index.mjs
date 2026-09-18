@@ -8,6 +8,7 @@ import { T10, T10b, T13, T13c, T14, T15, T17, T18, T19, T23, T24 } from "./05-pa
 import { T20, T20b, T21, T26, T27 } from "./06-cancel.mjs";
 import { T28, T29 } from "./07-enrollment.mjs";
 import { T30, T31 } from "./08-scan.mjs";
+import { T32, T33 } from "./09-mail.mjs";
 
 export const SCENARIOS = [
   // 出品
@@ -24,6 +25,8 @@ export const SCENARIOS = [
   T13, T14, T15, T17, T18, T19, T23,
   // カメラでQRを読み取って決済（偽のカメラで本物の読み取り画面を通す）
   T30, T31,
+  // 通知メール（開発サーバーが書き出したメールを読む）
+  T32, T33,
   // キャンセルと歯止め
   T20, T20b, T21, T26, T27,
   // 在籍期限切れ
