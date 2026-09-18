@@ -23,7 +23,10 @@ const PRICE_RANGES = [
 export default function ListingsPage() {
   const { user, ready } = useAuth();
   const [listings, setListings] = useState<Listing[]>([]);
-  const [loading, setLoading] = useState(true);
+  // どの条件（学部・本人）で読み込み終えたか。今の条件と違えば「読み込み中」。
+  const listKey = user?.faculty ? `${user.faculty}:${user.id}` : "all";
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  const loading = !ready || loadedKey !== listKey;
   const all = useMemo(() => listings.filter((l) => l.status === "出品中"), [listings]);
   const [query, setQuery] = useState("");
   const [cond, setCond] = useState("");
@@ -36,19 +39,18 @@ export default function ListingsPage() {
   useEffect(() => {
     if (!ready) return;
     let active = true;
-    setLoading(true);
     // ログイン時は自学部の「他の人」の出品のみ（自分の出品は除外＝マイページで確認）
     const req = user?.faculty ? fetchListingsByFaculty(user.faculty, user.id) : fetchListings();
     req.then((data) => {
       if (active) {
         setListings(data);
-        setLoading(false);
+        setLoadedKey(listKey);
       }
     });
     return () => {
       active = false;
     };
-  }, [ready, user?.faculty]);
+  }, [ready, user?.faculty, user?.id, listKey]);
 
   const filtered = useMemo(() => {
     let list = all.filter((item) => {

@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Claude Code の作業用コピー（git worktree）。アプリのコードではない。
+    ".claude/**",
   ]),
 ]);
 

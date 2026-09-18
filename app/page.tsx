@@ -73,7 +73,10 @@ export default function HomePage() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [newest, setNewest] = useState<Listing[]>([]);
   const [totalCount, setTotalCount] = useState(0);
-  const [facultyCount, setFacultyCount] = useState<number | null>(null);
+  // 学部別の件数は「どの学部の件数か」と一緒に持つ。ログアウトや学部の切り替えで古い数字を出さないため。
+  const [facultyCountOf, setFacultyCountOf] = useState<{ faculty: string; n: number } | null>(null);
+  const facultyCount =
+    facultyCountOf && user?.faculty === facultyCountOf.faculty ? facultyCountOf.n : null;
   const rootRef = useRef<HTMLDivElement>(null);
 
   // 新着4件（出品中のみ）
@@ -97,10 +100,8 @@ export default function HomePage() {
     if (user?.faculty) {
       const faculty = user.faculty;
       countActiveListingsByFaculty(faculty).then((n) => {
-        if (active) setFacultyCount(n);
+        if (active) setFacultyCountOf({ faculty, n });
       });
-    } else {
-      setFacultyCount(null);
     }
     return () => {
       active = false;
