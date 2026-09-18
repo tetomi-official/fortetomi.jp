@@ -12,6 +12,7 @@ import { fetchCoursesByIsbn, facultiesFromCourses, type SyllabusCourse } from "@
 import BarcodeScanner from "@/components/BarcodeScanner";
 import ConnectStatusBanner from "@/components/ConnectStatusBanner";
 import type { Condition } from "@/lib/types";
+import { loginHref } from "@/lib/redirect";
 
 const MIN_IMAGES = 2;
 const MAX_IMAGES = 5;
@@ -121,7 +122,7 @@ export default function SellPage() {
               <p style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 24 }}>
                 出品するにはログイン・ユーザー登録が必要です。
               </p>
-              <Link href="/login" className="btn-navy">
+              <Link href={loginHref("/sell")} className="btn-navy">
                 <i className="fas fa-sign-in-alt" /> ログイン / 登録
               </Link>
             </div>

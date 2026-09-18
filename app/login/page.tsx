@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/Toast";
+import { safeNextPath } from "@/lib/redirect";
 
 // デモ用のシード済みアカウント（supabase/seed.sql・password123）。
 // プレリリース中は PAY.jp 審査担当者が閲覧確認できるよう 1 アカウントに限定する。
@@ -21,6 +22,10 @@ export default function LoginPage() {
   const [remember, setRemember] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  // ログインしたら、来たページ（?next=）に戻る。無い・怪しいときはトップ。
+  // useSearchParams だとページ全体を Suspense で包む必要があるので、押した時点で URL から読む。
+  const goNext = () => router.push(safeNextPath(new URLSearchParams(window.location.search).get("next")));
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
@@ -35,7 +40,7 @@ export default function LoginPage() {
       return;
     }
     showToast("ログインしました", "success");
-    router.push("/");
+    goNext();
   };
 
   const demo = async (email: string) => {
@@ -48,7 +53,7 @@ export default function LoginPage() {
       return;
     }
     showToast("デモユーザーでログインしました", "success");
-    router.push("/");
+    goNext();
   };
 
   return (

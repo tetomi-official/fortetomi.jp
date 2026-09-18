@@ -7,6 +7,7 @@ import { conditionLabel, yen, CONDITION_OPTIONS } from "@/lib/labels";
 import ListingCard from "@/components/ListingCard";
 import { useAuth } from "@/lib/auth";
 import type { Listing } from "@/lib/types";
+import { loginHref } from "@/lib/redirect";
 
 const PAGE_SIZE = 12;
 
@@ -138,7 +139,7 @@ export default function ListingsPage() {
                 }}
               >
                 <i className="fas fa-graduation-cap" /> ログインすると自学部の教科書に絞り込まれます{" "}
-                <Link href="/login" style={{ textDecoration: "underline", fontWeight: 600 }}>
+                <Link href={loginHref("/listings")} style={{ textDecoration: "underline", fontWeight: 600 }}>
                   ログイン
                 </Link>
               </p>

@@ -15,6 +15,7 @@ import {
 import { conditionLabel, yen, formatDate, formatSlot } from "@/lib/labels";
 import { useAuth } from "@/lib/auth";
 import { canReserve } from "@/lib/prerelease";
+import { loginHref } from "@/lib/redirect";
 import { useToast } from "@/components/Toast";
 import type { CandidateSlot, Listing } from "@/lib/types";
 
@@ -175,12 +176,22 @@ export default function DetailPage() {
     }
   };
 
+  // メッセージはマイページで取引ごとに行う。ログインしていなければ、先にログインしてこの本に戻る。
+  const openChat = () => {
+    if (!user) {
+      showToast("メッセージにはログインが必要です", "error");
+      router.push(loginHref(`/listings/${params.id}`));
+      return;
+    }
+    router.push("/mypage");
+  };
+
   const openReserve = () => {
     // プレリリース中（Phase 0）は購入導線を封鎖。UI でも非表示だが二重防御。
     if (!canReserve) return;
     if (!user) {
       showToast("購入希望にはログインが必要です", "error");
-      router.push("/login");
+      router.push(loginHref(`/listings/${params.id}`));
       return;
     }
     // 在籍が失効していると購入不可。再認証へ誘導する。
@@ -370,7 +381,7 @@ export default function DetailPage() {
                       <i className={`fas ${isSold ? "fa-ban" : "fa-handshake"}`} />{" "}
                       {isSold ? st.label : "購入を希望する"}
                     </button>
-                    <button className="btn-chat-seller" onClick={() => router.push("/mypage")}>
+                    <button className="btn-chat-seller" onClick={openChat}>
                       <i className="fas fa-comment-dots" /> 出品者にメッセージ
                     </button>
                   </>
