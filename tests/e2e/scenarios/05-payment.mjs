@@ -7,7 +7,7 @@ import { applicationFee, sellerNet } from "../constants.mjs";
 import { 予約を置く, 出品を置く } from "../fixtures.mjs";
 
 /** 買い手の受け渡し画面を開き、QRに載る合言葉（nonce）を横で受け取る。 */
-async function QR画面を開いて合言葉を取る(page, reservationId) {
+export async function QR画面を開いて合言葉を取る(page, reservationId) {
   let 合言葉 = null;
   const 受け取り = async (res) => {
     if (!res.url().includes("/api/payments/nonce")) return;

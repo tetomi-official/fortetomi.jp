@@ -7,6 +7,7 @@ import { T12, T12b, T12c } from "./04-card.mjs";
 import { T10, T10b, T13, T13c, T14, T15, T17, T18, T19, T23, T24 } from "./05-payment.mjs";
 import { T20, T20b, T21, T26, T27 } from "./06-cancel.mjs";
 import { T28, T29 } from "./07-enrollment.mjs";
+import { T30, T31 } from "./08-scan.mjs";
 
 export const SCENARIOS = [
   // 出品
@@ -21,6 +22,8 @@ export const SCENARIOS = [
   T10, T10b, T24,
   // 決済
   T13, T14, T15, T17, T18, T19, T23,
+  // カメラでQRを読み取って決済（偽のカメラで本物の読み取り画面を通す）
+  T30, T31,
   // キャンセルと歯止め
   T20, T20b, T21, T26, T27,
   // 在籍期限切れ
