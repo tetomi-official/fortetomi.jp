@@ -1,7 +1,7 @@
 -- ===================================================
 -- TETOMI: ダミーデータ投入（開発・デモ用）
--- Supabase ダッシュボード → SQL Editor に貼り付けて Run。
--- 前提: 先に docs/supabase-setup.sql を実行済みであること。
+-- `npm run db:reset`（supabase db reset）で migration のあとに自動で流れる。
+-- 本番用のデモデータは docs/supabase-seed-prod.sql（こちらは本番に流さない）。
 --
 -- ※何度流しても安全（冪等）。固定UUIDで作るので、再実行時は
 --   既存のダミー行を一度消してから入れ直す。
@@ -12,8 +12,9 @@
 --       画像は別途 `npm run seed:images`（scripts/seed-images.mjs）で付与する。
 -- ===================================================
 
--- crypt()/gen_salt() に必要（Supabase は標準で有効）
-create extension if not exists pgcrypto;
+-- crypt()/gen_salt() は pgcrypto の関数。拡張は migration（schemas/00_setup）で入れているので
+-- ここでは作らない。seed で create extension を書くと、CLI の投入方式では
+-- pg_read_file の権限エラーになって seed 全体が止まる。
 
 -- ---------------------------------------------------
 -- 0) 再実行に備えて既存のダミー行を掃除
