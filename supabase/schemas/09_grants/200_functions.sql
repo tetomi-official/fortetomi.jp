@@ -20,11 +20,11 @@ REVOKE ALL ON FUNCTION "public"."handle_new_user"() FROM PUBLIC;
 
 GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "service_role";
 
--- ここは本番の現状と意図的に違う。本番では anon にも実行権が付いてしまっており
--- （docs/supabase-migration-2 の revoke が効いていない）、ログインしていない人でも
--- 「この利用者IDは在籍中か」を問い合わせられる状態。あるべき姿はこちら。
--- 本番への反映はタスク10。pgTAP で anon が呼べないことを見張る。
+-- anon にも実行権を付ける。listings の閲覧ポリシーがこの関数を呼ぶため、
+-- 外すとログインしていない人の出品一覧が壊れる（20260918…_restore_anon_is_enrollment_active）。
 REVOKE ALL ON FUNCTION "public"."is_enrollment_active"("uid" "uuid") FROM PUBLIC;
+
+GRANT ALL ON FUNCTION "public"."is_enrollment_active"("uid" "uuid") TO "anon";
 
 GRANT ALL ON FUNCTION "public"."is_enrollment_active"("uid" "uuid") TO "authenticated";
 
