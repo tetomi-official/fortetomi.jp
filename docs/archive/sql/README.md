@@ -3,7 +3,7 @@
 ここにあるのは、Supabase の SQL Editor に手で貼って本番を変えていたころの SQL。
 **歴史的な記録として残しているだけで、もう流さない。**
 
-今の正しい姿は次の2つ。手順は [`docs/db-workflow.md`](../../db-workflow.md)。
+今の正しい姿は次の2つ。手順は [`docs/operations/db-workflow.md`](../../operations/db-workflow.md)。
 
 - `supabase/schemas/`（本番の今の姿）
 - `supabase/migrations/`（本番に当てた変更の記録）

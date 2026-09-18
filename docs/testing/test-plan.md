@@ -26,7 +26,7 @@ MAIL_DRY_RUN=1
 
 DB が最新でないと T11 / T26 / T27 が落ちる（ステータスの歯止めはDB側のトリガーで効いているため）。
 本番は `supabase/migrations/` がすべて当たっていればよい。手元の DB で試すなら
-`npm run db:reset` で最新になる。手順は [`docs/db-workflow.md`](./db-workflow.md)。
+`npm run db:reset` で最新になる。手順は [`docs/operations/db-workflow.md`](../operations/db-workflow.md)。
 
 ### 1-3. 開発サーバー
 
@@ -305,7 +305,7 @@ node --env-file=.env.local scripts/stripe-refund.mjs <予約ID>
 
 ## 6. 関連
 
-- [`tests/e2e/`](../tests/e2e/) — 自動E2Eの中身
-- [`lib/__tests__/`](../lib/__tests__/) — 単体テスト
-- [`docs/stripe-operations.md`](./stripe-operations.md) — 返金・チャージバックの運用
-- [`docs/stripe-legal-review.md`](./stripe-legal-review.md) — 規約との食い違い
+- [`tests/e2e/`](../../tests/e2e/) — 自動E2Eの中身
+- [`lib/__tests__/`](../../lib/__tests__/) — 単体テスト
+- [`docs/operations/stripe-operations.md`](../operations/stripe-operations.md) — 返金・チャージバックの運用
+- [`docs/decisions/stripe-legal-review.md`](../decisions/stripe-legal-review.md) — 規約との食い違い

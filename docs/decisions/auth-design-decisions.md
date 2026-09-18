@@ -201,5 +201,5 @@
 
 ## 関連
 
-- [../README.md](../README.md) — TETOMI のサービス概要。「今後の改善案」に Firebase Authentication・大学拡張の記載あり。
-- [../devlog/2026-05-25.md](../devlog/2026-05-25.md) — セッション境界（Cookie / セッション / パスワードマネージャ）の学習ログ。
+- [../README.md](../../README.md) — TETOMI のサービス概要。「今後の改善案」に Firebase Authentication・大学拡張の記載あり。
+- [../devlog/2026-05-25.md](../../devlog/2026-05-25.md) — セッション境界（Cookie / セッション / パスワードマネージャ）の学習ログ。

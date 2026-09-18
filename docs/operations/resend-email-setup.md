@@ -80,7 +80,7 @@ Supabase → **Authentication** → **Emails** → **SMTP Settings** で Custom 
   REVERIFY_MAIL_FROM=TETOMI <no-reply@tetomi.jp>
   NEXT_PUBLIC_SITE_URL=https://tetomi.jp   # 任意（未設定時はリクエストの origin を使用）
   ```
-- 見本は [`.env.example`](../.env.example) を参照。
+- 見本は [`.env.example`](../../.env.example) を参照。
 
 ---
 
@@ -100,7 +100,7 @@ Supabase → **Authentication** → **Emails** → **SMTP Settings** で Custom 
 - `support@tetomi.jp`（`lib/support.ts` の `SUPPORT_CONTACT`）は**送信ドメイン設定だけでは受信できない**。Resend の Enable Receiving は OFF。実際に問い合わせを受けるには MX / 転送設定が別途必要。
 
 ## 関連
-- [`.env.example`](../.env.example) — 環境変数の見本
+- [`.env.example`](../../.env.example) — 環境変数の見本
 - `app/api/reverify/request/route.ts` — reverify メール送信（Resend HTTP API）
 - `app/api/recover/request/route.ts` — ログイン復旧メール送信（Resend HTTP API）
 - `scripts/test-resend.mjs` — 疎通テスト

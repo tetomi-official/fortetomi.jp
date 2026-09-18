@@ -60,4 +60,4 @@ TETOMI 開発で「どこまで作り込み、どの手法をいつ採用する�
 ## 関連
 
 - [./auth-design-decisions.md](./auth-design-decisions.md) — 認証機能の設計判断ログ。
-- [../README.md](../README.md) — TETOMI のサービス概要。
+- [../README.md](../../README.md) — TETOMI のサービス概要。
