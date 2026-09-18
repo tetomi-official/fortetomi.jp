@@ -13,12 +13,14 @@ const 手紙 = { to: "sato@g.chuo-u.ac.jp", subject: "【TETOMI】テスト", ht
 
 /** Resend への送信を横取りして、実際に送る中身を取り出す。 */
 function 送信を横取りする() {
-  const spy = vi.fn(async () => new Response("{}", { status: 200 }));
+  // 本物の fetch と同じ型にしておく（型なしで作ると、呼ばれた引数を型の上で取り出せない）
+  const spy = vi.fn<typeof fetch>(async () => new Response("{}", { status: 200 }));
   vi.stubGlobal("fetch", spy);
   return () => {
     const call = spy.mock.calls[0];
     if (!call) return null;
-    return { url: call[0], body: JSON.parse((call[1] as RequestInit).body as string) };
+    const [url, init] = call;
+    return { url, body: JSON.parse(init?.body as string) };
   };
 }
 
