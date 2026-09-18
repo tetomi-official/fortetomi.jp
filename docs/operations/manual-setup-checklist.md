@@ -2,9 +2,9 @@
 
 このセッションで実装した機能を「本番で実際に動く」状態にするために、**コードでは完結できずダッシュボード/DNS/環境変数などの手作業が必要な項目**をまとめる。実装済みコードは各項目のリンク先ドキュメント参照。
 
-最終更新: 2026-09-18（DB の変更手順を [`docs/db-workflow.md`](./db-workflow.md) に移し、SQL Editor に貼る手順をやめた）
+最終更新: 2026-09-18（DB の変更手順を [`docs/operations/db-workflow.md`](./db-workflow.md) に移し、SQL Editor に貼る手順をやめた）
 
-> **DB の変更について**：以前は `docs/` の SQL を Supabase の SQL Editor に貼って本番を変えていたが、今は `supabase/` のファイルで管理し、`supabase db push` で本番に当てる。手順は [`docs/db-workflow.md`](./db-workflow.md)。下の各「DBマイグレーションの適用」はすべて本番に適用済みで、昔の SQL は [`docs/archive/sql/`](./archive/sql/) に移した。
+> **DB の変更について**：以前は `docs/` の SQL を Supabase の SQL Editor に貼って本番を変えていたが、今は `supabase/` のファイルで管理し、`supabase db push` で本番に当てる。手順は [`docs/operations/db-workflow.md`](./db-workflow.md)。下の各「DBマイグレーションの適用」はすべて本番に適用済みで、昔の SQL は [`docs/archive/sql/`](../archive/sql/) に移した。
 
 > 記号：☐ 未対応 ／ ⏸ 保留（外部依存待ち） ／ 記入欄は完了時にチェック。
 
@@ -16,10 +16,10 @@
 **この2つ（A-1 / A-2）が済むまで実課金は動かない。**
 
 ### A-1. DBマイグレーションの適用 ✅ 適用済み
-- 対象SQL（記録）：[`docs/archive/sql/supabase-migration-9-payments.sql`](./archive/sql/supabase-migration-9-payments.sql)
+- 対象SQL（記録）：[`docs/archive/sql/supabase-migration-9-payments.sql`](../archive/sql/supabase-migration-9-payments.sql)
   - `reservations` に `charge_id / paid_at / payment_nonce_hash` を追加
   - `payment_customers` 表を新規作成（買い手のPAY.jp Customer保存先・書き込みは service_role のみ）
-- 本番に適用済み（2026-09-18 に DB の管理を `supabase/` へ移した時点で本番に入っていることを確認済み。今後の DB 変更は [`docs/db-workflow.md`](./db-workflow.md) の手順で行う）。
+- 本番に適用済み（2026-09-18 に DB の管理を `supabase/` へ移した時点で本番に入っていることを確認済み。今後の DB 変更は [`docs/operations/db-workflow.md`](./db-workflow.md) の手順で行う）。
 - ※ `SUPABASE_SERVICE_ROLE_KEY`（データAPI用）だけでは DDL は実行**できない**。
 
 ### A-2. PAY.jp テストキーの設定 ☐
@@ -59,7 +59,7 @@
 
 ## B. メール送信（Resend / 認証・再認証メール）
 
-登録確認メール（PB-009/010）と再認証メール（PB-015）を本番品質で送るための設定。コード側（再送信ボタン・疎通テスト・env見本）は実装済み。詳細手順は [`docs/resend-email-setup.md`](./resend-email-setup.md)。
+登録確認メール（PB-009/010）と再認証メール（PB-015）を本番品質で送るための設定。コード側（再送信ボタン・疎通テスト・env見本）は実装済み。詳細手順は [`docs/operations/resend-email-setup.md`](./resend-email-setup.md)。
 
 > **本番ドメインは `tetomi.jp`**（`fortetomi.jp` は未登録の誤りだった）。DNS は **Vercel** が管理（NS が `*.vercel-dns.com`）。**お名前.com ではない**ため、DNS レコードは Vercel ダッシュボードで追加する。
 
@@ -82,9 +82,9 @@
 
 ## C. その他 Supabase 手動作業（過去分・未確認なら要対応）
 
-以下は認証・セキュリティ関連で過去に必要とされた手作業。適用済みか不明なら確認する（詳細は認証系メモ／[`docs/archive/sql/supabase-setup.sql`](./archive/sql/supabase-setup.sql) 冒頭注意書き）。
+以下は認証・セキュリティ関連で過去に必要とされた手作業。適用済みか不明なら確認する（詳細は認証系メモ／[`docs/archive/sql/supabase-setup.sql`](../archive/sql/supabase-setup.sql) 冒頭注意書き）。
 
-- ✅ DB の中身が最新か：`supabase/migrations/` がすべて本番に当たっていればよい。確認は [`docs/db-workflow.md`](./db-workflow.md) の 2章 7（`db push --dry-run` で「当てるものが無い」と出ればよい）。
+- ✅ DB の中身が最新か：`supabase/migrations/` がすべて本番に当たっていればよい。確認は [`docs/operations/db-workflow.md`](./db-workflow.md) の 2章 7（`db push --dry-run` で「当てるものが無い」と出ればよい）。
 - ☐ Auth → URL Configuration に Site URL と Redirect URL(`/auth/confirm`) が登録済みか。
 - ☐ Authentication → Leaked Password Protection を ON（要手動）。
 - ☐ **パスワード再設定メールのテンプレ（PB-012）**：Authentication → Emails → Templates →「Reset Password」の本文リンクを
@@ -105,11 +105,11 @@
 `syllabus_textbooks` に保存するスクリプト。将来の PB-058（ISBN→授業名 自動照合）の土台。
 
 ### E-1. DBマイグレーションの適用 ✅ 適用済み
-- 対象SQL（記録）：[`docs/archive/sql/supabase-migration-10-syllabus.sql`](./archive/sql/supabase-migration-10-syllabus.sql)
+- 対象SQL（記録）：[`docs/archive/sql/supabase-migration-10-syllabus.sql`](../archive/sql/supabase-migration-10-syllabus.sql)
   - `syllabus_courses`（1科目1行・`id` はシラバスサイトの数値ID）
   - `syllabus_textbooks`（科目×ISBN の逆引き・`isbn13` にインデックス）
   - どちらも RLS 有効・`authenticated` は SELECT のみ・書き込みは service_role。
-- 本番に適用済み（2026-09-18 に DB の管理を `supabase/` へ移した時点で本番に入っていることを確認済み。今後の DB 変更は [`docs/db-workflow.md`](./db-workflow.md) の手順で行う）。
+- 本番に適用済み（2026-09-18 に DB の管理を `supabase/` へ移した時点で本番に入っていることを確認済み。今後の DB 変更は [`docs/operations/db-workflow.md`](./db-workflow.md) の手順で行う）。
 
 ### E-2. スクレイピング実行（E-1 完了後） ☐
 - 動作確認（DB書込みなし・ネットワークのみ）：
@@ -131,10 +131,10 @@
 ※ E（スクレイピング）でデータ投入済みが前提。ISBN不一致時のOCR書名照合（PB-059）は次回。
 
 ### F-1. DBマイグレーションの適用 ✅ 適用済み（**/listings 表示に必須**）
-- 対象SQL（記録）：[`docs/archive/sql/supabase-migration-11-listing-faculties.sql`](./archive/sql/supabase-migration-11-listing-faculties.sql)
+- 対象SQL（記録）：[`docs/archive/sql/supabase-migration-11-listing-faculties.sql`](../archive/sql/supabase-migration-11-listing-faculties.sql)
   - `listings.faculties text[]` を追加（この出品が表示される学部の集合）＋ GIN インデックス。
   - 既存の出品は「出品者の学部のみ」でバックフィル（従来挙動を維持）。
-- 本番に適用済み（2026-09-18 に DB の管理を `supabase/` へ移した時点で本番に入っていることを確認済み。今後の DB 変更は [`docs/db-workflow.md`](./db-workflow.md) の手順で行う）。
+- 本番に適用済み（2026-09-18 に DB の管理を `supabase/` へ移した時点で本番に入っていることを確認済み。今後の DB 変更は [`docs/operations/db-workflow.md`](./db-workflow.md) の手順で行う）。
 - ⚠ **注意**：このマイグレーション適用前は、一覧/検索（`/listings`）と学部別件数（LP）が
   `faculties` 列を参照してエラーになる。**コード配備とセットで適用すること**。
 
@@ -155,14 +155,14 @@
 ## G. セキュリティ対策（PB-036 Phase 3 / PAY.jp 本番申請）
 
 実装済み：セキュリティヘッダ（`next.config.ts`）／レート制限（Supabase）／特商法・利用規約・プライバシーの確定文言。
-対策の全体像は [`docs/security-measures.md`](./security-measures.md) 参照。
+対策の全体像は [`docs/decisions/security-measures.md`](../decisions/security-measures.md) 参照。
 
 ### G-1. レート制限のDBマイグレーション適用 ✅ 適用済み
-- 対象SQL（記録）：[`docs/archive/sql/supabase-migration-12-rate-limits.sql`](./archive/sql/supabase-migration-12-rate-limits.sql)
+- 対象SQL（記録）：[`docs/archive/sql/supabase-migration-12-rate-limits.sql`](../archive/sql/supabase-migration-12-rate-limits.sql)
   - `rate_limits` 表（service_role 専用）＋原子的判定関数 `check_rate_limit()` を作成。
-- 本番に適用済み（2026-09-18 に DB の管理を `supabase/` へ移した時点で本番に入っていることを確認済み。今後の DB 変更は [`docs/db-workflow.md`](./db-workflow.md) の手順で行う）。
+- 本番に適用済み（2026-09-18 に DB の管理を `supabase/` へ移した時点で本番に入っていることを確認済み。今後の DB 変更は [`docs/operations/db-workflow.md`](./db-workflow.md) の手順で行う）。
 - 未適用でもアプリは動く（`check_rate_limit` 不在時は fail-open で素通り＝制限が効かないだけ）。**本番では必ず適用すること。**
-- （任意）pg_cron を使う場合は、上の SQL 末尾コメントの `cron.schedule(...)` を参考に、[`docs/db-workflow.md`](./db-workflow.md) の手順で migration として足す。
+- （任意）pg_cron を使う場合は、上の SQL 末尾コメントの `cron.schedule(...)` を参考に、[`docs/operations/db-workflow.md`](./db-workflow.md) の手順で migration として足す。
 
 ### G-2. セキュリティヘッダの本番確認 ☐
 - コードのみで完結（追加設定不要）。デプロイ後、`curl -sI https://tetomi.jp/` で以下が付くことを確認：
@@ -170,7 +170,7 @@
 - ⚠ `Permissions-Policy` は `camera=(self)`。QR受け渡しスキャナ（カメラ）が動くことも確認。
 
 ### G-3. 法定ページの内容確認 ☐
-- [`/legal`](../app/legal/page.tsx)（特商法）・[`/terms`](../app/terms/page.tsx)（利用規約）・[`/privacy`](../app/privacy/page.tsx)（プライバシー）は確定文言を掲載済み（`draft={false}`）。事業者情報は [`lib/legal-info.ts`](../lib/legal-info.ts) に集約。
+- [`/legal`](../../app/legal/page.tsx)（特商法）・[`/terms`](../../app/terms/page.tsx)（利用規約）・[`/privacy`](../../app/privacy/page.tsx)（プライバシー）は確定文言を掲載済み（`draft={false}`）。事業者情報は [`lib/legal-info.ts`](../../lib/legal-info.ts) に集約。
 - ⚠ 規約類に**振込申請・売上残高・銀行口座（Payouts型）**の記述があるが、この機能は現状「未実装（次段階・A-6）」。掲載＝提供の約束になるため、機能提供時期との整合を運営で確認すること。
 
 ---
@@ -186,14 +186,14 @@
 してもらう必要がある。この負担は PAY.jp の Payouts型より重い。
 
 ### H-1. DBマイグレーションの適用 ✅ 適用済み
-- [`docs/archive/sql/supabase-migration-13-stripe.sql`](./archive/sql/supabase-migration-13-stripe.sql)（記録）
+- [`docs/archive/sql/supabase-migration-13-stripe.sql`](../archive/sql/supabase-migration-13-stripe.sql)（記録）
   - `payment_customers` に Stripe 用の列を追加（PAY.jp の列は消さず共存）
   - `reservations` に `payment_provider` / `payment_intent_id` / `payment_status` などを追加
   - `connect_accounts`（出品者の受取口座）を新規作成
-- [`docs/archive/sql/supabase-migration-14-connect-accounts-v2.sql`](./archive/sql/supabase-migration-14-connect-accounts-v2.sql)（記録）
+- [`docs/archive/sql/supabase-migration-14-connect-accounts-v2.sql`](../archive/sql/supabase-migration-14-connect-accounts-v2.sql)（記録）
   - Stripe が新規連携での Accounts v1 を廃止したため、v2 の形に合わせる
   - `charges_enabled` → `transfers_enabled` に改名、`details_submitted` を削除
-- 本番に適用済み（2026-09-18 に DB の管理を `supabase/` へ移した時点で本番に入っていることを確認済み。今後の DB 変更は [`docs/db-workflow.md`](./db-workflow.md) の手順で行う）。
+- 本番に適用済み（2026-09-18 に DB の管理を `supabase/` へ移した時点で本番に入っていることを確認済み。今後の DB 変更は [`docs/operations/db-workflow.md`](./db-workflow.md) の手順で行う）。
 
 ### H-2. Connect の有効化 ☐
 - Stripe ダッシュボードで Connect を有効化する（一度きり）。
@@ -233,7 +233,7 @@
 
 ### H-6. 法定ページの整合 ☐ **本番前に必須**
 - **利用規約の「振込申請」「売上残高」まわりが Stripe の実際の動きと食い違う。**
-  詳細と代替案は [`docs/stripe-legal-review.md`](./stripe-legal-review.md) にまとめてある。
+  詳細と代替案は [`docs/decisions/stripe-legal-review.md`](../decisions/stripe-legal-review.md) にまとめてある。
 - 特に第11条2項（振込手数料250円）と第12条（売上金の管理および振込）は、
   Stripe を本番で有効にする前に必ず直すこと。
 
@@ -247,18 +247,18 @@
 
 ## I. 取引ステータスの歯止め（A-3 / A-4 / A-5）
 
-通しテストで見つかった不備の修正（[`docs/test-findings-2026-09-12.md`](./test-findings-2026-09-12.md)）。
+通しテストで見つかった不備の修正（[`docs/testing/test-findings-2026-09-12.md`](../testing/test-findings-2026-09-12.md)）。
 **このマイグレーションを当てるまで、画面を直しても抜け道は残る。**
 
 ### I-1. DBマイグレーションの適用 ✅ 適用済み
-- [`docs/archive/sql/supabase-migration-15-reservation-status-guard.sql`](./archive/sql/supabase-migration-15-reservation-status-guard.sql)（記録）
+- [`docs/archive/sql/supabase-migration-15-reservation-status-guard.sql`](../archive/sql/supabase-migration-15-reservation-status-guard.sql)（記録）
   - 予約ステータスの遷移を決められた順番だけに限る
     （**買い手が支払わずに「完了」と書ける状態を塞ぐ**）
   - 取引が承認済みになったら出品を「予約済み」にし、取りやめたら「出品中」に戻す
     （**同じ本に複数の購入希望が付く＝二重売りを止める**）
   - キャンセル時に発行済みQRの合言葉を無効化する
   - 適用時点で承認済みなのに押さえられていない出品を一度だけ揃える
-- 本番に適用済み（2026-09-18 に DB の管理を `supabase/` へ移した時点で本番に入っていることを確認済み。今後の DB 変更は [`docs/db-workflow.md`](./db-workflow.md) の手順で行う）。
+- 本番に適用済み（2026-09-18 に DB の管理を `supabase/` へ移した時点で本番に入っていることを確認済み。今後の DB 変更は [`docs/operations/db-workflow.md`](./db-workflow.md) の手順で行う）。
 - 効いているかの確認：
   ```bash
   npm run test:e2e -- T11 T26 T27
@@ -293,8 +293,8 @@
 ---
 
 ## 関連ドキュメント
-- [`docs/resend-email-setup.md`](./resend-email-setup.md) — Resend の詳細手順（B）
-- [`docs/db-workflow.md`](./db-workflow.md) — DB の変更・手元での開発・本番への適用の手順
+- [`docs/operations/resend-email-setup.md`](./resend-email-setup.md) — Resend の詳細手順（B）
+- [`docs/operations/db-workflow.md`](./db-workflow.md) — DB の変更・手元での開発・本番への適用の手順
 - `supabase/schemas/` — DB の今の姿（テーブル・関数・権限など）。シラバスの取得は `scripts/scrape-syllabus.mjs`、学部の照合は `lib/syllabus.ts`
-- [`docs/archive/sql/`](./archive/sql/) — 昔の SQL（A-1 / E-1 / F-1 / G-1 / H-1 / I-1 の記録。もう流さない）
-- [`.env.example`](../.env.example) — 環境変数の見本
+- [`docs/archive/sql/`](../archive/sql/) — 昔の SQL（A-1 / E-1 / F-1 / G-1 / H-1 / I-1 の記録。もう流さない）
+- [`.env.example`](../../.env.example) — 環境変数の見本

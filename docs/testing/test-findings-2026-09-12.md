@@ -33,7 +33,7 @@
 
 **実際に確認したこと**: `app/sell/page.tsx:347` と `app/listings/[id]/page.tsx:393` は
 画面に「出品者に通知されます」と書いている。しかし通知の実体は
-[`lib/notifications.ts`](../lib/notifications.ts) のヘッダーのバッジ件数だけで、
+[`lib/notifications.ts`](../../lib/notifications.ts) のヘッダーのバッジ件数だけで、
 **メールは1通も送っていない**（Resend を使っているのは再認証・アカウント復旧の3か所のみ。
 予約・決済まわりには送信処理が存在しない）。
 
@@ -58,7 +58,7 @@
 > [E2E] 線形代数入門 第3版 ¥1,200 受け渡し候補 9/12 昼休み 9/13 昼休み 希望場所 Forest Gateway 3F
 
 カード登録画面（`/checkout`）にも「登録しただけでは請求されない」旨の記載が無い。
-説明があるのは [`components/PaymentQR.tsx:95`](../components/PaymentQR.tsx) の
+説明があるのは [`components/PaymentQR.tsx:95`](../../components/PaymentQR.tsx) の
 QRを出す画面だけ（「読み取られると決済が完了します」）。
 
 **何が起きるか**: 買い手は「購入希望を送った＝買った・請求される」と思い込む。
@@ -73,7 +73,7 @@ QRを出す画面だけ（「読み取られると決済が完了します」）
 **実際に確認したこと**: 出品者が受け渡し日を確定して予約が `承認済み` になっても、
 出品は `出品中` のままだった。`ListingStatus` に `予約済み` という値はあるのに、
 **コードのどこからも書き込まれていない**（書き込みは
-[`lib/payment-provider/reconcile.ts:63`](../lib/payment-provider/reconcile.ts) の `完了` だけ）。
+[`lib/payment-provider/reconcile.ts:63`](../../lib/payment-provider/reconcile.ts) の `完了` だけ）。
 
 **何が起きるか**: 承認済みの取引がある本が一覧に残り続け、別の人からも購入希望が届く。
 出品者は1冊しか持っていないのに複数人と受け渡しの約束をしてしまう。
@@ -114,7 +114,7 @@ QRの合言葉も消す。
 
 ### B-1. マイページの「売上残高」と「振込申請」が実態と違う 🟠
 
-[`app/mypage/page.tsx:588-637`](../app/mypage/page.tsx) は「売上残高（受取見込み）」を表示し、
+[`app/mypage/page.tsx:588-637`](../../app/mypage/page.tsx) は「売上残高（受取見込み）」を表示し、
 無効の「振込申請」ボタンと「振込手数料 ¥250／回」を出している。
 
 しかし Stripe Connect では**決済と同時に出品者のStripe残高へ送金済み**で、TETOMIは
@@ -133,7 +133,7 @@ Stripe APIから実際の残高と入金予定日を取ってきて表示する�
 特商法ページ、プライバシーポリシー（「PAY株式会社（決済処理・売上金振込）」）が、
 いずれも「運営が売上金を預かる」前提の文面になっている。
 
-[`docs/stripe-legal-review.md`](./stripe-legal-review.md) に整理済みだが未対応。
+[`docs/decisions/stripe-legal-review.md`](../decisions/stripe-legal-review.md) に整理済みだが未対応。
 **規約に書いてあるのに実際には取らない／やらない**状態で、公開前に直しておきたい。
 
 ---
@@ -197,5 +197,5 @@ npm test          # 単体テスト（34件・1秒未満）
 npm run test:e2e  # 自動E2E（26件・約10分）
 ```
 
-詳細は [`docs/test-plan.md`](./test-plan.md)。手動で見るべき範囲（カメラでのQR読み取り、
+詳細は [`docs/testing/test-plan.md`](./test-plan.md)。手動で見るべき範囲（カメラでのQR読み取り、
 3DSの画面、メール受信、スマホでの操作感）も同じ文書に手順がある。

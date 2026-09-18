@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 // 全レスポンスに付与する防御的セキュリティヘッダ（PB-036 Phase 3 / PAY.jp 本番申請）。
-// 目的別の解説は docs/security-measures.md を参照。
+// 目的別の解説は docs/decisions/security-measures.md を参照。
 //
 // ⚠ camera は QR受け渡しスキャナ（components/BarcodeScanner.tsx の getUserMedia）が使うため
 //   camera=(self) とする。camera=() で塞ぐとスキャナが動かなくなる（回帰注意）。

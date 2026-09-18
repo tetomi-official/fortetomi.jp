@@ -2,7 +2,7 @@
 -- TETOMI: 本番デモ環境向けデータ投入（デモ体験用）
 -- 本番 Supabase プロジェクトの SQL Editor に貼り付けて Run。
 -- 前提: supabase/migrations/ がすべて本番に適用済みであること
---       （テーブル・RPC・RLS・トリガーが揃っている状態。手順は docs/db-workflow.md）。
+--       （テーブル・RPC・RLS・トリガーが揃っている状態。手順は docs/operations/db-workflow.md）。
 --
 -- これは「デモ用データ」です。本番デモとして tetomi.jp で
 --   ・デモユーザーでのログイン（/login の「デモユーザーで試す」）

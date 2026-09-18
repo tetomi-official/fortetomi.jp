@@ -1,7 +1,7 @@
 -- ===================================================
 -- TETOMI: ダミーデータ投入（開発・デモ用）
 -- `npm run db:reset`（supabase db reset）で migration のあとに自動で流れる。
--- 本番用のデモデータは docs/supabase-seed-prod.sql（こちらは本番に流さない）。
+-- 本番用のデモデータは docs/operations/supabase-seed-prod.sql（こちらは本番に流さない）。
 --
 -- ※何度流しても安全（冪等）。固定UUIDで作るので、再実行時は
 --   既存のダミー行を一度消してから入れ直す。

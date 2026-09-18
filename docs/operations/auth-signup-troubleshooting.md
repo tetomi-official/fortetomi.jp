@@ -27,7 +27,7 @@
 
 ## A. Vercel 設定（`fortetomi-jp` プロジェクト）
 
-詳細は `docs/deploy-checklist.md` を参照。要点:
+詳細は `docs/operations/deploy-checklist.md` を参照。要点:
 
 1. **ドメイン割当（③の直接解消・最優先）**
    Settings → Domains に `tetomi.jp`（＋ `www.tetomi.jp`）を追加。別プロジェクトに登録済みなら付け替える。Production Branch = `main`、`Valid Configuration` 表示を確認。
@@ -46,7 +46,7 @@
 - Redirect URLs に `https://tetomi.jp/auth/confirm` を登録
 
 ### B-2. Auth → Email Templates
-テンプレートを次の形にする（`docs/resend-email-setup.md` と同じ）。既定の `{{ .ConfirmationURL }}` のままだと
+テンプレートを次の形にする（`docs/operations/resend-email-setup.md` と同じ）。既定の `{{ .ConfirmationURL }}` のままだと
 リンクが `/auth/confirm` の `token_hash`/`type` 受け口を通らず失敗する。
 
 - Confirm signup → `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup`

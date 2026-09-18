@@ -76,7 +76,7 @@ node --env-file=.env.local scripts/stripe-refund.mjs <予約ID> 1000
      メッセージのやりとりを提出する。
 3. 期限内に証拠を提出する（**期限を過ぎると自動的に負ける**）
 4. 出品者に負担を求めるかを判断する（→ 規約に定めが無いため要整備。
-   [`docs/stripe-legal-review.md`](./stripe-legal-review.md) の7を参照）
+   [`docs/decisions/stripe-legal-review.md`](../decisions/stripe-legal-review.md) の7を参照）
 
 ### 提出できる証拠の在り処
 
@@ -117,7 +117,7 @@ Stripe ダッシュボード →「Radar」→「ルール」で設定する。
 | `4000002500003155` | オフセッションで本人認証が必要になる |
 
 拒否されたとき、画面に**日本語の分かりやすい文言**が出ることを確認する
-（[`lib/payment-provider/errors.ts`](../lib/payment-provider/errors.ts)）。
+（[`lib/payment-provider/errors.ts`](../../lib/payment-provider/errors.ts)）。
 500エラーやコードがそのまま出てはいけない。
 
 ---
@@ -132,6 +132,6 @@ TETOMI 側には残高画面が無い（売上金を預かっていないため�
 
 ## 関連
 
-- [`docs/stripe-legal-review.md`](./stripe-legal-review.md) — 規約との食い違い（本番前に要対応）
-- [`docs/manual-setup-checklist.md`](./manual-setup-checklist.md) — H章に Stripe の設定手順
-- [`docs/security-measures.md`](./security-measures.md) — セキュリティ対策の全体像
+- [`docs/decisions/stripe-legal-review.md`](../decisions/stripe-legal-review.md) — 規約との食い違い（本番前に要対応）
+- [`docs/operations/manual-setup-checklist.md`](./manual-setup-checklist.md) — H章に Stripe の設定手順
+- [`docs/decisions/security-measures.md`](../decisions/security-measures.md) — セキュリティ対策の全体像

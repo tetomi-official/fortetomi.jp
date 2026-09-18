@@ -6,14 +6,14 @@
 //
 // docs/screens/small/{pc,sp} の JPEG を base64 で埋め込むので、
 // 出力された HTML 1ファイルだけで完結する（外部リクエストなし）。
-// 出力先: docs/flow-sell.html
+// 出力先: docs/screens/flow-sell.html
 // ===================================================
 
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const SMALL = path.resolve("docs/screens/small");
-const OUT = path.resolve("docs/flow-sell.html");
+const OUT = path.resolve("docs/screens/flow-sell.html");
 
 /**
  * 画面カード1枚ぶんの説明。

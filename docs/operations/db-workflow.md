@@ -10,8 +10,8 @@ DB（Supabase）の中身は、すべて `supabase/` の中のファイルで管
 | `supabase/seed.sql` | 手元の DB に入れる開発用データ（全員パスワード `password123`） |
 | `supabase/tests/` | pgTAP のテスト。「見せてはいけないものが見えない」「見せるものは見える」を確かめる |
 | `lib/database.types.ts` | DB から自動で作る型。手で書き換えない |
-| `docs/supabase-seed-prod.sql` | 本番デモ用のデータ（これだけは今も SQL Editor で流す） |
-| `docs/archive/sql/` | 昔の SQL。もう使わない（[README](./archive/sql/README.md)） |
+| `docs/operations/supabase-seed-prod.sql` | 本番デモ用のデータ（これだけは今も SQL Editor で流す） |
+| `docs/archive/sql/` | 昔の SQL。もう使わない（[README](../archive/sql/README.md)） |
 
 ---
 
