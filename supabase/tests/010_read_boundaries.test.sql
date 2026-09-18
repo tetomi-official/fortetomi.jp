@@ -5,7 +5,7 @@
 -- ログインしていない人の出品一覧が空になった。なので両側を確かめる。
 begin;
 \ir _helpers/helpers.psql
-select plan(31);
+select plan(33);
 
 -- ---- 準備：A と B が取引中、C は無関係、D は在籍切れ ----
 select pg_temp.make_user('aaaaaaaa-0000-0000-0000-000000000001', 'test-a@g.chuo-u.ac.jp', '出品者A');
@@ -22,6 +22,8 @@ insert into public.connect_accounts (user_id, stripe_account_id)
   values ('aaaaaaaa-0000-0000-0000-000000000001', 'acct_test_secret');
 insert into public.payment_customers (user_id, provider, stripe_customer_id)
   values ('bbbbbbbb-0000-0000-0000-000000000002', 'stripe', 'cus_test_secret');
+insert into public.syllabus_courses (id, course_name, faculty) values (990001, 'テスト用の授業', '経済学部');
+insert into public.syllabus_textbooks (course_id, isbn13) values (990001, '9780000000001');
 
 -- =========================================================
 -- ログインしていない人
@@ -42,7 +44,15 @@ select lives_ok($$ select * from public.get_newest_listings(4) $$,
 select lives_ok($$ select public.is_university_email_taken('x@g.chuo-u.ac.jp') $$,
   'ログインなし：登録画面のメール重複チェックは呼べる');
 
+select is(
+  pg_temp.try_count($q$ select c.course_name from public.syllabus_textbooks t
+                        join public.syllabus_courses c on c.id = t.course_id
+                        where t.isbn13 = '9780000000001' $q$),
+  1, 'ログインなし：詳細の「この本を使う授業」を読める（シラバス）');
+
 -- 見せない
+select throws_ok($$ insert into public.syllabus_courses (id, course_name) values (990002, '改ざん') $$,
+  '42501', null, 'ログインなし：シラバスは書き換えられない');
 select throws_ok($$ select * from public.profiles $$, '42501', null,
   'ログインなし：プロフィールを全部の列では読めない（在籍期限などは渡さない）');
 select throws_ok($$ select enrollment_valid_until from public.profiles $$, '42501', null,
