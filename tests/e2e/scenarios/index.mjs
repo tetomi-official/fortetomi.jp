@@ -6,6 +6,7 @@ import { T06, T07, T08, T09, T11 } from "./03-schedule.mjs";
 import { T12, T12b } from "./04-card.mjs";
 import { T10, T10b, T13, T14, T15, T17, T18, T19, T23, T24 } from "./05-payment.mjs";
 import { T20, T20b, T21, T26, T27 } from "./06-cancel.mjs";
+import { T28, T29 } from "./07-enrollment.mjs";
 
 export const SCENARIOS = [
   // 出品
@@ -22,4 +23,6 @@ export const SCENARIOS = [
   T13, T14, T15, T17, T18, T19, T23,
   // キャンセルと歯止め
   T20, T20b, T21, T26, T27,
+  // 在籍期限切れ
+  T28, T29,
 ];
