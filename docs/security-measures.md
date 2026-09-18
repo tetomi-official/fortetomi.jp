@@ -66,7 +66,7 @@ PAY.jp 本番申請（PB-049）にあたって整理した。各項目を「**�
 - **脅威**: `payjp_customer_id`（買い手のカードを指す ID）をユーザーが書き換えられると、他人のカードを自分の取引に紐づけて課金できる。
 - **対策**: 買い手のカード保存先 `payment_customers` は Supabase の **RLS（行レベルセキュリティ）** を有効化し、本人の SELECT のみ許可・**書き込みは service_role（サーバー）専用**。決済結果の列（`charge_id/paid_at`）もユーザーの UPDATE 権限外。
 - **なぜ効くか**: DB自身が「誰がどの行を読み書きできるか」を強制するため、アプリのバグがあってもデータ層で守られる。
-- 実装: [`docs/supabase-migration-9-payments.sql`](./supabase-migration-9-payments.sql)
+- 実装: [`supabase/schemas/`](../supabase/schemas/)（`02_tables/060_payment_customers.sql` ほか。当時の SQL は [`docs/archive/sql/supabase-migration-9-payments.sql`](./archive/sql/supabase-migration-9-payments.sql)）
 
 ## 8. Webhook の真正性検証（なりすまし・タイミング攻撃対策）
 
@@ -96,7 +96,7 @@ PAY.jp 本番申請（PB-049）にあたって整理した。各項目を「**�
   - 再認証メール送信 5回/時（ユーザー単位）、再認証確認 20回/時（IP単位・トークン総当たり対策）
 - **なぜ効くか**: サーバーレス（Vercel）でインスタンスをまたいでも効くよう、カウンタをDBに置き `insert ... on conflict` の1文で原子的に加算。ストア障害時は fail-open（正規ユーザーを締め出さない）＋ログ。
 - ログイン自体は Supabase Auth（自社API未経由）のため Supabase 側の Rate Limits に委ねる。
-- 実装: [`lib/rate-limit.ts`](../lib/rate-limit.ts)、[`docs/supabase-migration-12-rate-limits.sql`](./supabase-migration-12-rate-limits.sql)
+- 実装: [`lib/rate-limit.ts`](../lib/rate-limit.ts)、[`supabase/schemas/03_functions/100_check_rate_limit.sql`](../supabase/schemas/03_functions/100_check_rate_limit.sql)（当時の SQL は [`docs/archive/sql/supabase-migration-12-rate-limits.sql`](./archive/sql/supabase-migration-12-rate-limits.sql)）
 
 ## 11. 通信の暗号化（TLS）
 

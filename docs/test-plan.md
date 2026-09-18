@@ -24,10 +24,9 @@ MAIL_DRY_RUN=1
 
 ### 1-2. DBマイグレーション
 
-`docs/supabase-migration-15-reservation-status-guard.sql` が適用されていないと、
-T11 / T26 / T27 が落ちる（ステータスの歯止めはDB側のトリガーで効いているため）。
-適用は Supabase の SQL Editor へ貼り付け。詳細は
-[`docs/manual-setup-checklist.md`](./manual-setup-checklist.md) の I-1。
+DB が最新でないと T11 / T26 / T27 が落ちる（ステータスの歯止めはDB側のトリガーで効いているため）。
+本番は `supabase/migrations/` がすべて当たっていればよい。手元の DB で試すなら
+`npm run db:reset` で最新になる。手順は [`docs/db-workflow.md`](./db-workflow.md)。
 
 ### 1-3. 開発サーバー
 
@@ -37,7 +36,7 @@ npm run dev
 
 ### 1-4. 使うアカウント
 
-`docs/supabase-seed.sql` のシード済みアカウント。**全員パスワードは `password123`**。
+`supabase/seed.sql` のシード済みアカウント。**全員パスワードは `password123`**。
 
 | 役 | メール | 名前 | 学部 | 備考 |
 |---|---|---|---|---|

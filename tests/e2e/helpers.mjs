@@ -13,7 +13,7 @@ export const BASE_URL = process.env.BASE_URL ?? "http://localhost:3000";
 export const CHROME_PATH =
   process.env.CHROME_PATH ?? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
-/** シード済みのテストアカウント（docs/supabase-seed.sql、全員 password123）。 */
+/** シード済みのテストアカウント（supabase/seed.sql、全員 password123）。 */
 export const ACCOUNTS = {
   // 出品者。Stripe Connect の連携が済んでいる唯一のアカウント。
   seller: { email: "sato@g.chuo-u.ac.jp", password: "password123", name: "佐藤 花子", faculty: "経済学部" },
