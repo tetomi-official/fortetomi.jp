@@ -3,7 +3,7 @@
 // ---------------------------------------------------
 // この表への書き込みは service_role 専用。ユーザーが payjp_customer_id や
 // stripe_customer_id を書けると「他人の cus_ を指す→他人のカードに課金」が
-// 成立してしまうため（docs/supabase-migration-9-payments.sql 参照）。
+// 成立してしまうため（supabase/schemas/04_policies/060_payment_customers.sql 参照）。
 //
 // 決済会社ごとの列の違いをここ1か所に閉じ込める。Stripe の列を足すときも
 // 触るのはこのファイルだけで済む。

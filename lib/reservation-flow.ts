@@ -9,7 +9,7 @@ import type { ReservationStatus } from "./types";
 //
 // ここを唯一の定義とし、
 //   - 画面（app/mypage）はどのボタンを出すかの判断に使う
-//   - DB は docs/supabase-migration-15-reservation-status-guard.sql の
+//   - DB は supabase/schemas/03_functions/100_validate_reservation_update.sql の
 //     トリガーで同じ表を強制する（画面を回避されても効くように）
 // の二重で守る。**片方だけ直すと食い違うので、変えるときは必ず両方**。
 // ===================================================
