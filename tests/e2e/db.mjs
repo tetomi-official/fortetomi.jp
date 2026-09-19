@@ -34,6 +34,31 @@ export async function must(promise, what) {
   return data;
 }
 
+/**
+ * 利用回数の制限（lib/rate-limit.ts）をテスト用に数え直す。
+ * カード登録は 10分に10回まで。テストを続けて流すと、それだけで上限に当たるため。
+ */
+export async function 回数制限をリセット(bucket) {
+  await must(admin().from("rate_limits").delete().eq("bucket", bucket).select("bucket"), `rate_limits(${bucket})`);
+}
+
+/**
+ * テスト用アカウントの利用回数の制限を、全部まとめて数え直す。
+ * 制限は「1人あたり10分に何回」なので、テストを続けて流すと前の回の分で上限に当たる。
+ */
+export async function テスト用アカウントの回数制限をリセット(emails) {
+  let 件数 = 0;
+  for (const email of emails) {
+    const id = await userIdByEmail(email);
+    const rows = await must(
+      admin().from("rate_limits").delete().like("bucket", `%:${id}`).select("bucket"),
+      `rate_limits(${email})`,
+    );
+    件数 += rows.length;
+  }
+  return 件数;
+}
+
 /** メールアドレスからユーザーIDを引く。 */
 export async function userIdByEmail(email) {
   // profiles にメールは無いため auth.users を引く。1ページ目に収まる規模を前提とする。

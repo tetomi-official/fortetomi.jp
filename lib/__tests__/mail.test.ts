@@ -1,3 +1,6 @@
+import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { sendMail } from "@/lib/mail";
 
@@ -92,5 +95,31 @@ describe("メールの送信", () => {
       throw new Error("ネットワーク断");
     });
     await expect(sendMail(手紙)).resolves.toBe(false);
+  });
+});
+
+describe("テスト用の書き出し（MAIL_CAPTURE_DIR）", () => {
+  // 自動E2Eが送ったメールの中身を読むための仕組み。本番で動くと
+  // 全ユーザーのメール本文がサーバーのディスクに残るので、本番では必ず止める。
+  it("設定すると、送るはずだった中身を1通1ファイルで書き出す", async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), "mail-capture-"));
+    vi.stubEnv("MAIL_CAPTURE_DIR", dir);
+    vi.stubEnv("MAIL_DRY_RUN", "1");
+    await sendMail(手紙);
+    const files = await readdir(dir);
+    expect(files).toHaveLength(1);
+    const saved = JSON.parse(await readFile(path.join(dir, files[0]), "utf8"));
+    expect(saved).toMatchObject({ to: 手紙.to, subject: 手紙.subject, html: 手紙.html });
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  it("本番（NODE_ENV=production）では設定されていても書き出さない", async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), "mail-capture-"));
+    vi.stubEnv("MAIL_CAPTURE_DIR", dir);
+    vi.stubEnv("MAIL_DRY_RUN", "1");
+    vi.stubEnv("NODE_ENV", "production");
+    await sendMail(手紙);
+    expect(await readdir(dir)).toHaveLength(0);
+    await rm(dir, { recursive: true, force: true });
   });
 });

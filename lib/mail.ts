@@ -71,6 +71,28 @@ export function mailTable(rows: [string, string][]): string {
 }
 
 /**
+ * MAIL_CAPTURE_DIR が設定されていれば、メールの中身を1通1ファイルの JSON で書き出す。
+ * 開発・テスト専用。NODE_ENV=production では何もしない（設定が紛れ込んでも本番で書かない）。
+ * 書き出しに失敗しても送信は止めない。
+ */
+async function captureMailForTest(mail: { to: string; subject: string; html: string }): Promise<void> {
+  const dir = process.env.MAIL_CAPTURE_DIR?.trim();
+  if (!dir || process.env.NODE_ENV === "production") return;
+  try {
+    const { mkdir, writeFile } = await import("node:fs/promises");
+    const path = await import("node:path");
+    await mkdir(dir, { recursive: true });
+    const name = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.json`;
+    await writeFile(
+      path.join(dir, name),
+      JSON.stringify({ at: new Date().toISOString(), to: mail.to, subject: mail.subject, html: mail.html }),
+    );
+  } catch (e) {
+    console.error("[mail] テスト用の書き出しに失敗:", e);
+  }
+}
+
+/**
  * メールを1通送る。
  *
  * 送れなくても呼び出し元の処理は止めない前提で、例外を投げずに真偽値を返す。
@@ -84,6 +106,9 @@ export async function sendMail(mail: {
   devHint?: string;
 }): Promise<boolean> {
   const hint = mail.devHint ? ` ${mail.devHint}` : "";
+  // テスト用の書き出し。自動E2Eが「どの場面で・誰宛てに・何が書かれたメールが出たか」を
+  // 確かめるため、送るはずだった中身をファイルに残す。本番のビルドでは効かない。
+  await captureMailForTest(mail);
   // テスト用の空振りモード。自動E2Eはシードアカウント（実在しないアドレス）で
   // 走るので、これが無いと本当に送ってバウンスする。
   if (process.env.MAIL_DRY_RUN === "1") {

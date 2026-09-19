@@ -31,7 +31,7 @@ export const VIEWPORTS = {
 };
 
 /** Chrome を起動する。 */
-export async function launch({ headless = true } = {}) {
+export async function launch({ headless = true, args = [], カメラを自動で許可 = true } = {}) {
   return puppeteer.launch({
     executablePath: CHROME_PATH,
     headless,
@@ -39,8 +39,11 @@ export async function launch({ headless = true } = {}) {
       "--hide-scrollbars",
       "--disable-features=IsolateOrigins,site-per-process",
       // カメラの許可ダイアログで止まらないようにする（QR読み取り画面を開くため）。
-      "--use-fake-ui-for-media-stream",
+      // 「許可しなかったとき」を確かめるときだけ外す。
+      ...(カメラを自動で許可 ? ["--use-fake-ui-for-media-stream"] : []),
       "--use-fake-device-for-media-stream",
+      // 偽のカメラに映す動画を差し替えたいとき（QR読み取りの確認）に使う。
+      ...args,
     ],
   });
 }

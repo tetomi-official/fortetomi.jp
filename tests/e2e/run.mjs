@@ -5,6 +5,7 @@
 //   npm run test:e2e -- T13       指定したシナリオだけ
 //   npm run test:e2e -- --headed  ブラウザを見えるように開く
 //   npm run test:e2e -- --keep    作ったテストデータを消さない
+//   npm run test:e2e -- T12c T13c 断られるカードの確認（全体の実行には含めない。下の注意）
 //
 // 前提:
 //   - 開発サーバーが動いていること（npm run dev）
@@ -21,6 +22,7 @@ import path from "node:path";
 import { ACCOUNTS, BASE_URL, CHROME_PATH, launch, login, openPersona, shot } from "./helpers.mjs";
 import { SCENARIOS } from "./scenarios/index.mjs";
 import { cleanup } from "./cleanup.mjs";
+import { テスト用アカウントの回数制限をリセット } from "./db.mjs";
 
 // --- 環境変数を読む（.env.local → .env.development.local の順に上書き） ---
 for (const f of [".env.local", ".env.development.local"]) {
@@ -103,6 +105,8 @@ async function main() {
   見出し("■ 前回のテストデータを片付け");
   const 片付け前 = await cleanup({ quiet: true });
   console.log(`  ${片付け前.listings} 件の出品と ${片付け前.reservations} 件の予約を消しました`);
+  const 制限 = await テスト用アカウントの回数制限をリセット(Object.values(ACCOUNTS).map((a) => a.email));
+  console.log(`  テスト用アカウントの利用回数の制限を ${制限} 件リセットしました`);
 
   await mkdir(ARTIFACTS, { recursive: true });
   const browser = await launch({ headless: !headed });
@@ -121,7 +125,8 @@ async function main() {
     console.log(`  ${C.ok}✓${C.off} 買い手 ${ACCOUNTS.buyer.name}（${ACCOUNTS.buyer.email}）`);
 
     見出し("■ シナリオ");
-    const 対象 = only.length ? SCENARIOS.filter((s) => only.includes(s.id)) : SCENARIOS;
+    // separate: true のシナリオは、名前を指定したときだけ流す（全体の実行には含めない）
+    const 対象 = only.length ? SCENARIOS.filter((s) => only.includes(s.id)) : SCENARIOS.filter((s) => !s.separate);
     if (!対象.length) {
       console.log(`  ${C.warn}該当するシナリオがありません: ${only.join(", ")}${C.off}`);
     }

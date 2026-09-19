@@ -53,8 +53,8 @@ async function フレーム内をクリック(page, 正規表現, { timeout = 30
  * カード番号・有効期限・CVC を入力する。
  * PaymentElement は1つの iframe に3つの入力欄をまとめて出す。
  */
-export async function カードを入力(page, { number, exp = "12 / 34", cvc = "123" }) {
-  const 見つかった = await フレームを探す(page, 'input[name="number"]');
+export async function カードを入力(page, { number, exp = "12 / 34", cvc = "123", timeout = 30000 }) {
+  const 見つかった = await フレームを探す(page, 'input[name="number"]', { timeout });
   if (!見つかった) {
     throw new Error(
       "Stripe のカード入力欄（iframe）が出てきません。\n" +
@@ -101,4 +101,5 @@ export const TEST_CARDS = {
   本人認証が必要: "4000002500003155",
   残高不足: "4000000000009995",
   Radarがブロック: "4100000000000019",
+  登録は通るが課金で断られる: "4000000000000341",
 };
