@@ -6,6 +6,23 @@ import { BarcodeFormat, DecodeHintType } from "@zxing/library";
 
 type Controls = { stop: () => void };
 
+/**
+ * カメラが使えないときの案内。呼び出し側に「手入力」の逃げ道があるかで変える。
+ * - manual: 手入力の欄がある（ISBN の出品フォーム）
+ * - retry : 手入力が無い（受け渡しQR。合言葉は長くて手では打てない）ので、許可してやり直してもらう
+ */
+const CAMERA_ERROR = {
+  manual: {
+    denied: "カメラの使用が許可されませんでした。ブラウザの設定をご確認のうえ、手入力をご利用ください。",
+    failed: "カメラを起動できませんでした。手入力をご利用ください。",
+  },
+  retry: {
+    denied:
+      "カメラの使用が許可されませんでした。ブラウザの設定でこのサイトのカメラを許可してから、もう一度お試しください。",
+    failed: "カメラを起動できませんでした。ほかのアプリがカメラを使っていないか確認して、もう一度お試しください。",
+  },
+} as const;
+
 // ISBN バーコードは EAN-13（978/979 始まり）。EAN-8 も一応許容する。
 function isIsbnBarcode(text: string): boolean {
   const t = text.replace(/[^0-9Xx]/g, "");
@@ -15,7 +32,8 @@ function isIsbnBarcode(text: string): boolean {
 /**
  * カメラでコードを読み取るモーダル。既定は ISBN バーコード（EAN-13, PB-018 ②）。
  * formats/validate/transform を渡せば QR など別用途にも使える（PB-036 受け渡しQR）。
- * 読み取れたら onDetected(value) を呼んで自動で閉じる。手入力フォールバックは呼び出し側に残す。
+ * 読み取れたら onDetected(value) を呼んで自動で閉じる。手入力フォールバックは呼び出し側に残す
+ * （手入力が無い用途では cameraFallback="retry" を渡し、案内から手入力を外す）。
  */
 export default function BarcodeScanner({
   onDetected,
@@ -25,6 +43,7 @@ export default function BarcodeScanner({
   transform = (t) => t.replace(/[^0-9Xx]/g, ""),
   title = "バーコードを読み取る",
   hint = "本の裏表紙にあるISBNバーコード（978…）を枠内に映してください。",
+  cameraFallback = "manual",
 }: {
   onDetected: (value: string) => void;
   onClose: () => void;
@@ -33,6 +52,8 @@ export default function BarcodeScanner({
   transform?: (text: string) => string;
   title?: string;
   hint?: string;
+  /** カメラが使えないときの案内の種類（上の CAMERA_ERROR を参照）。 */
+  cameraFallback?: keyof typeof CAMERA_ERROR;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -57,11 +78,8 @@ export default function BarcodeScanner({
     const showError = (e: unknown) => {
       if (stopped) return;
       const name = e instanceof Error ? e.name : "";
-      setError(
-        name === "NotAllowedError"
-          ? "カメラの使用が許可されませんでした。ブラウザの設定をご確認のうえ、手入力をご利用ください。"
-          : "カメラを起動できませんでした。手入力をご利用ください。",
-      );
+      const messages = CAMERA_ERROR[cameraFallback];
+      setError(name === "NotAllowedError" ? messages.denied : messages.failed);
     };
 
     // カメラは自分で開き、読み取りの部品には開いたものを渡す。
