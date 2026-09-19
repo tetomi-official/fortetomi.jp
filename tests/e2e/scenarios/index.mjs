@@ -10,6 +10,7 @@ import { T28, T29 } from "./07-enrollment.mjs";
 import { T30, T31 } from "./08-scan.mjs";
 import { T32, T33 } from "./09-mail.mjs";
 import { T34, T35, T36 } from "./10-stripe.mjs";
+import { T37, T38 } from "./11-mobile.mjs";
 
 export const SCENARIOS = [
   // 出品
@@ -30,6 +31,8 @@ export const SCENARIOS = [
   T32, T33,
   // Stripe まわり（返金・出品者向け画面・受取口座の登録の再開）
   T34, T35, T36,
+  // スマホ幅での見え方と二度押し
+  T37, T38,
   // キャンセルと歯止め
   T20, T20b, T21, T26, T27,
   // 在籍期限切れ
