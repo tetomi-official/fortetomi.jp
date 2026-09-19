@@ -54,12 +54,38 @@ export default function BarcodeScanner({
       }
     };
 
-    reader
-      .decodeFromConstraints(
-        { video: { facingMode: { ideal: "environment" } } },
-        videoRef.current!,
-        (result, _err, ctrl) => {
-          controls = ctrl;
+    const showError = (e: unknown) => {
+      if (stopped) return;
+      const name = e instanceof Error ? e.name : "";
+      setError(
+        name === "NotAllowedError"
+          ? "カメラの使用が許可されませんでした。ブラウザの設定をご確認のうえ、手入力をご利用ください。"
+          : "カメラを起動できませんでした。手入力をご利用ください。",
+      );
+    };
+
+    // カメラは自分で開き、読み取りの部品には開いたものを渡す。
+    // 開発モード（React の Strict Mode）ではこの処理が「実行→片付け→実行」と2回走り、
+    // 2回とも同じ video 要素を使う。1回目のカメラが開き終わる前に片付けが来たとき、
+    // 読み取りの部品ごと止めると video 要素まで空にしてしまい、2回目のカメラが
+    // 映らなくなる。そこで、片付け済みなら「自分で開いたカメラだけ」を閉じて終える。
+    (async () => {
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: "environment" } },
+        });
+      } catch (e) {
+        showError(e);
+        return;
+      }
+      if (stopped) {
+        stream.getTracks().forEach((t) => t.stop());
+        return;
+      }
+      try {
+        const ctrl = await reader.decodeFromStream(stream, videoRef.current!, (result, _err, c) => {
+          controls = c;
           if (result && !stopped) {
             const text = result.getText();
             if (validate(text)) {
@@ -67,20 +93,14 @@ export default function BarcodeScanner({
               onDetected(transform(text));
             }
           }
-        },
-      )
-      .then((ctrl) => {
+        });
         controls = ctrl;
         if (stopped) ctrl.stop();
-      })
-      .catch((e: unknown) => {
-        const name = e instanceof Error ? e.name : "";
-        setError(
-          name === "NotAllowedError"
-            ? "カメラの使用が許可されませんでした。ブラウザの設定をご確認のうえ、手入力をご利用ください。"
-            : "カメラを起動できませんでした。手入力をご利用ください。",
-        );
-      });
+      } catch (e) {
+        stream.getTracks().forEach((t) => t.stop());
+        showError(e);
+      }
+    })();
 
     return stop;
     // モーダルはマウントごとに新規生成されるため、起動は1回だけでよい（props は初期値を採用）。
