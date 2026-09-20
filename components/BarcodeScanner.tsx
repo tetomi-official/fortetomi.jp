@@ -23,6 +23,23 @@ const CAMERA_ERROR = {
   },
 } as const;
 
+/**
+ * カメラ映像に重ねる読み取り枠の形。映像の枠（下の aspectRatio 4/3）に対する割合で置く。
+ * 読み取り自体は映像全体を走査しているので、枠は「ここに向けてください」の目印にすぎない。
+ * - wide  : ISBN バーコード（横長）向け
+ * - square: QR（正方形）向け。高さ基準の正方形を中央に置く
+ */
+const FRAME_SHAPE = {
+  wide: { left: "10%", right: "10%", top: "40%", bottom: "40%" },
+  square: {
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+    height: "78%",
+    aspectRatio: "1 / 1",
+  },
+} as const;
+
 // ISBN バーコードは EAN-13（978/979 始まり）。EAN-8 も一応許容する。
 function isIsbnBarcode(text: string): boolean {
   const t = text.replace(/[^0-9Xx]/g, "");
@@ -44,6 +61,7 @@ export default function BarcodeScanner({
   title = "バーコードを読み取る",
   hint = "本の裏表紙にあるISBNバーコード（978…）を枠内に映してください。",
   cameraFallback = "manual",
+  frameShape = "wide",
 }: {
   onDetected: (value: string) => void;
   onClose: () => void;
@@ -54,6 +72,8 @@ export default function BarcodeScanner({
   hint?: string;
   /** カメラが使えないときの案内の種類（上の CAMERA_ERROR を参照）。 */
   cameraFallback?: keyof typeof CAMERA_ERROR;
+  /** 読み取り枠の形。wide=ISBNバーコード向けの横長、square=QR向けの正方形。 */
+  frameShape?: keyof typeof FRAME_SHAPE;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -154,10 +174,7 @@ export default function BarcodeScanner({
             <div
               style={{
                 position: "absolute",
-                left: "10%",
-                right: "10%",
-                top: "40%",
-                bottom: "40%",
+                ...FRAME_SHAPE[frameShape],
                 border: "2px solid rgba(255,255,255,0.9)",
                 borderRadius: 8,
                 boxShadow: "0 0 0 9999px rgba(0,0,0,0.25)",
