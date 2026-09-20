@@ -20,6 +20,12 @@ const PRICE_RANGES = [
   { value: "5000-", label: "¥5,000〜" },
 ];
 
+const SORT_OPTIONS = [
+  { value: "newest", label: "新着順" },
+  { value: "price_asc", label: "価格：安い順" },
+  { value: "price_desc", label: "価格：高い順" },
+];
+
 export default function ListingsPage() {
   const { user, ready } = useAuth();
   const [listings, setListings] = useState<Listing[]>([]);
@@ -101,7 +107,8 @@ export default function ListingsPage() {
 
   return (
     <>
-      <div className="page-header">
+      {/* md 以上だけの紺の見出し。md 未満は下の白地の見出しに置き換える（案1）。 */}
+      <div className="page-header hidden md:block">
         <div className="page-header-inner">
           <div className="breadcrumb">
             <Link href="/">Home</Link>
@@ -149,10 +156,76 @@ export default function ListingsPage() {
         </div>
       </div>
 
-      <main className="page-main" style={{ background: "var(--bg-gray)" }}>
-        <div className="container">
-          {/* SEARCH & FILTER */}
-          <div className="search-filter-bar">
+      {/* md 未満は白地（案1「箱を作らない」）。md 以上は今までどおり灰色の地。 */}
+      <main className="page-main bg-bg-gray max-md:bg-white max-md:pt-[calc(var(--header-h)+24px)]">
+        <div className="container max-md:px-4">
+          {/* md 未満だけの見出し */}
+          <div className="mb-4 flex flex-col gap-1 md:hidden">
+            <h1 className="text-2xl leading-tight font-black text-navy">教科書一覧</h1>
+            <p className="text-[13px] text-ink-muted">
+              {ready
+                ? user?.faculty
+                  ? `${user.faculty}の出品教科書を検索・フィルター`
+                  : "ログインすると自学部の教科書に絞り込まれます"
+                : ""}
+            </p>
+          </div>
+
+          {/* md 未満だけの検索・絞り込み（丸い検索欄＋丸いボタン。検索ボタンは出さず Enter で検索） */}
+          <div className="mb-4 flex flex-col gap-4 md:hidden">
+            <form role="search" onSubmit={(e) => e.preventDefault()}>
+              <label className="flex h-12 items-center gap-2 rounded-full bg-bg-light px-3.5 text-ink-muted">
+                <i className="fas fa-search text-base" aria-hidden="true" />
+                <input
+                  type="search"
+                  aria-label="検索"
+                  enterKeyHint="search"
+                  placeholder="タイトル・授業名で検索"
+                  value={query}
+                  onChange={(e) => {
+                    setQuery(e.target.value);
+                    setPage(1);
+                  }}
+                  className="h-full min-w-0 grow bg-transparent text-base text-navy outline-none"
+                />
+              </label>
+            </form>
+            {/* はみ出す分は横スクロール（-mx-4 + px-4 で画面の端まで流す） */}
+            <div className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <FilterPill
+                label="状態"
+                value={cond}
+                options={[
+                  { value: "", label: "すべての状態" },
+                  ...CONDITION_OPTIONS.map((c) => ({ value: c, label: c })),
+                ]}
+                onChange={(v) => {
+                  setCond(v);
+                  setPage(1);
+                }}
+              />
+              <FilterPill
+                label="価格"
+                value={price}
+                options={PRICE_RANGES}
+                onChange={(v) => {
+                  setPrice(v);
+                  setPage(1);
+                }}
+              />
+              <FilterPill label="並び順" value={sort} options={SORT_OPTIONS} onChange={setSort} />
+              <button
+                type="button"
+                onClick={reset}
+                className="h-11 shrink-0 rounded-full bg-bg-light px-3.5 text-sm font-medium text-navy"
+              >
+                リセット
+              </button>
+            </div>
+          </div>
+
+          {/* SEARCH & FILTER（md 以上だけ。これまでの白いカード） */}
+          <div className="search-filter-bar hidden md:block">
             <div className="search-bar">
               <input
                 type="text"
@@ -198,9 +271,11 @@ export default function ListingsPage() {
                 ))}
               </select>
               <select className="filter-select" value={sort} onChange={(e) => setSort(e.target.value)}>
-                <option value="newest">新着順</option>
-                <option value="price_asc">価格：安い順</option>
-                <option value="price_desc">価格：高い順</option>
+                {SORT_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
               </select>
               <button className="filter-reset" onClick={reset}>
                 <i className="fas fa-undo" style={{ marginRight: 4, fontSize: 11 }} />
@@ -210,11 +285,11 @@ export default function ListingsPage() {
           </div>
 
           {/* SORT BAR */}
-          <div className="sort-bar">
+          <div className="sort-bar max-md:mb-4">
             <p className="result-count">
               <strong>{total}</strong> 件
             </p>
-            <div className="view-toggle">
+            <div className="view-toggle max-md:hidden">
               <button
                 className={`view-btn ${view === "grid" ? "active" : ""}`.trim()}
                 onClick={() => setView("grid")}
@@ -249,7 +324,7 @@ export default function ListingsPage() {
               <p>条件を変えて検索してみてください。</p>
             </div>
           ) : view === "grid" ? (
-            <div className="listings-grid">
+            <div className="listings-grid max-md:grid-cols-2 max-md:gap-x-4 max-md:gap-y-6">
               {pageItems.map((item) => (
                 <ListingCard key={item.id} item={item} />
               ))}
@@ -264,7 +339,7 @@ export default function ListingsPage() {
 
           {/* PAGINATION */}
           {pages > 1 && (
-            <div className="pagination">
+            <div className="pagination max-md:flex-wrap">
               <button className="page-btn" disabled={current === 1} onClick={() => goPage(current - 1)}>
                 <i className="fas fa-chevron-left" />
               </button>
@@ -295,6 +370,45 @@ export default function ListingsPage() {
         </div>
       </main>
     </>
+  );
+}
+
+/**
+ * md 未満の丸い絞り込みボタン（案1）。
+ * 見た目は上の span、押したときに開くのは透明で重ねた <select>。
+ * select の文字を 16px にしてあるのは、下回ると iOS がタップ時に画面を勝手に拡大するため。
+ */
+function FilterPill({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (value: string) => void;
+}) {
+  const selected = options.find((o) => o.value === value) ?? options[0];
+  return (
+    <div className="relative shrink-0">
+      <span className="pointer-events-none flex h-11 items-center gap-1.5 rounded-full bg-bg-light px-3.5 text-sm font-medium whitespace-nowrap text-navy">
+        {selected.label}
+        <i className="fas fa-chevron-down text-[11px]" aria-hidden="true" />
+      </span>
+      <select
+        aria-label={label}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="absolute inset-0 h-full w-full text-base opacity-0"
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }
 

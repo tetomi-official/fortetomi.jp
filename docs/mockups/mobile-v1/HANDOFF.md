@@ -19,6 +19,7 @@
 ## 実装のしかた
 - Tailwind で書く（`app/legacy.css` 冒頭の方針どおり）。移し終えた画面が専有していた legacy のクラスは削る。
 - `!important` は使わない。
+- Font Awesome の CSS はカスケードレイヤーの外にあり、レイヤー付きの Tailwind より強い。`<i class="fas …">` に `hidden` を付けても消えないので、囲んだ要素の側で消す（`<span class="contents max-md:hidden">`。`contents` にしておくと md 以上でのレイアウトが変わらない）。
 - 1画面ずつ PR を分ける。おすすめの順番: ログイン系 → 商品詳細 → 教科書一覧 → マイページ → フッター。
 
 ## 全画面共通ルール（md 未満）

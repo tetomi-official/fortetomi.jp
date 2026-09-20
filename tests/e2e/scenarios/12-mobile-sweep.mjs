@@ -26,7 +26,7 @@ const 画面 = [
   { path: "/legal", 名前: "特定商取引法", 済み: false, ログイン: false },
   { path: "/terms", 名前: "利用規約", 済み: false, ログイン: false },
   { path: "/privacy", 名前: "プライバシーポリシー", 済み: false, ログイン: false },
-  { path: "/listings", 名前: "教科書一覧", 済み: false, ログイン: true },
+  { path: "/listings", 名前: "教科書一覧", 済み: true, ログイン: true },
   { path: "__listing__", 名前: "教科書の詳細", 済み: false, ログイン: true },
   { path: "/sell", 名前: "出品", 済み: false, ログイン: true },
   { path: "/mypage", 名前: "マイページ", 済み: false, ログイン: true },
