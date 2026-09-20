@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/Toast";
 import { fetchListings, updateListingStatus, deleteListing } from "@/lib/listings";
@@ -33,19 +33,58 @@ type Tab =
   | "messages"
   | "support"
   | "profile";
+const TABS: Tab[] = [
+  "dashboard",
+  "myListings",
+  "sentRes",
+  "receivedRes",
+  "messages",
+  "support",
+  "profile",
+];
+
+/** ?tab= を受け取る。知らない値と未指定はダッシュボード。 */
+function tabFromQuery(value: string | null): Tab {
+  return TABS.includes(value as Tab) ? (value as Tab) : "dashboard";
+}
+
 const GRADES = ["1年", "2年", "3年", "4年", "院生"];
 
 export default function MyPage() {
+  // useSearchParams を使うため Suspense の境界が要る（静的生成時の制約）。
+  return (
+    <Suspense fallback={null}>
+      <MyPageInner />
+    </Suspense>
+  );
+}
+
+function MyPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, ready, updateProfile, changeLoginEmail, logout } = useAuth();
   const { showToast } = useToast();
-  // バナーからの ?tab=profile で初期タブをプロフィール編集に開く（初期値で解決）。
-  const [tab, setTab] = useState<Tab>(() =>
-    typeof window !== "undefined" &&
-    new URLSearchParams(window.location.search).get("tab") === "profile"
-      ? "profile"
-      : "dashboard",
-  );
+  // 開くタブは ?tab= で決まる。バナーからの ?tab=profile と、
+  // スマホの下タブバーからの ?tab=messages がここを通る。
+  const queryTab = searchParams.get("tab");
+  const [tab, setTab] = useState<Tab>(() => tabFromQuery(queryTab));
+
+  // 同じページの中で ?tab= だけが変わる遷移（スマホの下タブバー）では再マウントされない。
+  // URL が変わったことを描画中に見てタブを合わせる（effect でやると一度古いタブが
+  // 描かれてから差し替わるので、ちらつく）。
+  const [seenQueryTab, setSeenQueryTab] = useState(queryTab);
+  if (queryTab !== seenQueryTab) {
+    setSeenQueryTab(queryTab);
+    setTab(tabFromQuery(queryTab));
+  }
+
+  // 画面内でタブを切り替えたときは URL も書き換える。片方だけ変えると、
+  // 下タブバーから同じタブを選び直しても URL が変わらず反応しなくなる。
+  // 履歴を汚さないよう replace で、スクロール位置も動かさない。
+  const goTab = (key: Tab) => {
+    setTab(key);
+    router.replace(key === "dashboard" ? "/mypage" : `/mypage?tab=${key}`, { scroll: false });
+  };
 
   // メール切替確認からの戻り（?email_changed=1 / ?email_change=await）でトースト通知する。
   useEffect(() => {
@@ -396,7 +435,7 @@ export default function MyPage() {
     e.preventDefault();
     updateProfile(profile);
     showToast("プロフィールを更新しました", "success");
-    setTab("dashboard");
+    goTab("dashboard");
   };
 
   // ログイン用メールを変更する（新アドレス宛に確認メールが飛び、開くと切替が確定する）。
@@ -542,7 +581,7 @@ export default function MyPage() {
   const navItem = (key: Tab, icon: string, label: string, badge?: number) => (
     <div
       className={`sidebar-nav-item ${tab === key ? "active" : ""}`.trim()}
-      onClick={() => setTab(key)}
+      onClick={() => goTab(key)}
     >
       <i className={`fas ${icon}`} /> {label}
       {badge ? <span className="pending-dot">{badge}</span> : null}
@@ -1167,7 +1206,7 @@ export default function MyPage() {
                         <button type="submit" className="btn-navy">
                           <i className="fas fa-save" /> 保存する
                         </button>
-                        <button type="button" onClick={() => setTab("dashboard")} className="btn-outline">
+                        <button type="button" onClick={() => goTab("dashboard")} className="btn-outline">
                           キャンセル
                         </button>
                       </div>

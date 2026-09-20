@@ -28,6 +28,8 @@ export const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 export const VIEWPORTS = {
   pc: { width: 1280, height: 900, deviceScaleFactor: 1 },
   sp: { width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
+  // いちばん狭い実機（iPhone SE）。スマホ対応はこの幅を基準に作る。
+  se: { width: 375, height: 667, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
 };
 
 /** Chrome を起動する。 */

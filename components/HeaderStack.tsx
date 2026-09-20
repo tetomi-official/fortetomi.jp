@@ -41,7 +41,7 @@ export default function HeaderStack() {
   }, []);
 
   return (
-    <div className="header-stack" ref={ref}>
+    <div className="fixed inset-x-0 top-0 z-[500]" ref={ref}>
       <Navbar />
       <ReverifyBanner />
       <GraduationSwitchBanner />
