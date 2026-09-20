@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>案1 ログイン</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&amp;family=Raleway:wght@700;800;900&amp;display=swap">
+<style>
+body{margin:0;font-family:'Noto Sans JP',sans-serif;color:#14314A;background:#ffffff}
+a{color:#14314A}a:hover{color:#0d2035}
+button,input,select{font-family:inherit}
+button{cursor:pointer}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #ffffff; display: flex; flex-direction: column;">
+<header style="height: 56px; flex-shrink: 0; background: #14314A; padding: 0 4px 0 16px; display: flex; align-items: center; justify-content: space-between;">
+<a href="#" style="display: flex; flex-direction: column; text-decoration: none; color: #ffffff;"><span style="font-family: Raleway, sans-serif; font-size: 20px; font-weight: 900; letter-spacing: 0.12em; line-height: 1.1;">TETOMI</span><span style="font-size: 10px; color: rgba(255,255,255,0.75); line-height: 1.4;">手から手へ、教科書とつながりを</span></a>
+<button type="button" aria-label="メニュー" style="width: 48px; height: 48px; border: none; background: transparent; color: #ffffff; display: flex; align-items: center; justify-content: center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></button>
+</header>
+<main style="flex-grow: 1; padding: 40px 16px 24px; display: flex; flex-direction: column; gap: 32px;">
+<div style="display: flex; flex-direction: column; gap: 6px;"><h1 style="margin: 0; font-size: 28px; font-weight: 900; color: #14314A;">ログイン</h1><p style="margin: 0; font-size: 14px; color: #5f7688;">大学メールアドレスでログインしてください</p></div>
+<form style="margin: 0; display: flex; flex-direction: column; gap: 20px;">
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700; color: #14314A;">メールアドレス<input type="email" placeholder="example@g.chuo-u.ac.jp" style="height: 52px; box-sizing: border-box; padding: 0 16px; border: none; border-radius: 10px; background: #f4f5f6; font-size: 16px; color: #14314A;"></label>
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700; color: #14314A;">パスワード<input type="password" placeholder="パスワード" style="height: 52px; box-sizing: border-box; padding: 0 16px; border: none; border-radius: 10px; background: #f4f5f6; font-size: 16px; color: #14314A;"></label>
+<label style="min-height: 44px; display: flex; align-items: center; gap: 10px; font-size: 14px; color: #3d5a6e;"><input type="checkbox" style="width: 20px; height: 20px; margin: 0; accent-color: #14314A;">ログイン状態を保持する（30日間）</label>
+<button type="submit" style="height: 52px; border: none; border-radius: 26px; background: #14314A; color: #ffffff; font-size: 16px; font-weight: 700;">ログイン</button>
+</form>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 0;"><a href="#" style="min-height: 44px; display: flex; align-items: center; font-size: 14px; color: #14314A;">パスワードをお忘れですか？</a><a href="#" style="min-height: 44px; display: flex; align-items: center; font-size: 14px; color: #3d5a6e;">デモユーザー（佐藤 花子）で試す</a></div>
+<p style="margin: auto 0 0; display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 14px; color: #3d5a6e;">アカウントをお持ちでない方は<a href="#" style="min-height: 44px; display: flex; align-items: center; font-weight: 700; color: #14314A;">新規登録</a></p>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
