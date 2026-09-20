@@ -4,7 +4,7 @@
 //   ① ページが横にはみ出していないか（はみ出している要素も名指しする）
 //   ② 本文が固定ヘッダーの下に潜っていないか
 //   ③ 一番下の中身が下タブバーに隠れていないか
-//   ④ 下タブバーの4つが押せるか
+//   ④ 下タブバーの4つが押せるか（出さない画面では、出ていないこと）
 //   ⑤ 指で押すには小さすぎる操作が無いか
 //   ⑥ 文字が箱からはみ出して黙って切れていないか
 //
@@ -19,10 +19,10 @@ import { ACCOUNTS, go, login, openPersona, wait } from "../helpers.mjs";
 /** 巡回する画面。済み=true にした画面は、崩れたらテストが落ちる。 */
 const 画面 = [
   { path: "/", 名前: "トップ", 済み: false, ログイン: false },
-  { path: "/login", 名前: "ログイン", 済み: true, ログイン: false },
-  { path: "/signup", 名前: "新規登録", 済み: true, ログイン: false },
-  { path: "/forgot-password", 名前: "パスワード再設定", 済み: true, ログイン: false },
-  { path: "/recover", 名前: "ログインメールの復旧", 済み: true, ログイン: false },
+  { 下タブなし: true, path: "/login", 名前: "ログイン", 済み: true, ログイン: false },
+  { 下タブなし: true, path: "/signup", 名前: "新規登録", 済み: true, ログイン: false },
+  { 下タブなし: true, path: "/forgot-password", 名前: "パスワード再設定", 済み: true, ログイン: false },
+  { 下タブなし: true, path: "/recover", 名前: "ログインメールの復旧", 済み: true, ログイン: false },
   { path: "/legal", 名前: "特定商取引法", 済み: false, ログイン: false },
   { path: "/terms", 名前: "利用規約", 済み: false, ログイン: false },
   { path: "/privacy", 名前: "プライバシーポリシー", 済み: false, ログイン: false },
@@ -38,7 +38,7 @@ const 画面 = [
  * 開いている画面を調べて、見つけた問題を文の配列で返す。
  * ブラウザの中で動くので、ここから外の変数は参照しないこと。
  */
-function 画面を調べる() {
+function 画面を調べる(下タブなし) {
   const 問題 = []; // 画面ごとの崩れ（未移行の画面では記録だけ）
   const 共通 = []; // 共通部分の崩れ（移行済みなので、崩れたら必ず落とす）
   const 画面幅 = window.innerWidth;
@@ -103,7 +103,13 @@ function 画面を調べる() {
 
   // ④ 下タブバーの4つが押せるか（押せる＝大きさがあり、画面内で、上に何も重なっていない）
   const バー = document.querySelector('nav[aria-label="メインメニュー"]');
-  if (!バー) {
+  if (下タブなし) {
+    // ログイン系は下タブバーを出さない画面。出ていたら誤り。
+    if (バー) 共通.push("下タブバーを出さない画面なのに出ている");
+    // 出さない画面では本文の下に余白が残っていないことも見る。
+    const 余白 = getComputedStyle(document.body).paddingBottom;
+    if (parseFloat(余白) > 1) 共通.push(`下タブバーが無いのに本文の下に余白が残っている（${余白}）`);
+  } else if (!バー) {
     共通.push("下タブバーが無い");
   } else {
     for (const a of バー.querySelectorAll("a")) {
@@ -210,7 +216,7 @@ export const T39 = {
         // Next.js 開発サーバーのインジケータはプロダクトのUIではないので隠す（下タブに重なる）。
         await page.addStyleTag({ content: "nextjs-portal{display:none !important}" }).catch(() => {});
 
-        const { 共通, 問題 } = await page.evaluate(画面を調べる);
+        const { 共通, 問題 } = await page.evaluate(画面を調べる, !!s.下タブなし);
         await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
         await wait(400);
         共通.push(...(await page.evaluate(一番下を調べる)));
