@@ -548,16 +548,6 @@ button.candidate-row:hover { border-color: var(--navy); }
 }
 .modal-title { font-size: 1.1rem; font-weight: 800; color: var(--navy); margin-bottom: 6px; }
 .modal-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
-.modal-demo { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-light); }
-.modal-demo-title { text-align: center; font-size: 11px; color: var(--text-muted); margin-bottom: 12px; letter-spacing: 0.06em; text-transform: uppercase; }
-.demo-btns { display: flex; flex-direction: column; gap: 8px; }
-.demo-btn {
-  background: var(--bg-light); color: var(--navy);
-  padding: 11px 16px; border-radius: var(--r-sm);
-  font-size: 13px; font-weight: 600; text-align: center; transition: all 0.2s;
-  border: 1px solid var(--border-light); font-family: var(--font-en);
-}
-.demo-btn:hover { background: var(--navy); color: var(--white); }
 
 /* MISC UTILITY */
 .loading { display: flex; align-items: center; justify-content: center; padding: 60px; }
@@ -981,18 +971,6 @@ button.candidate-row:hover { border-color: var(--navy); }
   .lm-actions { flex-direction: column; align-items: flex-start; }
   .lm-price { font-size: 1rem; }
 }
-
-/* AUTH (login / signup) PAGE STYLES */
-.auth-page { background: var(--bg-gray); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: calc(var(--header-h) + 40px) 20px 60px; }
-.auth-card { background: var(--white); border-radius: var(--r-xl); padding: 40px; max-width: 440px; width: 100%; box-shadow: var(--shadow-lg); border: 1px solid var(--border-light); }
-.auth-logo { font-family: var(--font-en); font-size: 1.6rem; font-weight: 900; color: var(--navy); letter-spacing: 0.14em; margin-bottom: 6px; text-align: center; }
-.auth-title { font-size: 1.15rem; font-weight: 800; color: var(--navy); margin-bottom: 6px; text-align: center; }
-.auth-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 26px; text-align: center; line-height: 1.7; }
-.auth-switch { margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--border-light); text-align: center; font-size: 13px; color: var(--text-muted); }
-.auth-switch a { color: var(--navy); font-weight: 800; text-decoration: underline; }
-.auth-note { font-size: 11px; color: var(--text-muted); line-height: 1.7; background: var(--bg-light); border-radius: var(--r-sm); padding: 10px 14px; margin-top: 14px; border-left: 3px solid var(--navy); }
-.checkbox-row { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--text-mid); margin-bottom: 18px; line-height: 1.6; }
-.checkbox-row input { width: auto; margin-top: 3px; }
 
 /* Mypage dashboard quick links */
 .dash-link { display: flex; align-items: center; gap: 14px; padding: 14px; background: var(--bg-light); border-radius: var(--r); border: 1px solid var(--border-light); transition: box-shadow 0.2s; }

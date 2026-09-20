@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { useActionRequiredCount } from "@/lib/action-required";
 import { loginHref } from "@/lib/redirect";
-import { MAIN_NAV } from "@/components/main-nav";
+import { AUTH_PATHS, MAIN_NAV } from "@/components/main-nav";
 
 // スマホの主動線。PC の縦タブ（SideTab）は幅が狭いと出せないため、
 // スマホではこのバーが「探す・出品・メッセージ・マイページ」の入口になる。
@@ -15,6 +16,8 @@ import { MAIN_NAV } from "@/components/main-nav";
 //   本文側の余白は globals.css の --bottom-nav-h（PC では 0）が受け持つ。
 // ・高さは「h-14(56px) + セーフエリア」ちょうどにして --bottom-nav-h と一致させる。
 //   区切り線を border で描くと 1px 増えて本文の一番下がバーに隠れるので、影で描いている。
+// ・ログイン系の画面では出さない（下記）。
+
 export default function BottomTabBar() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -22,6 +25,21 @@ export default function BottomTabBar() {
   const count = useActionRequiredCount();
 
   const currentTab = searchParams.get("tab");
+  // ログイン系では出さない（AUTH_PATHS のコメント参照）。
+  const 隠す = AUTH_PATHS.includes(pathname);
+
+  // バーを出さない画面では、本文の下に空けている余白も消す（でないと下が 56px 空く）。
+  // HeaderStack が --header-h を面倒みているのと同じやり方。
+  useEffect(() => {
+    if (!隠す) return;
+    const root = document.documentElement;
+    root.style.setProperty("--bottom-nav-h", "0px");
+    return () => {
+      root.style.removeProperty("--bottom-nav-h");
+    };
+  }, [隠す]);
+
+  if (隠す) return null;
 
   return (
     <nav

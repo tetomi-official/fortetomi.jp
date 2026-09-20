@@ -1,6 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import AuthShell, {
+  AuthCheckbox,
+  AuthField,
+  AuthFieldRow,
+  AuthForm,
+  AuthInlineLink,
+  AuthNote,
+  AuthSelect,
+  AuthSubmit,
+  AuthSwitch,
+} from "@/components/AuthShell";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/Toast";
@@ -131,201 +142,166 @@ export default function SignupPage() {
   // 確認メール送信後（大学メール宛）の画面
   if (sentTo) {
     return (
-      <main className="auth-page">
-        <div className="auth-card">
-          <div className="auth-logo">TETOMI</div>
-          <h1 className="auth-title">大学メールを確認してください</h1>
-          <p className="auth-sub">
+      <AuthShell
+        title="大学メールを確認してください"
+        description={
+          <>
             在籍確認のため、<strong>{sentTo}</strong> 宛に確認メールを送りました。
             <br />
             メール内のリンクを開くと登録が完了し、この大学メールでログインできるようになります。
+          </>
+        }
+      >
+        <AuthNote>
+          メールが届かない場合は迷惑メールフォルダをご確認ください。届かない・リンクの有効期限が切れた場合は、下のボタンから再送信できます。
+        </AuthNote>
+        <AuthSubmit
+          type="button"
+          icon="fa-paper-plane"
+          onClick={handleResend}
+          disabled={resending || cooldown > 0}
+        >
+          {resending
+            ? "送信中…"
+            : cooldown > 0
+              ? `再送信（${cooldown}秒後に再試行できます）`
+              : "確認メールを再送信"}
+        </AuthSubmit>
+        <AuthSwitch bottom>
+          <p className="flex flex-wrap items-center justify-center gap-1">
+            すでに登録済みの方は
+            <AuthInlineLink href="/login">ログイン</AuthInlineLink>
           </p>
-          <p className="auth-note">
-            メールが届かない場合は迷惑メールフォルダをご確認ください。届かない・リンクの有効期限が切れた場合は、下のボタンから再送信できます。
-          </p>
-          <button
-            type="button"
-            className="btn-navy btn-full"
-            onClick={handleResend}
-            disabled={resending || cooldown > 0}
-          >
-            <i className="fas fa-paper-plane" />{" "}
-            {resending
-              ? "送信中…"
-              : cooldown > 0
-                ? `再送信（${cooldown}秒後に再試行できます）`
-                : "確認メールを再送信"}
-          </button>
-          <div className="auth-switch">
-            すでに登録済みの方は <Link href="/login">ログイン</Link>
-          </div>
-        </div>
-      </main>
+        </AuthSwitch>
+      </AuthShell>
     );
   }
 
   return (
-    <main className="auth-page">
-      <div className="auth-card">
-        <div className="auth-logo">TETOMI</div>
-        <h1 className="auth-title">新規登録</h1>
-        <p className="auth-sub">
+    <AuthShell
+      title="新規登録"
+      description={
+        <>
           {UNIVERSITY_NAME}の在学生向けサービスです。
           <br />
           大学メールでログインします。在籍確認のため大学メール宛に確認メールを送信します。
-        </p>
+        </>
+      }
+    >
+      <AuthForm onSubmit={handleSubmit}>
+        <AuthField
+          label="お名前"
+          required
+          type="text"
+          autoComplete="name"
+          placeholder="山田 太郎"
+          value={form.name}
+          onChange={set("name")}
+        />
+        <AuthField
+          label="大学メールアドレス（ログイン用）"
+          required
+          type="email"
+          autoComplete="email"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          inputMode="email"
+          placeholder={`example@${ALLOWED_EMAIL_DOMAIN}`}
+          value={form.universityEmail}
+          onChange={set("universityEmail")}
+        />
+        <AuthField
+          label="復旧用メールアドレス（個人の連絡先）"
+          required
+          type="email"
+          autoComplete="email"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          inputMode="email"
+          placeholder="example@gmail.com"
+          value={form.recoveryEmail}
+          onChange={set("recoveryEmail")}
+          hint="卒業後も使えるアドレスを入力してください。大学メールが使えなくなった際の復旧・ログイン切替に使います。"
+        />
+        <AuthField
+          label="パスワード"
+          required
+          type="password"
+          autoComplete="new-password"
+          placeholder="8文字以上"
+          value={form.password}
+          onChange={set("password")}
+        />
+        <AuthField
+          label="パスワード（確認）"
+          required
+          type="password"
+          autoComplete="new-password"
+          placeholder="もう一度入力"
+          value={form.passwordConfirm}
+          onChange={set("passwordConfirm")}
+        />
+        <AuthField label="大学名" type="text" value={UNIVERSITY_NAME} readOnly disabled />
 
-        <form onSubmit={handleSubmit}>
-          <div className="form-group required">
-            <label>お名前</label>
-            <input
-              type="text"
-              autoComplete="name"
-              placeholder="山田 太郎"
-              value={form.name}
-              onChange={set("name")}
-              required
-            />
-          </div>
-
-          <div className="form-group required">
-            <label>大学メールアドレス（ログイン用）</label>
-            <input
-              type="email"
-              autoComplete="email"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-              inputMode="email"
-              placeholder={`example@${ALLOWED_EMAIL_DOMAIN}`}
-              value={form.universityEmail}
-              onChange={set("universityEmail")}
-              required
-            />
-          </div>
-
-          <div className="form-group required">
-            <label>復旧用メールアドレス（個人の連絡先）</label>
-            <input
-              type="email"
-              autoComplete="email"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-              inputMode="email"
-              placeholder="example@gmail.com"
-              value={form.recoveryEmail}
-              onChange={set("recoveryEmail")}
-              required
-            />
-            <p className="field-hint" style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 4 }}>
-              卒業後も使えるアドレスを入力してください。大学メールが使えなくなった際の復旧・ログイン切替に使います。
-            </p>
-          </div>
-
-          <div className="form-group required">
-            <label>パスワード</label>
-            <input
-              type="password"
-              autoComplete="new-password"
-              placeholder="8文字以上"
-              value={form.password}
-              onChange={set("password")}
-              required
-            />
-          </div>
-          <div className="form-group required">
-            <label>パスワード（確認）</label>
-            <input
-              type="password"
-              autoComplete="new-password"
-              placeholder="もう一度入力"
-              value={form.passwordConfirm}
-              onChange={set("passwordConfirm")}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label>大学名</label>
-            <input type="text" value={UNIVERSITY_NAME} readOnly disabled />
-          </div>
-
-          <div className="form-row">
-            <div className="form-group required">
-              <label>学部</label>
-              <select value={form.faculty} onChange={set("faculty")} required>
-                <option value="" disabled>
-                  選択してください
-                </option>
-                {FACULTIES.map((f) => (
-                  <option key={f} value={f}>
-                    {f}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group required">
-              <label>学年</label>
-              <select value={form.grade} onChange={set("grade")} required>
-                {GRADES.map((g) => (
-                  <option key={g} value={g}>
-                    {g}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="form-group required">
-            <label>性別</label>
-            <select value={form.gender} onChange={set("gender")} required>
-              <option value="" disabled>
-                選択してください
+        <AuthFieldRow>
+          <AuthSelect label="学部" required value={form.faculty} onChange={set("faculty")}>
+            <option value="" disabled>
+              選択してください
+            </option>
+            {FACULTIES.map((f) => (
+              <option key={f} value={f}>
+                {f}
               </option>
-              {GENDERS.map((g) => (
-                <option key={g} value={g}>
-                  {g}
-                </option>
-              ))}
-            </select>
-          </div>
+            ))}
+          </AuthSelect>
+          <AuthSelect label="学年" required value={form.grade} onChange={set("grade")}>
+            {GRADES.map((g) => (
+              <option key={g} value={g}>
+                {g}
+              </option>
+            ))}
+          </AuthSelect>
+        </AuthFieldRow>
 
-          <label className="checkbox-row">
-            <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} />
-            <span>
-              <Link
-                href="/terms"
-                target="_blank"
-                style={{ color: "var(--navy)", textDecoration: "underline" }}
-              >
-                利用規約
-              </Link>
-              ・
-              <Link
-                href="/privacy"
-                target="_blank"
-                style={{ color: "var(--navy)", textDecoration: "underline" }}
-              >
-                プライバシーポリシー
-              </Link>
-              に同意します
-            </span>
-          </label>
+        <AuthSelect label="性別" required value={form.gender} onChange={set("gender")}>
+          <option value="" disabled>
+            選択してください
+          </option>
+          {GENDERS.map((g) => (
+            <option key={g} value={g}>
+              {g}
+            </option>
+          ))}
+        </AuthSelect>
 
-          <button type="submit" className="btn-navy btn-full" disabled={submitting}>
-            <i className="fas fa-user-plus" /> {submitting ? "送信中…" : "登録する"}
-          </button>
-        </form>
+        <AuthCheckbox checked={agree} onChange={(e) => setAgree(e.target.checked)}>
+          <Link href="/terms" target="_blank" className="text-navy underline">
+            利用規約
+          </Link>
+          ・
+          <Link href="/privacy" target="_blank" className="text-navy underline">
+            プライバシーポリシー
+          </Link>
+          に同意します
+        </AuthCheckbox>
 
-        <p className="auth-note">
-          大学メール（@{ALLOWED_EMAIL_DOMAIN}）がログインIDになります。卒業前に、マイページから復旧用の個人メールへ切り替えてください。
+        <AuthSubmit icon="fa-user-plus" disabled={submitting}>
+          {submitting ? "送信中…" : "登録する"}
+        </AuthSubmit>
+      </AuthForm>
+
+      <AuthNote>
+        大学メール（@{ALLOWED_EMAIL_DOMAIN}）がログインIDになります。卒業前に、マイページから復旧用の個人メールへ切り替えてください。
+      </AuthNote>
+
+      <AuthSwitch bottom>
+        <p className="flex flex-wrap items-center justify-center gap-1">
+          すでにアカウントをお持ちの方は
+          <AuthInlineLink href="/login">ログイン</AuthInlineLink>
         </p>
-
-        <div className="auth-switch">
-          すでにアカウントをお持ちの方は <Link href="/login">ログイン</Link>
-        </div>
-      </div>
-    </main>
+      </AuthSwitch>
+    </AuthShell>
   );
 }

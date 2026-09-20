@@ -1,6 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import AuthShell, {
+  authActionClass,
+  AuthField,
+  AuthForm,
+  AuthSubmit,
+  AuthSwitch,
+  AuthTextLink,
+} from "@/components/AuthShell";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
@@ -42,73 +50,65 @@ export default function ResetPasswordPage() {
   // 回復セッションが無い（リンク未経由・期限切れ）場合の案内。
   if (ready && !user && !done) {
     return (
-      <main className="auth-page">
-        <div className="auth-card">
-          <div className="auth-logo">TETOMI</div>
-          <h1 className="auth-title">リンクが無効です</h1>
-          <p className="auth-sub">
+      <AuthShell
+        title="リンクが無効です"
+        description={
+          <>
             パスワード再設定リンクの有効期限が切れているか、無効です。
             <br />
             お手数ですが、もう一度お試しください。
-          </p>
-          <Link href="/forgot-password" className="btn-navy btn-full" style={{ marginTop: 8 }}>
-            再設定メールを送り直す
-          </Link>
-          <div className="auth-switch">
-            <Link href="/login">ログインに戻る</Link>
-          </div>
-        </div>
-      </main>
+          </>
+        }
+      >
+        <Link href="/forgot-password" className={`${authActionClass} md:mt-2`}>
+          再設定メールを送り直す
+        </Link>
+        <AuthSwitch bottom>
+          <AuthTextLink href="/login">ログインに戻る</AuthTextLink>
+        </AuthSwitch>
+      </AuthShell>
     );
   }
 
   if (done) {
     return (
-      <main className="auth-page">
-        <div className="auth-card">
-          <div className="auth-logo">TETOMI</div>
-          <h1 className="auth-title">パスワードを変更しました</h1>
-          <p className="auth-sub">新しいパスワードでご利用いただけます。ホームへ移動します…</p>
-        </div>
-      </main>
+      <AuthShell
+        title="パスワードを変更しました"
+        description="新しいパスワードでご利用いただけます。ホームへ移動します…"
+      >
+        {null}
+      </AuthShell>
     );
   }
 
   return (
-    <main className="auth-page">
-      <div className="auth-card">
-        <div className="auth-logo">TETOMI</div>
-        <h1 className="auth-title">新しいパスワードを設定</h1>
-        <p className="auth-sub">新しいパスワードを入力してください（8文字以上）。</p>
-
-        <form onSubmit={handleSubmit}>
-          <div className="form-group required">
-            <label>新しいパスワード</label>
-            <input
-              type="password"
-              autoComplete="new-password"
-              placeholder="8文字以上"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <div className="form-group required">
-            <label>新しいパスワード（確認）</label>
-            <input
-              type="password"
-              autoComplete="new-password"
-              placeholder="もう一度入力"
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              required
-            />
-          </div>
-          <button type="submit" className="btn-navy btn-full" disabled={submitting || !ready}>
-            <i className="fas fa-key" /> {submitting ? "変更中…" : "パスワードを変更する"}
-          </button>
-        </form>
-      </div>
-    </main>
+    <AuthShell
+      title="新しいパスワードを設定"
+      description="新しいパスワードを入力してください（8文字以上）。"
+    >
+      <AuthForm onSubmit={handleSubmit}>
+        <AuthField
+          label="新しいパスワード"
+          required
+          type="password"
+          autoComplete="new-password"
+          placeholder="8文字以上"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <AuthField
+          label="新しいパスワード（確認）"
+          required
+          type="password"
+          autoComplete="new-password"
+          placeholder="もう一度入力"
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+        />
+        <AuthSubmit icon="fa-key" disabled={submitting || !ready}>
+          {submitting ? "変更中…" : "パスワードを変更する"}
+        </AuthSubmit>
+      </AuthForm>
+    </AuthShell>
   );
 }
