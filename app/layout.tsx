@@ -1,10 +1,13 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth";
 import { ToastProvider } from "@/components/Toast";
 import Footer from "@/components/Footer";
 import SideTab from "@/components/SideTab";
+import BottomTabBar from "@/components/BottomTabBar";
 import HeaderStack from "@/components/HeaderStack";
+import { ActionRequiredProvider } from "@/lib/action-required";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
 export const metadata: Metadata = {
@@ -43,14 +46,23 @@ export default function RootLayout({
           href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css"
         />
       </head>
-      <body>
+      {/* 下タブバーに隠れないよう本文の下に余白を作る（--bottom-nav-h は PC では 0）。
+          legacy.css の * リセット（padding:0）に勝たせるため、utilities レイヤーに乗る
+          Tailwind のクラスで指定している。 */}
+      <body className="pb-[var(--bottom-nav-h)]">
         <AuthProvider>
-          <ToastProvider>
-            <SideTab />
-            <HeaderStack />
-            {children}
-            <Footer />
-          </ToastProvider>
+          <ActionRequiredProvider>
+            <ToastProvider>
+              <SideTab />
+              <HeaderStack />
+              {children}
+              <Footer />
+              {/* スマホの主動線。?tab= を読むので Suspense で囲う（静的生成の制約）。 */}
+              <Suspense fallback={null}>
+                <BottomTabBar />
+              </Suspense>
+            </ToastProvider>
+          </ActionRequiredProvider>
         </AuthProvider>
         <ServiceWorkerRegister />
       </body>

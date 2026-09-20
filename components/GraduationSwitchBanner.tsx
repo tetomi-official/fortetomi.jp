@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { isAllowedEmail } from "@/lib/constants";
+import HeaderBanner from "@/components/HeaderBanner";
 
 // 卒業が近い（4年 / 院生）かつログインIDがまだ大学メールのユーザーに、
 // 個人メールへの切替を促す常時バナー。切替を忘れたまま大学メールが失効すると
@@ -20,41 +20,14 @@ export default function GraduationSwitchBanner() {
   if (user.grade !== "4年" && user.grade !== "院生") return null;
 
   return (
-    <div
-      role="alert"
-      style={{
-        background: "#eff6ff",
-        borderBottom: "1px solid #93c5fd",
-        color: "#1e3a8a",
-        padding: "10px 16px",
-        fontSize: 13,
-        lineHeight: 1.6,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 10,
-        flexWrap: "wrap",
-        textAlign: "center",
-      }}
-    >
-      <span>
-        <i className="fas fa-graduation-cap" style={{ marginRight: 6 }} />
-        卒業後もログインできるよう、個人のメールアドレスへの切り替えをおすすめします。
-      </span>
-      <Link
-        href="/mypage?tab=profile"
-        style={{
-          background: "#1e3a8a",
-          color: "#fff",
-          padding: "5px 14px",
-          borderRadius: 999,
-          fontWeight: 700,
-          textDecoration: "none",
-          whiteSpace: "nowrap",
-        }}
-      >
-        メールを切り替える
-      </Link>
-    </div>
+    <HeaderBanner
+      tone="info"
+      icon="fa-graduation-cap"
+      message="卒業後もログインできるよう、個人のメールアドレスへの切り替えをおすすめします。"
+      shortMessage="個人メールへの切り替えがおすすめ"
+      href="/mypage?tab=profile"
+      cta="メールを切り替える"
+      shortCta="切り替え"
+    />
   );
 }

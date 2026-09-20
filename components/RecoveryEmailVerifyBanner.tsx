@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { canReserve } from "@/lib/prerelease";
+import HeaderBanner from "@/components/HeaderBanner";
 
 // 復旧用（個人）メールが「未設定」または「未検証」のユーザーに、確認を促す常時バナー。
 // 検証済みの復旧用アドレスがないと、卒業などで大学メールが失効したときに
@@ -22,47 +22,20 @@ export default function RecoveryEmailVerifyBanner() {
   if (user.recovery_email_verified) return null;
 
   const notSet = !user.recovery_email;
-  const message = notSet
-    ? "卒業後もアカウントを復旧できるよう、復旧用の個人メールアドレスを登録してください。"
-    : "登録した復旧用メールアドレスがまだ未確認です。確認しておくと、卒業後の復旧に使えます。";
-  const cta = notSet ? "メールを登録する" : "メールを確認する";
 
   return (
-    <div
-      role="alert"
-      style={{
-        background: "#fefce8",
-        borderBottom: "1px solid #fde047",
-        color: "#854d0e",
-        padding: "10px 16px",
-        fontSize: 13,
-        lineHeight: 1.6,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 10,
-        flexWrap: "wrap",
-        textAlign: "center",
-      }}
-    >
-      <span>
-        <i className="fas fa-envelope-circle-check" style={{ marginRight: 6 }} />
-        {message}
-      </span>
-      <Link
-        href="/mypage?tab=profile"
-        style={{
-          background: "#854d0e",
-          color: "#fff",
-          padding: "5px 14px",
-          borderRadius: 999,
-          fontWeight: 700,
-          textDecoration: "none",
-          whiteSpace: "nowrap",
-        }}
-      >
-        {cta}
-      </Link>
-    </div>
+    <HeaderBanner
+      tone="warn"
+      icon="fa-envelope-circle-check"
+      message={
+        notSet
+          ? "卒業後もアカウントを復旧できるよう、復旧用の個人メールアドレスを登録してください。"
+          : "登録した復旧用メールアドレスがまだ未確認です。確認しておくと、卒業後の復旧に使えます。"
+      }
+      shortMessage={notSet ? "復旧用メールを登録してください" : "復旧用メールが未確認です"}
+      href="/mypage?tab=profile"
+      cta={notSet ? "メールを登録する" : "メールを確認する"}
+      shortCta={notSet ? "登録" : "確認"}
+    />
   );
 }

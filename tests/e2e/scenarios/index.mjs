@@ -11,6 +11,7 @@ import { T30, T31 } from "./08-scan.mjs";
 import { T32, T33 } from "./09-mail.mjs";
 import { T34, T35, T36 } from "./10-stripe.mjs";
 import { T37, T38 } from "./11-mobile.mjs";
+import { T39 } from "./12-mobile-sweep.mjs";
 
 export const SCENARIOS = [
   // 出品
@@ -33,6 +34,8 @@ export const SCENARIOS = [
   T34, T35, T36,
   // スマホ幅での見え方と二度押し
   T37, T38,
+  // スマホ幅（375px）で主要画面を巡回（Tailwind 移行のガードレール）
+  T39,
   // キャンセルと歯止め
   T20, T20b, T21, T26, T27,
   // 在籍期限切れ
