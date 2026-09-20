@@ -73,7 +73,9 @@ export default function MessagesPanel({
                       </span>
                     </div>
                     <div className="msg-thread-sub">
-                      <i className="fas fa-book" /> {t.reservation.listing_title}
+                      <i className="fas fa-book" />
+                      {/* 狭い画面では本の名前を詰める。詰めないと右の役割が箱の外へ押し出される。 */}
+                      <span className="min-w-0 truncate">{t.reservation.listing_title}</span>
                       <span className="msg-thread-role">
                         {t.role === "buyer" ? "購入希望" : "受け取った希望"}
                       </span>

@@ -18,6 +18,11 @@ import { sellerNet, PLATFORM_FEE_RATE, PAYOUT_FEE_YEN } from "@/lib/constants";
 import { decodePaymentQR } from "@/lib/payments";
 import { canReserve, canChangeLoginEmail } from "@/lib/prerelease";
 import MessagesPanel from "@/components/MessagesPanel";
+import MypageMenu, {
+  MypageBackLink,
+  MypageLogout,
+  MypageProfile,
+} from "@/components/MypageMenu";
 import SupportPanel from "@/components/SupportPanel";
 import BarcodeScanner from "@/components/BarcodeScanner";
 import { BarcodeFormat } from "@zxing/library";
@@ -507,11 +512,18 @@ function MyPageInner() {
     return (
       <>
         <MyHeader sub={`${user.name}さんのページ`} />
-        <main className="page-main" style={{ background: "var(--bg-gray)" }}>
-          <div className="container">
-            <div className="mypage-layout">
-              {/* SIDEBAR：プロフィール概要とログアウトのみ */}
-              <aside className="mypage-sidebar">
+        <main className="page-main max-md:bg-white max-md:pt-[calc(var(--header-h)+24px)] max-md:pb-8 md:bg-bg-gray">
+          {/* max-w-none：Tailwind の container が legacy の .container に勝ち、
+              640〜767px で幅 640px に絞られてしまうのを外す（左右は 16px のまま） */}
+          <div className="container max-md:max-w-none max-md:px-4">
+            <div className="mypage-layout max-md:block">
+              {/* スマホ（md 未満）：案1 のプロフィールとログアウトだけ出す */}
+              <div className="flex flex-col gap-8 md:hidden">
+                <MypageProfile user={user} />
+              </div>
+
+              {/* SIDEBAR：プロフィール概要とログアウトのみ（md 以上） */}
+              <aside className="mypage-sidebar hidden md:block">
                 <div className="sidebar-profile">
                   <div className="sidebar-avatar">{(user.name || "?").charAt(0)}</div>
                   <div className="sidebar-name">{user.name}</div>
@@ -528,23 +540,29 @@ function MyPageInner() {
                 </nav>
               </aside>
 
-              {/* MAIN PANEL：準備中の案内 */}
-              <div>
-                <div className="panel-card">
-                  <div className="panel-body" style={{ textAlign: "center", padding: "56px 32px" }}>
-                    <div style={{ fontSize: "3rem", marginBottom: 16 }}>🚧</div>
-                    <h3 style={{ fontSize: "1.3rem", fontWeight: 800, color: "var(--navy)", marginBottom: 12 }}>
+              {/* MAIN PANEL：準備中の案内。md 未満では箱にしない */}
+              <div className="max-md:mt-8">
+                <div className="panel-card max-md:rounded-none max-md:border-0 max-md:shadow-none">
+                  <div className="panel-body px-0 py-0 text-left md:px-8 md:py-14 md:text-center">
+                    <div className="mb-4 text-5xl max-md:hidden">🚧</div>
+                    <h3 className="mb-3 text-[17px] font-black text-navy md:text-[1.3rem] md:font-extrabold">
                       マイページは準備中です
                     </h3>
-                    <p style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 8 }}>
+                    <p className="mb-2 text-sm text-ink-muted">
                       出品・購入希望・メッセージなどの各機能は順次公開予定です。
                     </p>
-                    <p style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 24 }}>
+                    <p className="mb-6 text-sm text-ink-muted">
                       今しばらくお待ちください。
                     </p>
-                    <button type="button" className="btn-navy" onClick={() => setLogoutConfirm(true)}>
-                      <i className="fas fa-sign-out-alt" /> ログアウト
-                    </button>
+                    {/* md 未満は案1 の赤い文字ボタン、md 以上はこれまでの紺のボタン */}
+                    <div className="max-md:hidden">
+                      <button type="button" className="btn-navy" onClick={() => setLogoutConfirm(true)}>
+                        <i className="fas fa-sign-out-alt" /> ログアウト
+                      </button>
+                    </div>
+                    <div className="flex md:hidden">
+                      <MypageLogout onClick={() => setLogoutConfirm(true)} />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -588,14 +606,37 @@ function MyPageInner() {
     </div>
   );
 
+  // md 未満では ?tab= が無いときを「メニュー画面」にする（components/MypageMenu.tsx）。
+  // tab（既定はダッシュボード）とは別に、URL に ?tab= が有るかどうかで見る。
+  // md 以上は今までどおりなので、この値では出し分けない。
+  const メニュー画面 = queryTab === null;
+
   return (
     <>
       <MyHeader sub={`${user.name}さんのページ`} />
-      <main className="page-main" style={{ background: "var(--bg-gray)" }}>
-        <div className="container">
-          <div className="mypage-layout">
-            {/* SIDEBAR */}
-            <aside className="mypage-sidebar">
+      <main className="page-main max-md:bg-white max-md:pt-[calc(var(--header-h)+24px)] max-md:pb-8 md:bg-bg-gray">
+        {/* max-w-none：Tailwind の container が legacy の .container に勝ち、
+            640〜767px で幅 640px に絞られてしまうのを外す（左右は 16px のまま） */}
+        <div className="container max-md:max-w-none max-md:px-4">
+          {/* md 未満は 2 段組みをやめて 1 枚に積む（グリッドの隙間 28px も効かせない） */}
+          <div className="mypage-layout max-md:block">
+            {/* スマホ（md 未満）のメニュー画面。?tab= が付いているときは中身を出す */}
+            {メニュー画面 ? (
+              <MypageMenu
+                user={user}
+                badges={{
+                  myListings: stats.active,
+                  sentRes: sentPending,
+                  receivedRes: recvPending,
+                }}
+                onLogout={() => setLogoutConfirm(true)}
+              />
+            ) : (
+              <MypageBackLink />
+            )}
+
+            {/* SIDEBAR（md 以上だけ。E2E と撮影はこの .sidebar-nav-item を押している） */}
+            <aside className="mypage-sidebar hidden md:block">
               <div className="sidebar-profile">
                 <div className="sidebar-avatar">{(user.name || "?").charAt(0)}</div>
                 <div className="sidebar-name">{user.name}</div>
@@ -620,7 +661,7 @@ function MyPageInner() {
             </aside>
 
             {/* MAIN PANEL */}
-            <div>
+            <div className={メニュー画面 ? "max-md:hidden" : undefined}>
               {/* DASHBOARD */}
               {tab === "dashboard" && (
                 <div className="panel-card">
@@ -1374,9 +1415,10 @@ function MyPageInner() {
   );
 }
 
+// 紺の見出し帯。md 未満では出さない（案1 は白地に見出しだけで区切る）。
 function MyHeader({ sub }: { sub: string }) {
   return (
-    <div className="page-header">
+    <div className="page-header hidden md:block">
       <div className="page-header-inner">
         <div className="breadcrumb">
           <Link href="/">Home</Link>

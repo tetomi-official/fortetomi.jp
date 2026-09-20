@@ -64,6 +64,9 @@
   --color-ok-strong:   #059669;
   --color-ng:          #ef4444;
   --color-ng-strong:   #e5484d;
+  /* 白背景の「文字」に使える赤。--color-ng は白地で 4.5:1 に届かないため、
+     ログアウトのような文字だけの危険操作にはこちらを使う。 */
+  --color-ng-ink:      #c53030;
   --color-alert:       #9a3412;
   --color-alert-bg:    #fff7ed;
   --color-alert-line:  #fdba74;
