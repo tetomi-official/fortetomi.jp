@@ -1365,6 +1365,7 @@ function MyPageInner() {
           title="買い手のQRを読み取る"
           hint="買い手が表示している受け渡しQRを枠内に映してください。読み取ると決済が実行されます。"
           cameraFallback="retry"
+          frameShape="square"
           onDetected={captureByQR}
           onClose={() => setScanning(false)}
         />
