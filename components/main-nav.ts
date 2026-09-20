@@ -40,3 +40,16 @@ export const MAIN_NAV: MainNavItem[] = [
 
 /** PC の縦タブに出す 2 つ（出品が先）。 */
 export const SIDE_TAB_NAV: MainNavItem[] = [MAIN_NAV[1], MAIN_NAV[0]];
+
+/**
+ * ログイン系の画面。スマホ（md 未満）では上のヘッダーも下タブバーも出さず、
+ * 画面まるごとを入力に使う（案3・docs/mockups/mobile-v1/V3Login.dc.html）。
+ * まだログインしていない人が、他の行き先に気を取られずに済むようにするため。
+ */
+export const AUTH_PATHS = [
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/reset-password",
+  "/recover",
+];

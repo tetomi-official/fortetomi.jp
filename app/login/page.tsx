@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/Toast";
 import { safeNextPath } from "@/lib/redirect";
+import Link from "next/link";
 import AuthShell, {
   AuthCheckbox,
   AuthField,
@@ -89,22 +90,36 @@ export default function LoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        <AuthCheckbox checked={remember} onChange={(e) => setRemember(e.target.checked)}>
-          ログイン状態を保持する（30日間）
-        </AuthCheckbox>
+        {/* 案3：「30日間保持」と「パスワードをお忘れですか？」を1行に左右で並べる。
+            md 以上はこれまでどおり、チェックは単独・リンクは下の区切り線の中に置く。 */}
+        <div className="flex items-center justify-between gap-2 md:block">
+          <AuthCheckbox compact checked={remember} onChange={(e) => setRemember(e.target.checked)}>
+            <span className="md:hidden">30日間保持</span>
+            <span className="hidden md:inline">ログイン状態を保持する（30日間）</span>
+          </AuthCheckbox>
+          <Link
+            href="/forgot-password"
+            className="flex min-h-11 shrink-0 items-center text-[13px] text-navy md:hidden"
+          >
+            パスワードをお忘れですか？
+          </Link>
+        </div>
         <AuthSubmit icon="fa-sign-in-alt" disabled={submitting}>
           {submitting ? "ログイン中…" : "ログイン"}
         </AuthSubmit>
       </AuthForm>
 
-      <AuthSwitch>
-        <AuthTextLink href="/forgot-password">パスワードをお忘れですか？</AuthTextLink>
-      </AuthSwitch>
+      {/* md 以上だけ：これまでの区切り線つきの並び */}
+      <div className="hidden md:block">
+        <AuthSwitch>
+          <AuthTextLink href="/forgot-password">パスワードをお忘れですか？</AuthTextLink>
+        </AuthSwitch>
+      </div>
 
-      {/* デモユーザー。md 未満は中央寄せの文字リンク、md 以上はこれまでのボタンのまま。
+      {/* デモユーザー。md 以上はこれまでのボタンのまま。
           class の "demo-btn" は scripts/capture-flow.mjs が見ている目印なので残すこと。 */}
-      <div className="flex flex-col md:mt-5 md:gap-2 md:border-t md:border-line-light md:pt-5">
-        <p className="hidden md:mb-3 md:block md:text-center md:text-[11px] md:tracking-[0.06em] md:text-ink-muted md:uppercase">
+      <div className="hidden md:mt-5 md:flex md:flex-col md:gap-2 md:border-t md:border-line-light md:pt-5">
+        <p className="md:mb-3 md:text-center md:text-[11px] md:tracking-[0.06em] md:text-ink-muted md:uppercase">
           — デモユーザーで試す —
         </p>
         {DEMO_ACCOUNTS.map((u) => (
@@ -113,23 +128,30 @@ export default function LoginPage() {
             type="button"
             onClick={() => demo(u.email)}
             disabled={submitting}
-            className="demo-btn font-en flex min-h-11 items-center justify-center text-sm text-ink-mid transition-all md:min-h-0 md:rounded-sm md:border md:border-line-light md:bg-bg-light md:px-4 md:py-[11px] md:text-[13px] md:font-semibold md:text-navy md:hover:bg-navy md:hover:text-white"
+            className="demo-btn font-en rounded-sm border border-line-light bg-bg-light px-4 py-[11px] text-[13px] font-semibold text-navy transition-all hover:bg-navy hover:text-white"
           >
-            {/* アイコンは md 以上だけ。Font Awesome はレイヤー外の CSS で display を
-                指定していて hidden が効かないので、span で包んで包み側を消す。 */}
-            <span className="mr-1.5 hidden opacity-50 md:inline-block" aria-hidden="true">
-              <i className="fas fa-user" />
-            </span>
-            <span className="md:hidden">デモユーザー（{u.name}）で試す</span>
-            <span className="hidden md:inline">
-              {u.name}（{u.faculty} {u.grade}）
-            </span>
+            <i className="fas fa-user mr-1.5 opacity-50" aria-hidden="true" />
+            {u.name}（{u.faculty} {u.grade}）
           </button>
         ))}
       </div>
 
+      {/* 案3：画面の下端に「はじめての方は 新規登録・デモで試す」を1行で置く（md 未満）。 */}
       <AuthSwitch bottom>
-        <p className="flex flex-wrap items-center justify-center gap-1">
+        <p className="flex flex-wrap items-center justify-center gap-1 md:hidden">
+          はじめての方は
+          <AuthInlineLink href="/signup">新規登録</AuthInlineLink>
+          <span>・</span>
+          <button
+            type="button"
+            onClick={() => demo(DEMO_ACCOUNTS[0].email)}
+            disabled={submitting}
+            className="demo-btn inline-flex min-h-11 items-center text-sm text-ink-mid"
+          >
+            デモで試す
+          </button>
+        </p>
+        <p className="hidden md:flex md:flex-wrap md:items-center md:justify-center md:gap-1">
           アカウントをお持ちでない方は
           <AuthInlineLink href="/signup">新規登録</AuthInlineLink>
         </p>

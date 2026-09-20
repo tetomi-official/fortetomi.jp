@@ -6,7 +6,7 @@ import { useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { useActionRequiredCount } from "@/lib/action-required";
 import { loginHref } from "@/lib/redirect";
-import { MAIN_NAV } from "@/components/main-nav";
+import { AUTH_PATHS, MAIN_NAV } from "@/components/main-nav";
 
 // スマホの主動線。PC の縦タブ（SideTab）は幅が狭いと出せないため、
 // スマホではこのバーが「探す・出品・メッセージ・マイページ」の入口になる。
@@ -18,14 +18,6 @@ import { MAIN_NAV } from "@/components/main-nav";
 //   区切り線を border で描くと 1px 増えて本文の一番下がバーに隠れるので、影で描いている。
 // ・ログイン系の画面では出さない（下記）。
 
-/**
- * 下タブバーを出さない画面。
- * ログイン・新規登録・パスワード再設定・復旧は、まだログインしていない人が
- * 目の前のこと（入力）だけに集中する画面なので、他の行き先を並べない。
- * モックの docs/mockups/mobile-v1/V1Login.dc.html にもバーは無い。
- */
-const 出さない画面 = ["/login", "/signup", "/forgot-password", "/reset-password", "/recover"];
-
 export default function BottomTabBar() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -33,7 +25,8 @@ export default function BottomTabBar() {
   const count = useActionRequiredCount();
 
   const currentTab = searchParams.get("tab");
-  const 隠す = 出さない画面.includes(pathname);
+  // ログイン系では出さない（AUTH_PATHS のコメント参照）。
+  const 隠す = AUTH_PATHS.includes(pathname);
 
   // バーを出さない画面では、本文の下に空けている余白も消す（でないと下が 56px 空く）。
   // HeaderStack が --header-h を面倒みているのと同じやり方。
