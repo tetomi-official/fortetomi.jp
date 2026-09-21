@@ -106,12 +106,6 @@ export default function ListingsPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const pageNumbers: (number | "...")[] = [];
-  for (let i = 1; i <= pages; i++) {
-    if (i === 1 || i === pages || Math.abs(i - current) <= 1) pageNumbers.push(i);
-    else if (i === 2 || i === pages - 1) pageNumbers.push("...");
-  }
-
   return (
     <>
       {/* 紺のページヘッダーは md 以上だけ。スマホはヘッダー直下の検索帯にする（案2）。 */}
@@ -341,40 +335,146 @@ export default function ListingsPage() {
           )}
 
           {/* PAGINATION */}
-          {pages > 1 && (
-            <div className="pagination flex-wrap">
-              <button className="page-btn" disabled={current === 1} onClick={() => goPage(current - 1)}>
-                <i className="fas fa-chevron-left" />
-              </button>
-              {pageNumbers.map((n, i) =>
-                n === "..." ? (
-                  <span key={`e${i}`} style={{ color: "var(--text-muted)", padding: "0 4px" }}>
-                    …
-                  </span>
-                ) : (
-                  <button
-                    key={n}
-                    className={`page-btn ${n === current ? "active" : ""}`.trim()}
-                    onClick={() => goPage(n)}
-                  >
-                    {n}
-                  </button>
-                ),
-              )}
-              <button
-                className="page-btn"
-                disabled={current === pages}
-                onClick={() => goPage(current + 1)}
-              >
-                <i className="fas fa-chevron-right" />
-              </button>
-            </div>
-          )}
+          {pages > 1 && <Pagination current={current} pages={pages} onChange={goPage} />}
         </div>
       </main>
     </>
   );
 }
+
+/**
+ * ページ送り。
+ *
+ * md 未満は案2（`docs/mockups/mobile/V2Footer.dc.html`）の丸ボタン。44px で、
+ * 現在のページは紺塗り、前後のページは山形のアイコンボタンにする。
+ * 幅 360px でも横にはみ出さないよう、スマホでは番号を「最初・現在・最後」だけに絞る
+ * （いちばん多いときで 44px×5 ＋ … ×2 ＋ 隙間 ＋ 左右の余白 = 324px）。
+ *
+ * md 以上は今までどおりの見た目（38px の角丸ボタン）。番号は前後1ページ＋最初と最後。
+ */
+function Pagination({
+  current,
+  pages,
+  onChange,
+}: {
+  current: number;
+  pages: number;
+  onChange: (n: number) => void;
+}) {
+  // md 以上に出す番号。前後1ページと、最初・最後。
+  const wide: (number | "...")[] = [];
+  for (let i = 1; i <= pages; i++) {
+    if (i === 1 || i === pages || Math.abs(i - current) <= 1) wide.push(i);
+    else if (i === 2 || i === pages - 1) wide.push("...");
+  }
+  // md 未満に出す番号。最初・現在・最後だけ。
+  const narrow: (number | "...")[] = [];
+  for (const n of [...new Set([1, current, pages])].sort((a, b) => a - b)) {
+    const prev = narrow[narrow.length - 1];
+    if (typeof prev === "number" && n - prev > 1) narrow.push("...");
+    narrow.push(n);
+  }
+
+  // 44px の丸。現在のページだけ紺で塗るので、文字色は下で足す
+  // （同じ性質を2つ書くと、どちらが勝つかがクラスの並び順では決まらない）。
+  const round =
+    "flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[15px] font-bold disabled:pointer-events-none disabled:opacity-35";
+
+  return (
+    <>
+      {/* md 未満（案2） */}
+      <nav aria-label="ページ送り" className="flex items-center justify-center gap-1 p-4 md:hidden">
+        <button
+          type="button"
+          aria-label="前のページ"
+          className={`${round} text-navy`}
+          disabled={current === 1}
+          onClick={() => onChange(current - 1)}
+        >
+          <i className="fas fa-chevron-left text-lg" aria-hidden="true" />
+        </button>
+        {narrow.map((n, i) =>
+          n === "..." ? (
+            <span key={`e${i}`} className="flex w-6 shrink-0 items-center justify-center text-ink-sub">
+              …
+            </span>
+          ) : (
+            <button
+              key={n}
+              type="button"
+              aria-label={`${n}ページ目`}
+              aria-current={n === current ? "page" : undefined}
+              className={`${round} ${n === current ? "bg-navy text-white" : "text-navy"}`}
+              onClick={() => onChange(n)}
+            >
+              {n}
+            </button>
+          ),
+        )}
+        <button
+          type="button"
+          aria-label="次のページ"
+          className={`${round} text-navy`}
+          disabled={current === pages}
+          onClick={() => onChange(current + 1)}
+        >
+          <i className="fas fa-chevron-right text-lg" aria-hidden="true" />
+        </button>
+      </nav>
+
+      {/* md 以上（今までどおり） */}
+      <nav
+        aria-label="ページ送り"
+        className="mt-9 hidden flex-wrap items-center justify-center gap-1.5 md:flex"
+      >
+        <button
+          type="button"
+          aria-label="前のページ"
+          className={`${PAGE_BTN} ${PAGE_BTN_OFF}`}
+          disabled={current === 1}
+          onClick={() => onChange(current - 1)}
+        >
+          <i className="fas fa-chevron-left" aria-hidden="true" />
+        </button>
+        {wide.map((n, i) =>
+          n === "..." ? (
+            <span key={`e${i}`} className="px-1 text-ink-muted">
+              …
+            </span>
+          ) : (
+            <button
+              key={n}
+              type="button"
+              aria-label={`${n}ページ目`}
+              aria-current={n === current ? "page" : undefined}
+              className={`${PAGE_BTN} ${
+                n === current ? "border-navy bg-navy text-white" : PAGE_BTN_OFF
+              }`}
+              onClick={() => onChange(n)}
+            >
+              {n}
+            </button>
+          ),
+        )}
+        <button
+          type="button"
+          aria-label="次のページ"
+          className={`${PAGE_BTN} ${PAGE_BTN_OFF}`}
+          disabled={current === pages}
+          onClick={() => onChange(current + 1)}
+        >
+          <i className="fas fa-chevron-right" aria-hidden="true" />
+        </button>
+      </nav>
+    </>
+  );
+}
+
+/** md 以上のページ送りのボタン（移行前の `.page-btn` と同じ見た目）。 */
+const PAGE_BTN =
+  "font-en flex h-[38px] min-w-[38px] items-center justify-center rounded-sm border-[1.5px] px-2 text-[13px] font-bold transition-colors disabled:pointer-events-none disabled:opacity-35";
+/** 現在のページ以外の色。同じ性質（背景・文字色）を2つ書くと勝ち負けが読めないので分けてある。 */
+const PAGE_BTN_OFF = "border-line bg-white text-ink-mid hover:border-navy hover:text-navy";
 
 /**
  * スマホの絞り込みボタン（案2の丸ボタン）。
