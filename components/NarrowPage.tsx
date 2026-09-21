@@ -11,8 +11,8 @@ import type { ReactNode } from "react";
  */
 export default function NarrowPage({ children }: { children: ReactNode }) {
   return (
-    <main className="mx-auto w-full max-w-[520px] px-4 pt-[calc(var(--header-h)+24px)] pb-10 md:pt-[calc(var(--header-h)+40px)]">
-      {children}
+    <main className="bg-bg-light pt-[calc(var(--header-h)+24px)] pb-10 md:bg-transparent md:pt-[calc(var(--header-h)+40px)]">
+      <div className="mx-auto w-full max-w-[520px] px-4">{children}</div>
     </main>
   );
 }

@@ -7,6 +7,9 @@ import type { ReactNode } from "react";
  * md 未満は案2の決まりどおり囲いをやめ、白い全幅の面にする（上下だけ 1px の線）。
  * 見出しの下線もスマホでは引かない。
  *
+ * md 未満で画面の端まで広げるのに `-mx-4` を使うので、左右 16px の余白を持つ入れ物
+ * （`NarrowPage`）の中で使うこと。
+ *
  * `form-card` のクラス名は E2E が目印にしているので必ず残すこと
  * （`tests/e2e/fake-camera.mjs`、`05-payment.mjs` などが `.form-card svg` を見ている）。
  */
