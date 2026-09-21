@@ -5,7 +5,7 @@
 -- ログインしていない人の出品一覧が空になった。なので両側を確かめる。
 begin;
 \ir _helpers/helpers.psql
-select plan(33);
+select plan(35);
 
 -- ---- 準備：A と B が取引中、C は無関係、D は在籍切れ ----
 select pg_temp.make_user('aaaaaaaa-0000-0000-0000-000000000001', 'test-a@g.chuo-u.ac.jp', '出品者A');
@@ -85,6 +85,8 @@ select throws_ok($$ select * from public.payment_customers $$, '42501', null,
   'ログインなし：カード保存先は読めない');
 select throws_ok($$ select public.check_rate_limit('x', 1, 60) $$, '42501', null,
   'ログインなし：回数制限の関数は呼べない（他人の枠を消費させない）');
+select throws_ok($$ select * from public.handover_reminders $$, '42501', null,
+  'ログインなし：リマインドの送信記録は読めない');
 
 -- =========================================================
 -- ログイン済み：無関係な C
@@ -117,6 +119,8 @@ select throws_ok($$ select * from public.email_recovery_requests $$, '42501', nu
   'ログイン済み：復旧用トークンの表は読めない');
 select throws_ok($$ select public.check_rate_limit('x', 1, 60) $$, '42501', null,
   'ログイン済み：回数制限の関数は呼べない');
+select throws_ok($$ select * from public.handover_reminders $$, '42501', null,
+  'ログイン済み：リマインドの送信記録は読めない（何通送ったかを当事者にも見せない）');
 
 -- =========================================================
 -- ログイン済み：取引の当事者

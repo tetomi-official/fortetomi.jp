@@ -2,7 +2,7 @@
 -- 読み取り側（010）と同じく、塞ぎすぎて正しい操作が壊れていないかも確かめる。
 begin;
 \ir _helpers/helpers.psql
-select plan(38);
+select plan(39);
 
 -- ---- 準備：A が出品者、B が買い手、C は無関係、D は在籍切れ ----
 select pg_temp.make_user('aaaaaaaa-0000-0000-0000-000000000001', 'test-a@g.chuo-u.ac.jp', '出品者A');
@@ -150,6 +150,13 @@ select throws_ok($$ insert into public.connect_accounts (user_id, stripe_account
 select throws_ok($$ insert into public.payment_customers (user_id, provider, stripe_customer_id)
                     values ('aaaaaaaa-0000-0000-0000-000000000001', 'stripe', 'cus_fake') $$,
   '42501', null, 'カードの保存先を自分で登録できない（他人のカードで払わせない）');
+
+-- =========================================================
+-- リマインドの送信記録（サーバーだけが書く）
+-- =========================================================
+select throws_ok($$ insert into public.handover_reminders (reservation_id, kind, side)
+                    values ('22222222-abab-0000-0000-000000000001', '前日', 'buyer') $$,
+  '42501', null, 'リマインドの送信記録を自分で書けない（送信済みに見せかけて通知を止められない）');
 
 -- =========================================================
 -- 画像の置き場（listing-images）

@@ -2,7 +2,7 @@
 
 このセッションで実装した機能を「本番で実際に動く」状態にするために、**コードでは完結できずダッシュボード/DNS/環境変数などの手作業が必要な項目**をまとめる。実装済みコードは各項目のリンク先ドキュメント参照。
 
-最終更新: 2026-09-18（DB の変更手順を [`docs/operations/db-workflow.md`](./db-workflow.md) に移し、SQL Editor に貼る手順をやめた）
+最終更新: 2026-09-22（受け渡しリマインドメールの定時実行を追加 → J）
 
 > **DB の変更について**：以前は `docs/` の SQL を Supabase の SQL Editor に貼って本番を変えていたが、今は `supabase/` のファイルで管理し、`supabase db push` で本番に当てる。手順は [`docs/operations/db-workflow.md`](./db-workflow.md)。下の各「DBマイグレーションの適用」はすべて本番に適用済みで、昔の SQL は [`docs/archive/sql/`](../archive/sql/) に移した。
 
@@ -268,6 +268,41 @@
 
 ---
 
+## J. 受け渡しリマインドメール（#58）
+
+受け渡しの**2日前の朝（日本時間 8:00）**と**前日の夜（日本時間 20:00）**に、買い手と出品者の両方へ
+当日の案内を送る。日程が決まったあと当日まで何も届かず、忘れられて取引が流れるのを防ぐ。
+
+- 定時実行：[`.github/workflows/handover-reminder.yml`](../../.github/workflows/handover-reminder.yml)
+- 送る中身と二度送りの防止：`app/api/cron/handover-reminder` → `lib/notify-handover-reminder.ts`
+- 送信済みの記録：`handover_reminders` 表（予約・回・相手が主キー。service_role だけが読み書きできる）
+
+### J-1. DBマイグレーションの適用 ☐
+- `supabase/migrations/20260921222800_add_handover_reminders.sql`
+- 手順は [`docs/operations/db-workflow.md`](./db-workflow.md) の 2章（`--dry-run` で確認してから `db push`）。
+
+### J-2. 共有シークレットの設定 ☐
+同じ文字列を2か所に置く。**片方だけだと 401 になって1通も届かない。**
+
+1. 値を作る：`openssl rand -hex 32`
+2. Vercel の環境変数に `CRON_SECRET` として設定（`NEXT_PUBLIC_` は付けない）。設定後に再デプロイ。
+3. GitHub → Settings → Secrets and variables → Actions → **Secrets** に `CRON_SECRET` を同じ値で登録。
+
+### J-3. 叩き先の設定（本番以外を叩くときだけ） ☐
+- 既定は `https://tetomi.jp`。別のURLを叩くときだけ、GitHub の同じ画面の
+  **Variables** に `SITE_URL` を登録する。
+
+### J-4. 動くことの確認 ☐
+1. GitHub → Actions → 「受け渡しリマインド」→ **Run workflow** → 回（2日前 / 前日）を選んで実行。
+2. 緑になり、ログに `{"kind":...,"sent":N,...}` が出ること。対象が無ければ `sent:0` でよい。
+3. もう一度同じ回を実行し、`skipped` に振り替わる（＝二度送りしない）こと。
+4. `CRON_SECRET` を空にして叩くと 401 になること。
+
+> **定時実行は既定のブランチ（`main`）のものだけが動く。** `develop` に入れただけでは動かない。
+> GitHub の定時実行は混み具合で数十分遅れることがある。取りこぼしても次の回で拾い直す作りにしてある。
+
+---
+
 ## 環境変数まとめ（`.env.local` と本番環境変数の両方に）
 
 | 変数 | 用途 | 現状 | 必要な作業 |
@@ -287,8 +322,9 @@
 | `STRIPE_SECRET_KEY` | Stripe(秘密) | 未設定 | **テストキー設定（H-3）** |
 | `STRIPE_WEBHOOK_SECRET` | Stripe Webhook署名 | 未設定 | **設定（H-4）** |
 | `STRIPE_3DS_REQUIRED` | 3DS要求(任意) | 未設定＝既定で要求 | 通常は未設定でOK。※日本のガイドライン該当時はこの値に関係なく Stripe が3DSを出す |
+| `CRON_SECRET` | 受け渡しリマインドの定時実行の認証 | 未設定 | **設定（J-2）**。GitHub の `secrets.CRON_SECRET` と同じ値 |
 
-> 本番（Vercel等）ではサーバー専用変数（`SUPABASE_SERVICE_ROLE_KEY` / `PAYJP_SECRET_KEY` / `PAYJP_WEBHOOK_TOKEN` / `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` / `RESEND_API_KEY`）を**サーバー環境変数**として設定し、`NEXT_PUBLIC_` を付けないこと。
+> 本番（Vercel等）ではサーバー専用変数（`SUPABASE_SERVICE_ROLE_KEY` / `PAYJP_SECRET_KEY` / `PAYJP_WEBHOOK_TOKEN` / `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` / `RESEND_API_KEY` / `CRON_SECRET`）を**サーバー環境変数**として設定し、`NEXT_PUBLIC_` を付けないこと。
 
 ---
 
