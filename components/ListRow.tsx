@@ -133,8 +133,27 @@ export function ListRow({
  * 押せないので `<button>` にはしない。区切り線は行の全幅に引く（ListRow の
  * ようにアイコンぶん右へずらさない。左に揃える目印が無いため）。
  * 値が長いときは右寄せのまま折り返す。
+ *
+ * 値が文章（数行にわたる説明）のときは `stacked` にする。右寄せの細い列で
+ * 長文を読ませないよう、ラベルの下に値を左寄せで置く（特商法の表記など）。
  */
-export function DataRow({ label, value }: { label: ReactNode; value: ReactNode }) {
+export function DataRow({
+  label,
+  value,
+  stacked = false,
+}: {
+  label: ReactNode;
+  value: ReactNode;
+  stacked?: boolean;
+}) {
+  if (stacked) {
+    return (
+      <div className="flex flex-col gap-1 border-b border-line-light px-4 py-3 text-sm">
+        <span className="text-ink-sub">{label}</span>
+        <span className="leading-[1.8] break-words text-navy">{value}</span>
+      </div>
+    );
+  }
   return (
     <div className="flex min-h-12 items-center justify-between gap-4 border-b border-line-light px-4 text-sm">
       <span className="shrink-0 text-ink-sub">{label}</span>
