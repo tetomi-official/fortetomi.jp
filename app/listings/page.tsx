@@ -217,7 +217,7 @@ export default function ListingsPage() {
         {ready && !user && (
           <p className="border-b border-line-light bg-white px-4 py-3 text-[13px] text-ink-muted md:hidden">
             ログインすると自学部の教科書に絞り込まれます{" "}
-            <Link href={loginHref("/listings")} className="font-bold text-navy underline">
+            <Link href={loginHref("/listings")} className="font-bold whitespace-nowrap text-navy underline">
               ログイン
             </Link>
           </p>
