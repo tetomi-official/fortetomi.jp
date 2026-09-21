@@ -29,8 +29,8 @@ const 画面 = [
   { path: "/listings", 名前: "教科書一覧", 済み: true, ログイン: true },
   { path: "__listing__", 名前: "教科書の詳細", 済み: true, ログイン: true },
   { path: "/sell", 名前: "出品", 済み: false, ログイン: true },
-  { path: "/mypage", 名前: "マイページ", 済み: false, ログイン: true },
-  { path: "/mypage?tab=messages", 名前: "マイページ（メッセージ）", 済み: false, ログイン: true },
+  { path: "/mypage", 名前: "マイページ", 済み: true, ログイン: true },
+  { path: "/mypage?tab=messages", 名前: "マイページ（メッセージ）", 済み: true, ログイン: true },
   { path: "/sell/connect", 名前: "受取口座の登録", 済み: false, ログイン: true },
 ];
 
