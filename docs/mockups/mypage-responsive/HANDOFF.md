@@ -1,6 +1,6 @@
 # マイページ レスポンシブ修正 — 実装ハンドオフ
 
-> **2026-09-20 更新**: md（768px）未満のスマホ表示は `docs/mockups/mobile-v1/HANDOFF.md`（案1「余白と見出し」）で置き換え。このファイルの「≤480px」の指定と `Main.dc.html` は使わない。タブレット（768〜1024px、`TabletA.dc.html`）の指定は有効。
+> **2026-09-20 更新**: md（768px）未満のスマホ表示は `docs/mockups/mobile/HANDOFF.md`（案2「リスト型」）で置き換え。このファイルの「≤480px」の指定と `Main.dc.html` は使わない。タブレット（768〜1024px、`TabletA.dc.html`）の指定は有効。
 
 ## 対象
 - `app/mypage/page.tsx`（`.mypage-sidebar` / `.sidebar-nav` / `navItem()` 周辺、ログイン後・未ログイン後どちらのサイドバーも）
