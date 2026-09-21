@@ -24,6 +24,18 @@ const TARGETS = [
   { file: "V2Detail.dc.html", name: "v2-detail" },
   { file: "V2Footer.dc.html", name: "v2-footer" },
   { file: "V3Login.dc.html", name: "v3-login" },
+  // 追加画面（HANDOFF-more-screens.md）
+  { file: "V2Top.dc.html", name: "v2-top" },
+  { file: "V2Sell.dc.html", name: "v2-sell" },
+  { file: "V2Checkout.dc.html", name: "v2-checkout" },
+  { file: "V2Legal.dc.html", name: "v2-legal" },
+  { file: "V2Dashboard.dc.html", name: "v2-dashboard" },
+  { file: "V2MyListings.dc.html", name: "v2-my-listings" },
+  { file: "V2SentRes.dc.html", name: "v2-sent-res" },
+  { file: "V2RecvRes.dc.html", name: "v2-recv-res" },
+  { file: "V2Messages.dc.html", name: "v2-messages" },
+  { file: "V2Support.dc.html", name: "v2-support" },
+  { file: "V2Profile.dc.html", name: "v2-profile" },
 ];
 
 /** モックの外枠（width:390px の div）。dc の実行環境なしでも素の HTML として描画される。 */
@@ -37,6 +49,9 @@ async function capture(page, { file, name }) {
 
   const frame = await page.$(FRAME);
   if (!frame) throw new Error(`${file}: 外枠（${FRAME}）が見つからない`);
+  // トップ（2060px）・出品（1720px）のように1枚で全体を描いたモックもあるので、画面の高さを外枠に合わせる。
+  const { height } = await frame.boundingBox();
+  if (height > 844) await page.setViewport({ width: 390, height: Math.ceil(height), deviceScaleFactor: 2 });
   await frame.screenshot({ path: path.join(OUT_DIR, `${name}.png`) });
   console.log(`  ${name}.png`);
 
