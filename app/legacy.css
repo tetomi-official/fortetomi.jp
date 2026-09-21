@@ -41,6 +41,14 @@ ul, ol { list-style: none; }
 .legal-body th, .legal-body td { border: 1px solid var(--border-light, #e5e7eb); padding: 10px 12px; text-align: left; vertical-align: top; }
 .legal-body th { width: 34%; background: var(--bg-gray, #f7f8fa); font-weight: 700; color: var(--navy); }
 .legal-body .todo { color: #9a3412; background: #fff7ed; padding: 1px 6px; border-radius: 4px; font-size: 12px; }
+/* スマホ（md 未満）：長文の利用規約・プライバシーポリシーを読みやすくする（#52）。
+   文字を15pxへ、段落・見出し・リスト項目の余白を広げるだけで、構造は変えない。 */
+@media (max-width: 767px) {
+  .legal-body { font-size: 15px; }
+  .legal-body p { margin-bottom: 16px; }
+  .legal-body h2 { margin: 36px 0 12px; }
+  .legal-body li { margin-bottom: 8px; }
+}
 
 /* BUTTONS */
 .btn-white {
