@@ -8,19 +8,32 @@ import type { ReactNode } from "react";
  *
  *   SectionLabel … 灰色の地に置く見出しの帯
  *   RowGroup     … 白い行のまとまり（上下に 1px の線）
- *   ListRow      … 行そのもの（高さ 52px）
+ *   ListRow      … 押せる行（アイコン＋ラベル＋山形。高さ 52px）
+ *   DataRow      … 読むだけの行（左にラベル・右に値。高さ 48px 以上）
  */
 
 /** 行のまとまりに付ける見出しの帯。灰色の地の上に置く。 */
-export function SectionLabel({ children }: { children: ReactNode }) {
+export function SectionLabel({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <h2 className="px-4 pt-5 pb-2 text-xs font-bold tracking-[0.06em] text-ink-sub">{children}</h2>
+    <h2
+      className={`px-4 pt-5 pb-2 text-xs font-bold tracking-[0.06em] text-ink-sub ${className}`.trim()}
+    >
+      {children}
+    </h2>
   );
 }
 
 /**
  * 行のまとまり。上下に 1px の線を引く。
  * 区切り線は行ごとに持たせてあるので、ここでは最終行のぶんだけ打ち消している。
+ * ListRow は線を内側の要素（`data-row-line`）が持ち、DataRow は行そのものが持つので、
+ * 両方を打ち消す。
  */
 export function RowGroup({
   children,
@@ -31,7 +44,7 @@ export function RowGroup({
 }) {
   return (
     <div
-      className={`border-y border-line-light bg-white [&>:last-child_[data-row-line]]:border-b-0 ${className}`.trim()}
+      className={`border-y border-line-light bg-white [&>:last-child]:border-b-0 [&>:last-child_[data-row-line]]:border-b-0 ${className}`.trim()}
     >
       {children}
     </div>
@@ -111,5 +124,21 @@ export function ListRow({
     <button type="button" onClick={onClick} className={outer} aria-current={current ? "page" : undefined}>
       {inner}
     </button>
+  );
+}
+
+/**
+ * 読むだけの 1 行（左にラベル・右に値）。商品情報のような「項目と中身」に使う。
+ *
+ * 押せないので `<button>` にはしない。区切り線は行の全幅に引く（ListRow の
+ * ようにアイコンぶん右へずらさない。左に揃える目印が無いため）。
+ * 値が長いときは右寄せのまま折り返す。
+ */
+export function DataRow({ label, value }: { label: ReactNode; value: ReactNode }) {
+  return (
+    <div className="flex min-h-12 items-center justify-between gap-4 border-b border-line-light px-4 text-sm">
+      <span className="shrink-0 text-ink-sub">{label}</span>
+      <span className="min-w-0 text-right font-bold break-words text-navy">{value}</span>
+    </div>
   );
 }
