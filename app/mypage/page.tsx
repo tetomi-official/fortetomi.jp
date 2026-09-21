@@ -18,10 +18,11 @@ import { sellerNet, PLATFORM_FEE_RATE, PAYOUT_FEE_YEN } from "@/lib/constants";
 import { decodePaymentQR } from "@/lib/payments";
 import { canReserve, canChangeLoginEmail } from "@/lib/prerelease";
 import MessagesPanel from "@/components/MessagesPanel";
+import { ListRow, RowGroup, SectionLabel } from "@/components/ListRow";
 import SupportPanel from "@/components/SupportPanel";
 import BarcodeScanner from "@/components/BarcodeScanner";
 import { BarcodeFormat } from "@zxing/library";
-import type { Listing, Reservation, ReservationStatus } from "@/lib/types";
+import type { Listing, Reservation, ReservationStatus, User } from "@/lib/types";
 import { canTransition } from "@/lib/reservation-flow";
 import { loginHref } from "@/lib/redirect";
 
@@ -50,6 +51,11 @@ function tabFromQuery(value: string | null): Tab {
 
 const GRADES = ["1年", "2年", "3年", "4年", "院生"];
 
+// スマホは紺のページヘッダーを出さないので、上の余白はヘッダーの高さぶんだけにする。
+// 地の色も案2の #f4f5f6（md 以上は今までどおり）。
+const PAGE_MAIN =
+  "page-main bg-bg-light pt-[var(--header-h)] pb-8 md:bg-bg-gray md:pt-[calc(var(--header-h)+32px)] md:pb-20";
+
 export default function MyPage() {
   // useSearchParams を使うため Suspense の境界が要る（静的生成時の制約）。
   return (
@@ -77,6 +83,12 @@ function MyPageInner() {
     setSeenQueryTab(queryTab);
     setTab(tabFromQuery(queryTab));
   }
+
+  // スマホ（md 未満）では `/mypage`（?tab= なし）をメニュー画面にし、行を押すと
+  // `?tab=...` へ移る。中身を開いている間は上に「‹ マイページ」の戻る行を出す。
+  // 狭い画面にメニューと中身を積むと目当ての項目まで遠いため。md 以上は今までどおり
+  // サイドバーと中身を並べるので、この区別は使わない。
+  const showMenu = queryTab === null;
 
   // 画面内でタブを切り替えたときは URL も書き換える。片方だけ変えると、
   // 下タブバーから同じタブを選び直しても URL が変わらず反応しなくなる。
@@ -388,13 +400,13 @@ function MyPageInner() {
   const [recoverySubmitting, setRecoverySubmitting] = useState(false);
   const [verifySending, setVerifySending] = useState(false);
 
-  if (!ready) return <main className="page-main" style={{ background: "var(--bg-gray)" }} />;
+  if (!ready) return <main className={PAGE_MAIN} />;
 
   if (!user) {
     return (
       <>
         <MyHeader sub="— ログインしてください —" />
-        <main className="page-main" style={{ background: "var(--bg-gray)" }}>
+        <main className={PAGE_MAIN}>
           <div className="container">
             <div className="panel-card">
               <div className="panel-body" style={{ textAlign: "center", padding: "56px 32px" }}>
@@ -507,11 +519,31 @@ function MyPageInner() {
     return (
       <>
         <MyHeader sub={`${user.name}さんのページ`} />
-        <main className="page-main" style={{ background: "var(--bg-gray)" }}>
+        <main className={PAGE_MAIN}>
+          {/* スマホ：プロフィールの行と準備中の案内、ログアウトだけ（案2） */}
+          <div className="md:hidden">
+            <MobileProfile user={user} editable={false} />
+            <div className="mt-6 border-y border-line-light bg-white px-4 py-6">
+              <h3 className="text-base font-extrabold text-navy">マイページは準備中です</h3>
+              <p className="mt-2 text-sm leading-relaxed text-ink-sub">
+                出品・購入希望・メッセージなどの各機能は順次公開予定です。今しばらくお待ちください。
+              </p>
+            </div>
+            <RowGroup className="mt-6">
+              <ListRow
+                icon="fa-sign-out-alt"
+                label="ログアウト"
+                tone="danger"
+                chevron={false}
+                onClick={() => setLogoutConfirm(true)}
+              />
+            </RowGroup>
+          </div>
+
           <div className="container">
             <div className="mypage-layout">
               {/* SIDEBAR：プロフィール概要とログアウトのみ */}
-              <aside className="mypage-sidebar">
+              <aside className="mypage-sidebar hidden md:block">
                 <div className="sidebar-profile">
                   <div className="sidebar-avatar">{(user.name || "?").charAt(0)}</div>
                   <div className="sidebar-name">{user.name}</div>
@@ -529,7 +561,7 @@ function MyPageInner() {
               </aside>
 
               {/* MAIN PANEL：準備中の案内 */}
-              <div>
+              <div className="hidden md:block">
                 <div className="panel-card">
                   <div className="panel-body" style={{ textAlign: "center", padding: "56px 32px" }}>
                     <div style={{ fontSize: "3rem", marginBottom: 16 }}>🚧</div>
@@ -591,11 +623,61 @@ function MyPageInner() {
   return (
     <>
       <MyHeader sub={`${user.name}さんのページ`} />
-      <main className="page-main" style={{ background: "var(--bg-gray)" }}>
-        <div className="container">
+      <main className={PAGE_MAIN}>
+        {/* スマホ（md 未満）：?tab= が無いときはメニュー画面（案2・全幅の行） */}
+        {showMenu && (
+          <div className="md:hidden">
+            <MobileProfile user={user} />
+            <SectionLabel>取引</SectionLabel>
+            <RowGroup>
+              <ListRow icon="fa-chart-bar" label="ダッシュボード" href="/mypage?tab=dashboard" />
+              <ListRow
+                icon="fa-book"
+                label="出品中の教科書"
+                href="/mypage?tab=myListings"
+                badge={stats.active}
+              />
+              <ListRow
+                icon="fa-paper-plane"
+                label="送った購入希望"
+                href="/mypage?tab=sentRes"
+                badge={sentPending}
+              />
+              <ListRow
+                icon="fa-inbox"
+                label="受け取った購入希望"
+                href="/mypage?tab=receivedRes"
+                badge={recvPending}
+              />
+            </RowGroup>
+            <SectionLabel>サポート</SectionLabel>
+            <RowGroup>
+              <ListRow icon="fa-comments" label="メッセージ" href="/mypage?tab=messages" />
+              <ListRow icon="fa-headset" label="運営サポート" href="/mypage?tab=support" />
+            </RowGroup>
+            <RowGroup className="mt-6">
+              <ListRow
+                icon="fa-sign-out-alt"
+                label="ログアウト"
+                tone="danger"
+                chevron={false}
+                onClick={() => setLogoutConfirm(true)}
+              />
+            </RowGroup>
+          </div>
+        )}
+
+        {/* スマホ：中身を開いている間はメニューへ戻る行を出す */}
+        {!showMenu && (
+          <RowGroup className="mb-4 md:hidden">
+            <ListRow icon="fa-chevron-left" label="マイページ" href="/mypage" chevron={false} />
+          </RowGroup>
+        )}
+
+        <div className={`container ${showMenu ? "hidden md:block" : ""}`.trim()}>
           <div className="mypage-layout">
-            {/* SIDEBAR */}
-            <aside className="mypage-sidebar">
+            {/* SIDEBAR（md 以上。スマホは上のメニュー画面が代わりを務める） */}
+            <aside className="mypage-sidebar hidden md:block">
               <div className="sidebar-profile">
                 <div className="sidebar-avatar">{(user.name || "?").charAt(0)}</div>
                 <div className="sidebar-name">{user.name}</div>
@@ -1374,9 +1456,44 @@ function MyPageInner() {
   );
 }
 
+/**
+ * スマホのメニュー最上部に置くプロフィールの行（案2）。
+ * サイドバーの紺のプロフィールとは別物で、md 未満でしか出さない。
+ */
+function MobileProfile({ user, editable = true }: { user: User; editable?: boolean }) {
+  return (
+    <div className="flex items-center gap-[14px] border-b border-line-light bg-white px-4 py-5">
+      <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-navy/8 text-[22px] font-bold text-navy">
+        {(user.name || "?").charAt(0)}
+      </span>
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="truncate text-lg font-black text-navy">{user.name}</span>
+        <span className="flex items-center gap-2 text-[13px] text-ink-sub">
+          <span className="truncate">{`${user.faculty} ${user.grade}`.trim()}</span>
+          <span className="flex shrink-0 items-center gap-[3px] font-bold text-navy">
+            <i className="fas fa-star text-[11px]" aria-hidden="true" />
+            {user.rating}
+          </span>
+        </span>
+      </div>
+      {/* phase 0（閲覧のみ）はプロフィール編集を開けないので、行き先の無い「編集」は出さない。 */}
+      {editable && (
+        <Link
+          href="/mypage?tab=profile"
+          className="flex min-h-11 shrink-0 items-center gap-1 text-[13px] font-bold text-navy"
+        >
+          編集
+          <i className="fas fa-chevron-right text-[11px]" aria-hidden="true" />
+        </Link>
+      )}
+    </div>
+  );
+}
+
 function MyHeader({ sub }: { sub: string }) {
   return (
-    <div className="page-header">
+    // 紺のページヘッダーは md 以上だけ。スマホはヘッダー直下からプロフィールの行にする（案2）。
+    <div className="page-header hidden md:block">
       <div className="page-header-inner">
         <div className="breadcrumb">
           <Link href="/">Home</Link>

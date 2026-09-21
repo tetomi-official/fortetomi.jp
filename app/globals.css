@@ -41,10 +41,13 @@
   --color-navy-light: #1e4a6e;
   --color-navy-dark:  #0d2035;
 
-  /* 文字 */
+  /* 文字。濃い順。白地で 4.5:1 を満たすのは ink-sub まで。
+     ink-muted と ink-faint は、読めなくても困らない飾り（山形など）に使う。 */
   --color-ink:        #14314A;
   --color-ink-mid:    #3d5a6e;
+  --color-ink-sub:    #5f7688;
   --color-ink-muted:  #7a93a5;
+  --color-ink-faint:  #9aabb8;
 
   /* 罫線・背景 */
   --color-line:       #d0d5d9;
@@ -64,6 +67,8 @@
   --color-ok-strong:   #059669;
   --color-ng:          #ef4444;
   --color-ng-strong:   #e5484d;
+  /* 文字だけの危険操作（ログアウトなど）用。--color-ng は白地で 4.5:1 に届かない。 */
+  --color-ng-ink:      #c53030;
   --color-alert:       #9a3412;
   --color-alert-bg:    #fff7ed;
   --color-alert-line:  #fdba74;

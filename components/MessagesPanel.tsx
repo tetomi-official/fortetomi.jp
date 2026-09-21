@@ -73,7 +73,13 @@ export default function MessagesPanel({
                       </span>
                     </div>
                     <div className="msg-thread-sub">
-                      <i className="fas fa-book" /> {t.reservation.listing_title}
+                      {/* 本の名前は詰めて出す。囲まないと、長い名前が右の役割ラベルを
+                          箱の外へ押し出して、狭い画面で見えなくなる。
+                          アイコンと名前の 8px は、囲う前の flex の間隔と同じ。 */}
+                      <span className="flex min-w-0 items-center gap-2">
+                        <i className="fas fa-book" />
+                        <span className="truncate">{t.reservation.listing_title}</span>
+                      </span>
                       <span className="msg-thread-role">
                         {t.role === "buyer" ? "購入希望" : "受け取った希望"}
                       </span>
