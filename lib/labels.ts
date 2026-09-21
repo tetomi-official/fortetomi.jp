@@ -50,6 +50,20 @@ export function formatDate(ts?: number): string {
 }
 
 /**
+ * "YYYY-MM-DD" を "9/30（水）" の形にする（issue #54）。
+ * Stripe から来る入金予定日を画面に出すために使う。曜日まで出すのは、
+ * 「4営業日後」のような相対表現より、実際の曜日の方が待ち時間を掴みやすいため。
+ * 形が違う文字列は触らずそのまま返す。
+ */
+export function formatYmd(ymd: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd);
+  if (!m) return ymd;
+  // 日付だけを見たいので、時差でずれない正午のUTCとして解釈する。
+  const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12));
+  return `${Number(m[2])}/${Number(m[3])}（${"日月火水木金土"[d.getUTCDay()]}）`;
+}
+
+/**
  * 受け渡し候補（日付＋時刻）を表示用に整形（機能④）。
  * 例: ("2026-06-30", "10:00") -> "6/30 10:00"。
  * ISO 形式でない旧データ（"午前中（9:00〜12:00）" 等）はそのまま連結する。

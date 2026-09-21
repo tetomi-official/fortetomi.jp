@@ -86,8 +86,11 @@ export const PAYMENT_TIMING_NOTICE =
  */
 export const PLATFORM_FEE_RATE = 0.1;
 
-/** 振込手数料（PB-046）。振込申請時に売上残高から差し引く。 */
-export const PAYOUT_FEE_YEN = 250;
+// 振込手数料（旧 PAYOUT_FEE_YEN = 250）は削除した（issue #54）。
+// 出品者から振込手数料を取る場面は存在しない。決済が成立した時点で代金は出品者本人の
+// Stripe 残高へ移り、銀行への入金も Stripe が自動で行う。Stripe の入金手数料
+// （0.25% + ¥250／回）は運営に請求されるもので、出品者の受取額からは引かれない。
+// 実測と判断の経緯は docs/decisions/stripe-payout-behavior.md。
 
 /** 販売価格から出品者の受取額（サービス手数料10%差引後）を計算する。端数は切り捨て。 */
 export function sellerNet(price: number): number {
