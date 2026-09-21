@@ -20,6 +20,19 @@ const PRICE_RANGES = [
   { value: "5000-", label: "¥5,000〜" },
 ];
 
+// スマホの丸ボタン用の選択肢。ボタンには選んでいる値が出るので、
+// 未選択のときの文字は「すべての状態」ではなく項目名そのものにする。
+const COND_PILL = [
+  { value: "", label: "状態" },
+  ...CONDITION_OPTIONS.map((c) => ({ value: c, label: c })),
+];
+const PRICE_PILL = [{ value: "", label: "価格" }, ...PRICE_RANGES.slice(1)];
+const SORT_PILL = [
+  { value: "newest", label: "新着順" },
+  { value: "price_asc", label: "安い順" },
+  { value: "price_desc", label: "高い順" },
+];
+
 export default function ListingsPage() {
   const { user, ready } = useAuth();
   const [listings, setListings] = useState<Listing[]>([]);
@@ -101,7 +114,8 @@ export default function ListingsPage() {
 
   return (
     <>
-      <div className="page-header">
+      {/* 紺のページヘッダーは md 以上だけ。スマホはヘッダー直下の検索帯にする（案2）。 */}
+      <div className="page-header hidden md:block">
         <div className="page-header-inner">
           <div className="breadcrumb">
             <Link href="/">Home</Link>
@@ -149,10 +163,74 @@ export default function ListingsPage() {
         </div>
       </div>
 
-      <main className="page-main" style={{ background: "var(--bg-gray)" }}>
-        <div className="container">
-          {/* SEARCH & FILTER */}
-          <div className="search-filter-bar">
+      <main className="page-main bg-bg-light pt-[var(--header-h)] pb-8 md:bg-bg-gray md:pt-[calc(var(--header-h)+32px)] md:pb-20">
+        {/* スマホの検索帯。検索ボタンは出さず、打てばその場で絞り込まれる（Enter で確定）。 */}
+        <form
+          role="search"
+          onSubmit={(e) => {
+            e.preventDefault();
+            setPage(1);
+          }}
+          className="border-b border-line-light bg-white px-4 py-3 md:hidden"
+        >
+          <label className="flex h-11 items-center gap-2 rounded-[10px] bg-bg-light px-3 text-ink-muted">
+            <span aria-hidden="true">
+              <i className="fas fa-search" />
+            </span>
+            <input
+              type="search"
+              aria-label="教科書を検索"
+              placeholder="タイトル・授業名で検索"
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setPage(1);
+              }}
+              className="min-w-0 flex-1 bg-transparent text-base text-navy outline-none"
+            />
+          </label>
+          {/* 絞り込み。はみ出す分は横スクロールで逃がす。 */}
+          <div className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4">
+            <FilterPill
+              label="状態"
+              value={cond}
+              options={COND_PILL}
+              onChange={(v) => {
+                setCond(v);
+                setPage(1);
+              }}
+            />
+            <FilterPill
+              label="価格"
+              value={price}
+              options={PRICE_PILL}
+              onChange={(v) => {
+                setPrice(v);
+                setPage(1);
+              }}
+            />
+            <FilterPill label="並び順" value={sort} options={SORT_PILL} onChange={setSort} />
+          </div>
+        </form>
+
+        {/* 紺ヘッダーを出さない代わりに、未ログインの人にだけ絞り込みの案内を残す */}
+        {ready && !user && (
+          <p className="border-b border-line-light bg-white px-4 py-3 text-[13px] text-ink-muted md:hidden">
+            ログインすると自学部の教科書に絞り込まれます{" "}
+            <Link href={loginHref("/listings")} className="font-bold whitespace-nowrap text-navy underline">
+              ログイン
+            </Link>
+          </p>
+        )}
+
+        <p className="px-4 py-3 text-[13px] text-ink-muted md:hidden">
+          教科書一覧 <strong className="font-extrabold text-navy">{total}</strong> 件
+        </p>
+
+        {/* md 未満は内枠を使わず全幅にする（行を画面いっぱいに並べるため） */}
+        <div className="md:container">
+          {/* SEARCH & FILTER（md 以上） */}
+          <div className="search-filter-bar hidden md:block">
             <div className="search-bar">
               <input
                 type="text"
@@ -209,8 +287,8 @@ export default function ListingsPage() {
             </div>
           </div>
 
-          {/* SORT BAR */}
-          <div className="sort-bar">
+          {/* SORT BAR（md 以上。スマホは上の件数の帯と、行ひとつの表示だけ） */}
+          <div className="sort-bar hidden md:flex">
             <p className="result-count">
               <strong>{total}</strong> 件
             </p>
@@ -249,7 +327,7 @@ export default function ListingsPage() {
               <p>条件を変えて検索してみてください。</p>
             </div>
           ) : view === "grid" ? (
-            <div className="listings-grid">
+            <div className="flex flex-col md:grid md:grid-cols-[repeat(auto-fill,minmax(240px,1fr))] md:gap-5">
               {pageItems.map((item) => (
                 <ListingCard key={item.id} item={item} />
               ))}
@@ -264,7 +342,7 @@ export default function ListingsPage() {
 
           {/* PAGINATION */}
           {pages > 1 && (
-            <div className="pagination">
+            <div className="pagination flex-wrap">
               <button className="page-btn" disabled={current === 1} onClick={() => goPage(current - 1)}>
                 <i className="fas fa-chevron-left" />
               </button>
@@ -295,6 +373,48 @@ export default function ListingsPage() {
         </div>
       </main>
     </>
+  );
+}
+
+/**
+ * スマホの絞り込みボタン（案2の丸ボタン）。
+ *
+ * 見えているのは丸ボタンだが、実体は透明にして重ねた <select>。こうすると
+ * 端末そのままの選択画面が出て、キーボード操作にも乗る。
+ * iOS は文字が 16px 未満の入力欄にふれると勝手に拡大するので、<select> 側だけ
+ * 16px にしてある（見えている文字は指定どおり 14px）。
+ */
+function FilterPill({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (v: string) => void;
+}) {
+  const selected = options.find((o) => o.value === value);
+  return (
+    <span className="relative inline-flex shrink-0">
+      <select
+        aria-label={label}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="peer absolute inset-0 h-full w-full text-base opacity-0"
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+      <span className="pointer-events-none flex h-11 items-center gap-1.5 rounded-full border border-line bg-white px-4 text-sm whitespace-nowrap text-navy peer-focus-visible:ring-2 peer-focus-visible:ring-navy">
+        {selected?.label ?? label}
+        <i className="fas fa-chevron-down text-[11px] text-ink-mid" aria-hidden="true" />
+      </span>
+    </span>
   );
 }
 
