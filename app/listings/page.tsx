@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { fetchListings, fetchListingsByFaculty } from "@/lib/listings";
 import { conditionLabel, yen, CONDITION_OPTIONS } from "@/lib/labels";
 import ListingCard from "@/components/ListingCard";
@@ -34,14 +35,25 @@ const SORT_PILL = [
 ];
 
 export default function ListingsPage() {
+  // useSearchParams を使うため Suspense の境界が要る（静的生成時の制約）。
+  return (
+    <Suspense fallback={null}>
+      <ListingsPageInner />
+    </Suspense>
+  );
+}
+
+function ListingsPageInner() {
   const { user, ready } = useAuth();
+  const searchParams = useSearchParams();
   const [listings, setListings] = useState<Listing[]>([]);
   // どの条件（学部・本人）で読み込み終えたか。今の条件と違えば「読み込み中」。
   const listKey = user?.faculty ? `${user.faculty}:${user.id}` : "all";
   const [loadedKey, setLoadedKey] = useState<string | null>(null);
   const loading = !ready || loadedKey !== listKey;
   const all = useMemo(() => listings.filter((l) => l.status === "出品中"), [listings]);
-  const [query, setQuery] = useState("");
+  // トップの検索欄で打った言葉は `?q=` で渡ってくる。最初の絞り込みに入れる。
+  const [query, setQuery] = useState(() => searchParams.get("q") ?? "");
   const [cond, setCond] = useState("");
   const [price, setPrice] = useState("");
   const [sort, setSort] = useState("newest");
