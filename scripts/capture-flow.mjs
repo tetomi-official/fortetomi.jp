@@ -112,6 +112,42 @@ async function fillStep2(page) {
 }
 
 /**
+ * スマホ幅（md 未満）の出品フォームを埋める。
+ * スマホは3ステップではなく1枚のフォーム（案2・リスト型）なので、PC とは道筋が違う。
+ * 入力欄は name 属性で引く（`app/sell/page.tsx` の md 未満のブロック）。
+ */
+async function fillSellMobile(page) {
+  // 入力欄は座標を使わず focus で選ぶ。スマホ相当の表示では、puppeteer のクリックが
+  // 画面をスクロールしたあとの座標を取り違えて、下タブバーを押してしまうことがある。
+  const 入力 = async (name, value) => {
+    const el = await page.$(`[data-sell-form="mobile"] [name="${name}"]`);
+    if (!el) throw new Error(`スマホの出品フォームに ${name} の入力欄がありません`);
+    await el.focus();
+    await page.keyboard.type(value, { delay: 8 });
+  };
+  await 入力("title", SAMPLE.title);
+  await 入力("subject", SAMPLE.subject);
+  await 入力("author", SAMPLE.author);
+  await 入力("publisher", SAMPLE.publisher);
+  await 入力("isbn", SAMPLE.isbn);
+  await 入力("year", SAMPLE.year);
+  await 入力("price", SAMPLE.price);
+  await 入力("location", SAMPLE.location);
+  await 入力("desc", SAMPLE.desc);
+  await clickText(page, '[data-sell-form="mobile"] label', SAMPLE.condition);
+
+  // 写真は input[type=file] に直接渡す（PC と同じ入力欄。スマホでは「追加」に隠れている）。
+  const fileInput = await page.$('input[type="file"]');
+  if (!fileInput) throw new Error("写真アップロードの input が見つかりません");
+  await fileInput.uploadFile(...PHOTOS);
+  await page.waitForFunction(
+    () => document.querySelectorAll('[data-sell-form="mobile"] [data-photo-thumb]').length >= 2,
+    { timeout: 10000 },
+  );
+  await wait(500);
+}
+
+/**
  * 1端末ぶんの撮影。
  * @param {boolean} submit true なら実際に出品を作成して完了画面まで撮る
  * @returns {Promise<import("puppeteer-core").Page|null>} 完了画面まで進んだ page（sp 用に使い回す）
@@ -140,32 +176,45 @@ async function capture(browser, device, { submit }) {
   await shot(page, device, "04-listings");
 
   await go("/sell");
-  await waitForText(page, "01 — 基本情報");
-  // プレリリース中（RELEASE_PHASE < 2）は「次へ」が無効で先に進めない。
-  const gated = await page.evaluate(() =>
-    [...document.querySelectorAll("button")].some(
-      (b) => b.textContent?.includes("次へ") && b.disabled,
-    ),
+  // md 未満は3ステップではなく1枚のフォーム（案2・リスト型）。道筋が違うので分ける。
+  const スマホ = VIEWPORTS[device].width < 768;
+  await waitForText(page, スマホ ? "教科書を出品する" : "01 — 基本情報");
+  // プレリリース中（RELEASE_PHASE < 2）は先へ進むボタンが無効になっている。
+  const gated = await page.evaluate(
+    (文言) =>
+      [...document.querySelectorAll("button")].some(
+        (b) => b.textContent?.includes(文言) && b.disabled,
+      ),
+    スマホ ? "準備中です" : "次へ",
   );
   if (gated) {
     throw new Error(
-      "出品が解禁されていません（「次へ」が無効）。プロジェクト直下に .env.development.local を作り " +
+      "出品が解禁されていません。プロジェクト直下に .env.development.local を作り " +
         "NEXT_PUBLIC_RELEASE_PHASE=2 を書いてから開発サーバーを再起動してください。",
     );
   }
   await shot(page, device, "05-sell-step1-empty");
 
-  await fillStep1(page);
-  await shot(page, device, "06-sell-step1-filled");
+  if (スマホ) {
+    await fillSellMobile(page);
+    await shot(page, device, "06-sell-step1-filled");
+    // 1枚のフォームなので、下半分（状態・価格・コメント）も撮っておく。
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await wait(600);
+    await shot(page, device, "07-sell-step2");
+  } else {
+    await fillStep1(page);
+    await shot(page, device, "06-sell-step1-filled");
 
-  await clickText(page, "button", "次へ");
-  await waitForText(page, "03 — 状態");
-  await fillStep2(page);
-  await shot(page, device, "07-sell-step2");
+    await clickText(page, "button", "次へ");
+    await waitForText(page, "03 — 状態");
+    await fillStep2(page);
+    await shot(page, device, "07-sell-step2");
 
-  await clickText(page, "button", "確認へ");
-  await waitForText(page, "05 — 出品内容の確認");
-  await shot(page, device, "08-sell-step3-confirm");
+    await clickText(page, "button", "確認へ");
+    await waitForText(page, "05 — 出品内容の確認");
+    await shot(page, device, "08-sell-step3-confirm");
+  }
 
   if (!submit) {
     console.log("  … 出品の実行はスキップ（完了画面は PC の周回で撮影済み）");
