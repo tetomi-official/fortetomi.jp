@@ -1,7 +1,8 @@
 import { sellerNet } from "./constants";
 import { applicationFeeAmount } from "./payment-provider/fees";
 import { formatSlot, yen } from "./labels";
-import { mailButton, mailLayout, mailTable, siteUrl } from "./mail";
+import { mailButton, mailLayout, mailSteps, mailTable, siteUrl } from "./mail";
+import { SUPPORT_CONTACT } from "./support";
 import type { CandidateSlot } from "./types";
 
 // ===================================================
@@ -45,6 +46,20 @@ function 確定した日時(d: ReservationMailData): string | null {
   return null;
 }
 
+/**
+ * うまくいかないときの連絡先。
+ *
+ * 当日その場で困るのは「相手が来ない」「QRが読めない」「決済が通らない」の3つ。
+ * どれも先にアプリ内で相手に連絡すれば片づくことが多いので、運営の窓口より先に
+ * そちらへ誘導する。文面はここ1か所に置き、どのメールでも同じ体裁にする。
+ */
+function 困ったときは(状況: string): string {
+  return `<p style="font-size:13px;color:#374151">
+      ${状況}<br />
+      解決しないときは運営（<a href="mailto:${SUPPORT_CONTACT}">${SUPPORT_CONTACT}</a>）までご連絡ください。
+    </p>`;
+}
+
 /** 購入希望が届いた（→出品者） */
 export function purchaseRequestMail(d: ReservationMailData): Mail {
   const 候補 = (d.candidateSlots ?? []).map((s) => formatSlot(s.date, s.time)).join(" / ") || "—";
@@ -73,10 +88,11 @@ export function purchaseRequestMail(d: ReservationMailData): Mail {
  */
 export function scheduleConfirmedMail(d: ReservationMailData, 宛先: "buyer" | "seller"): Mail {
   const 日時 = 確定した日時(d) ?? "調整した日時";
+  const 場所 = d.proposedLocation || d.location;
   const 明細 = mailTable([
     ["教科書", d.listingTitle],
     ["受け渡し日時", 日時],
-    ["場所", d.proposedLocation || d.location],
+    ["場所", 場所],
     ["金額", yen(d.price)],
   ]);
 
@@ -87,9 +103,21 @@ export function scheduleConfirmedMail(d: ReservationMailData, 宛先: "buyer" | 
         "受け渡し日が決まりました",
         `<p>${d.sellerName} さんが受け渡しの日程を確定しました。</p>` +
           明細 +
-          `<p><strong>支払いは受け渡しの場で行います。</strong>下のボタンから支払いカードを登録し、
-           当日はQRを出品者に見せてください。読み取られた時点で決済されます。</p>` +
-          mailButton("受け取り・支払いの画面へ", checkout(d.reservationId)),
+          `<p><strong>支払いは受け渡しの場で行います。</strong>当日の流れは次のとおりです。</p>` +
+          mailSteps([
+            `${日時}に「${場所}」へ行き、${d.sellerName} さんと会う`,
+            "教科書を受け取り、その場で状態を確かめる",
+            "「受け取り・支払い」の画面を開き、QRを出品者に見せる",
+            `出品者がQRを読み取ると、その場で登録済みのカードに ${yen(d.price)} が決済されます`,
+          ]) +
+          `<p><strong>現金のやり取りはありません。</strong>出品者にその場でお金を渡す必要はなく、
+           求められた場合も渡さないでください。</p>` +
+          `<p>QRは支払いカードを登録すると表示されます。当日あわてないよう、先に登録しておいてください。</p>` +
+          mailButton("受け取り・支払いの画面へ", checkout(d.reservationId)) +
+          困ったときは(
+            `出品者が来ない、QRが表示されない、決済が通らない ── こうしたときは、
+             まずマイページのメッセージで ${d.sellerName} さんに連絡してください。`,
+          ),
       ),
     };
   }
@@ -99,9 +127,21 @@ export function scheduleConfirmedMail(d: ReservationMailData, 宛先: "buyer" | 
       "受け渡し日が決まりました",
       `<p>${d.buyerName} さんが提案した日程を承諾しました。</p>` +
         明細 +
-        `<p>当日は買い手が出すQRを、マイページの「QRを読み取って決済」から読み取ってください。
-         読み取った時点で決済が成立し、売上が確定します。</p>` +
-        mailButton("マイページで確認する", mypage()),
+        `<p>当日の流れは次のとおりです。</p>` +
+        mailSteps([
+          `${日時}に「${場所}」へ行き、${d.buyerName} さんと会う`,
+          "教科書を渡す",
+          "マイページの「QRを読み取って決済」を開き、買い手が見せるQRを読み取る",
+          `読み取った時点で ${yen(d.price)} の決済が成立し、売上が確定します`,
+        ]) +
+        `<p><strong>現金のやり取りはありません。</strong>その場で代金を受け取らないでください。
+         受け取ってしまうと二重に支払わせることになります。</p>` +
+        mailButton("マイページで確認する", mypage()) +
+        困ったときは(
+          `買い手が来ない、QRが読み取れない、決済が通らない ── こうしたときは、
+           まずマイページのメッセージで ${d.buyerName} さんに連絡してください。
+           教科書はまだ渡さずにおいてください。`,
+        ),
     ),
   };
 }
@@ -153,8 +193,13 @@ export function paymentCompletedBuyerMail(d: ReservationMailData): Mail {
           ["お支払い金額", yen(d.price)],
           ["お相手", `${d.sellerName} さん`],
         ]) +
+        `<p>この取引で現金のやり取りは発生していません。</p>` +
         `<p>ご利用ありがとうございました。</p>` +
-        mailButton("取引を確認する", mypage()),
+        mailButton("取引を確認する", mypage()) +
+        困ったときは(
+          `受け取った教科書が説明と違う、金額が合わないといったときは、
+           まずマイページのメッセージで ${d.sellerName} さんに連絡してください。`,
+        ),
     ),
   };
 }
@@ -176,7 +221,11 @@ export function paymentCompletedSellerMail(d: ReservationMailData): Mail {
         ]) +
         `<p>売上は決済会社（Stripe）のあなたのアカウントへ送られました。残高と入金の予定は
          出品者向けの画面で確認できます。運営が売上金を預かることはありません。</p>` +
-        mailButton("売上・入金を確認する", `${siteUrl()}/sell/connect`),
+        mailButton("売上・入金を確認する", `${siteUrl()}/sell/connect`) +
+        困ったときは(
+          `受け渡しの内容について確認したいことがあれば、
+           まずマイページのメッセージで ${d.buyerName} さんに連絡してください。`,
+        ),
     ),
   };
 }

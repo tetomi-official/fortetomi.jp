@@ -71,6 +71,23 @@ export function mailTable(rows: [string, string][]): string {
 }
 
 /**
+ * 順番のある案内（当日の流れなど）。
+ *
+ * <ol> は番号の位置や字下げをメールソフトが勝手に変えるため、番号のセルと
+ * 本文のセルに分けた <table> で組む。画像は一切使わないので、画像を表示しない
+ * 設定でもそのまま読める。
+ */
+export function mailSteps(steps: string[]): string {
+  const tr = steps
+    .map(
+      (s, i) =>
+        `<tr><td style="padding:6px 12px 6px 0;color:#1e293b;font-weight:bold;vertical-align:top;white-space:nowrap">${i + 1}.</td><td style="padding:6px 0;vertical-align:top">${s}</td></tr>`,
+    )
+    .join("");
+  return `<table style="border-collapse:collapse;margin:12px 0">${tr}</table>`;
+}
+
+/**
  * MAIL_CAPTURE_DIR が設定されていれば、メールの中身を1通1ファイルの JSON で書き出す。
  * 開発・テスト専用。NODE_ENV=production では何もしない（設定が紛れ込んでも本番で書かない）。
  * 書き出しに失敗しても送信は止めない。
