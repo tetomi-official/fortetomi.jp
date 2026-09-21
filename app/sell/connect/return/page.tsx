@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
+import FormCard from "@/components/FormCard";
+import NarrowPage from "@/components/NarrowPage";
 
 // Stripe のオンボーディングから戻ってきた直後の画面。
 // account.updated Webhook がまだ届いていない可能性があるので、ここで一度
@@ -49,16 +51,14 @@ export default function SellConnectReturnPage() {
     });
   }, [ready, user]);
 
-  const wrap = (children: React.ReactNode) => (
-    <main style={{ maxWidth: 520, margin: "40px auto", padding: "0 16px" }}>{children}</main>
-  );
+  const wrap = (children: React.ReactNode) => <NarrowPage>{children}</NarrowPage>;
 
   if (ready && !user) return wrap(<p>ログインが必要です。</p>);
   if (error) return wrap(<p style={{ color: "#c0392b" }}>{error}</p>);
   if (!status) return wrap(<p>確認中…</p>);
 
   return wrap(
-    <div className="form-card">
+    <FormCard>
       {status.state === "利用可能" ? (
         <>
           <h2>登録が完了しました</h2>
@@ -88,6 +88,6 @@ export default function SellConnectReturnPage() {
       >
         {status.state === "利用可能" ? "出品にもどる" : "登録画面にもどる"}
       </Link>
-    </div>,
+    </FormCard>,
   );
 }

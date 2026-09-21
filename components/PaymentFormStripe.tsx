@@ -8,6 +8,7 @@ import {
   useElements,
   useStripe,
 } from "@stripe/react-stripe-js";
+import FormCard from "@/components/FormCard";
 
 // 支払いカードの登録フォーム（Stripe 版）。
 //
@@ -114,7 +115,7 @@ function StripeSetupForm({
   }
 
   return (
-    <div className="form-card">
+    <FormCard>
       <h2>支払いカードの登録</h2>
       <div className="form-group">
         <PaymentElement options={{ layout: "tabs" }} />
@@ -132,7 +133,7 @@ function StripeSetupForm({
       >
         {submitting ? "登録中…" : submitLabel}
       </button>
-    </div>
+    </FormCard>
   );
 }
 
@@ -216,30 +217,39 @@ export default function PaymentFormStripe({
 
   if (done) {
     return (
-      <div className="form-card">
+      <FormCard>
         <h2>カードを登録しました</h2>
         <p className="form-hint">
           受け渡し時に、このカードへ自動で決済されます。QRコードを出品者に見せてください。
         </p>
-      </div>
+      </FormCard>
     );
   }
 
   if (!clientSecret) {
     return (
-      <div className="form-card">
+      <FormCard>
         <h2>支払いカードの登録</h2>
         {error ? (
           <p style={{ color: "#c0392b", fontSize: 14 }}>{error}</p>
         ) : (
           <p className="form-hint">読み込み中…</p>
         )}
-      </div>
+      </FormCard>
     );
   }
 
   return (
-    <Elements stripe={getStripePromise()} options={{ clientSecret, locale: "ja" }}>
+    <Elements
+      stripe={getStripePromise()}
+      options={{
+        clientSecret,
+        locale: "ja",
+        // 入力欄の文字を 16px にする。これを下回ると iOS が勝手に画面を拡大する。
+        // PaymentElement は iframe の中なので、CSS ではなくここから渡すしかない。
+        appearance: { variables: { fontSizeBase: "16px" } },
+      }}
+    >
       <StripeSetupForm submitLabel={submitLabel} onSucceeded={handleSucceeded} />
     </Elements>
   );

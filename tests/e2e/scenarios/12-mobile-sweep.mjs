@@ -16,7 +16,13 @@
 
 import { ACCOUNTS, go, login, openPersona, wait } from "../helpers.mjs";
 
-/** 巡回する画面。済み=true にした画面は、崩れたらテストが落ちる。 */
+/** 決済画面を開くための予約。seed（supabase/seed.sql）の「鈴木が承認済み・カード未登録」の1件。 */
+const 承認済みの予約 = "b0000000-0000-0000-0000-000000000002";
+
+/**
+ * 巡回する画面。済み=true にした画面は、崩れたらテストが落ちる。
+ * ログイン: false=未ログイン / true=出品者(佐藤) / "買い手"=上の予約の買い手(鈴木)
+ */
 const 画面 = [
   { path: "/", 名前: "トップ", 済み: false, ログイン: false },
   { 下タブなし: true, path: "/login", 名前: "ログイン", 済み: true, ログイン: false },
@@ -31,7 +37,8 @@ const 画面 = [
   { path: "/sell", 名前: "出品", 済み: false, ログイン: true },
   { path: "/mypage", 名前: "マイページ", 済み: true, ログイン: true },
   { path: "/mypage?tab=messages", 名前: "マイページ（メッセージ）", 済み: true, ログイン: true },
-  { path: "/sell/connect", 名前: "受取口座の登録", 済み: false, ログイン: true },
+  { path: "/sell/connect", 名前: "受取口座の登録", 済み: true, ログイン: true },
+  { path: `/checkout/${承認済みの予約}`, 名前: "決済（カード登録）", 済み: true, ログイン: "買い手" },
 ];
 
 /**
@@ -190,8 +197,11 @@ export const T39 = {
   async run({ browser, log }) {
     const guest = await openPersona(browser, { device: "se" });
     const member = await openPersona(browser, { device: "se" });
+    // 決済画面は「承認済みの購入希望の買い手」でしか開けないので、その人でも1つ開く。
+    const buyer = await openPersona(browser, { device: "se" });
     try {
       await login(member.page, ACCOUNTS.seller);
+      await login(buyer.page, ACCOUNTS.sellerNoConnect);
 
       // 詳細ページ用に、一覧の先頭の教科書を1つ調べておく
       await go(member.page, "/listings");
@@ -210,13 +220,27 @@ export const T39 = {
           log(`（${s.名前}：一覧に教科書が無いので飛ばした）`);
           continue;
         }
-        const page = s.ログイン ? member.page : guest.page;
+        const page = s.ログイン === "買い手" ? buyer.page : s.ログイン ? member.page : guest.page;
         await go(page, path);
         await wait(1800); // 読み込みと差し替えが落ち着くのを待つ
         // Next.js 開発サーバーのインジケータはプロダクトのUIではないので隠す（下タブに重なる）。
         await page.addStyleTag({ content: "nextjs-portal{display:none !important}" }).catch(() => {});
+        // Stripe がテストモードのときだけ右下に出す開発用の吹き出し（easel）も同じく
+        // プロダクトのUIではない。本番（本物のキー）では出ない。
+        // インラインで display:block !important を持っていて CSS では消せないので、取り除く。
+        await page
+          .evaluate(() => {
+            document
+              .querySelectorAll('iframe[src*="elements-inner-easel"]')
+              .forEach((f) => f.remove());
+          })
+          .catch(() => {});
 
         const { 共通, 問題 } = await page.evaluate(画面を調べる, !!s.下タブなし);
+        // いちばん下へ送る。画像や決済フォームの読み込みで背が伸びることがあるので、
+        // 一度送って落ち着かせてから、もう一度送って測る。
+        await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+        await wait(600);
         await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
         await wait(400);
         共通.push(...(await page.evaluate(一番下を調べる)));
@@ -254,6 +278,7 @@ export const T39 = {
     } finally {
       await guest.context.close().catch(() => {});
       await member.context.close().catch(() => {});
+      await buyer.context.close().catch(() => {});
     }
   },
 };

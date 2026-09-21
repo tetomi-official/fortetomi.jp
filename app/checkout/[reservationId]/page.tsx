@@ -8,6 +8,8 @@ import { fetchSentReservations } from "@/lib/reservations";
 import { hasRegisteredCard } from "@/lib/payments";
 import { yen } from "@/lib/labels";
 import { PAYMENT_TIMING_NOTICE } from "@/lib/constants";
+import FormCard from "@/components/FormCard";
+import NarrowPage from "@/components/NarrowPage";
 import PaymentForm from "@/components/PaymentForm";
 import PaymentQR from "@/components/PaymentQR";
 import PaymentAuthPrompt from "@/components/PaymentAuthPrompt";
@@ -64,9 +66,7 @@ export default function CheckoutPage() {
     return () => clearInterval(id);
   }, [ready, user, params.reservationId, reservation]);
 
-  const wrap = (children: React.ReactNode) => (
-    <main style={{ maxWidth: 520, margin: "40px auto", padding: "0 16px" }}>{children}</main>
-  );
+  const wrap = (children: React.ReactNode) => <NarrowPage>{children}</NarrowPage>;
 
   if (ready && !user) return wrap(<p>決済にはログインが必要です。</p>);
   if (loading) return wrap(<p>読み込み中…</p>);
@@ -76,17 +76,17 @@ export default function CheckoutPage() {
 
   return wrap(
     <>
-      <p style={{ marginBottom: 4, color: "var(--text-muted)" }}>{reservation.listing_title}</p>
-      <p style={{ fontSize: 22, fontWeight: 700, marginBottom: 20 }}>{yen(reservation.price)}</p>
+      <p className="mb-1 text-ink-muted">{reservation.listing_title}</p>
+      <p className="mb-5 text-[22px] font-bold">{yen(reservation.price)}</p>
 
       {paid ? (
-        <div className="form-card">
+        <FormCard>
           <h2>決済が完了しています</h2>
           <p className="form-hint">受け取りは完了です。ありがとうございました。</p>
           <Link href="/mypage" className="btn-navy btn-full" style={{ marginTop: 12 }}>
             マイページへ
           </Link>
-        </div>
+        </FormCard>
       ) : reservation.payment_status === "requires_action" ? (
         // 受け渡しの場でカード会社が本人確認を求めた。買い手の端末で完了させれば
         // その場で決済が終わる（出品者にQRを出し直してもらう必要はない）。
@@ -102,17 +102,17 @@ export default function CheckoutPage() {
           }}
         />
       ) : reservation.status !== "承認済み" ? (
-        <div className="form-card">
+        <FormCard>
           <h2>出品者の承認待ちです</h2>
           <p className="form-hint">
             出品者が受け渡し日を承認すると、支払いに進めます。マイページでご確認ください。
           </p>
-        </div>
+        </FormCard>
       ) : cardReady ? (
-        <div className="form-card">
+        <FormCard>
           <h2>受け渡し用QR</h2>
           <PaymentQR reservationId={reservation.id} onNeedCard={() => setCardReady(false)} />
-        </div>
+        </FormCard>
       ) : (
         <>
           {/* カードを登録した時点では請求されないことを、入力の前に伝える。 */}

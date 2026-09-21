@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
+import FormCard from "@/components/FormCard";
+import NarrowPage from "@/components/NarrowPage";
 
 // 出品者の受取口座（Stripe Connect）登録ハブ。
 //  - 未作成: 「口座登録をはじめる」→ Stripe がホストする本人確認・口座入力へ全画面遷移
@@ -123,15 +125,13 @@ export default function SellConnectPage() {
     }
   }
 
-  const wrap = (children: React.ReactNode) => (
-    <main style={{ maxWidth: 520, margin: "40px auto", padding: "0 16px" }}>{children}</main>
-  );
+  const wrap = (children: React.ReactNode) => <NarrowPage>{children}</NarrowPage>;
 
   if (ready && !user) return wrap(<p>ログインが必要です。</p>);
   if (loading) return wrap(<p>読み込み中…</p>);
 
   return wrap(
-    <div className="form-card">
+    <FormCard>
       <h2>受取口座の登録</h2>
       {status && <p className="form-hint">{stateMessage(status.state)}</p>}
       {status?.state === "手続き中" && status.requirementsDue && status.requirementsDue.length > 0 && (
@@ -172,6 +172,6 @@ export default function SellConnectPage() {
           {submitting ? "準備中…" : status?.state === "未作成" ? "口座登録をはじめる" : "登録を続ける"}
         </button>
       )}
-    </div>,
+    </FormCard>,
   );
 }

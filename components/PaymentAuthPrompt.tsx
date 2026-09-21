@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { loadStripe, type Stripe as StripeJs } from "@stripe/stripe-js";
+import FormCard from "@/components/FormCard";
 
 // 受け渡しの場でカード会社が本人認証（3DS）を求めたときの、買い手側の復旧画面。
 //
@@ -102,15 +103,15 @@ export default function PaymentAuthPrompt({
 
   if (phase === "done") {
     return (
-      <div className="form-card">
+      <FormCard>
         <h2>決済が完了しました</h2>
         <p className="form-hint">お待たせしました。受け取りは完了です。</p>
-      </div>
+      </FormCard>
     );
   }
 
   return (
-    <div className="form-card" style={{ borderColor: "#f59e0b", background: "#fffbeb" }}>
+    <FormCard className="border-[#f59e0b] bg-[#fffbeb]">
       <h2>カード会社の本人確認が必要です</h2>
       <p className="form-hint">
         安全のため、カード会社が追加の確認を求めています。下のボタンから確認を完了すると、
@@ -125,6 +126,6 @@ export default function PaymentAuthPrompt({
       >
         {phase === "running" ? "確認中…" : "本人確認を行う"}
       </button>
-    </div>
+    </FormCard>
   );
 }
