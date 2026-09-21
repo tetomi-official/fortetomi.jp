@@ -10,6 +10,7 @@ import type { ReactNode } from "react";
  *   RowGroup     … 白い行のまとまり（上下に 1px の線）
  *   ListRow      … 押せる行（アイコン＋ラベル＋山形。高さ 52px）
  *   DataRow      … 読むだけの行（左にラベル・右に値。高さ 48px 以上）
+ *   SubBar       … ヘッダーの下の画面名の帯（高さ 52px。左に「‹ 戻る」）
  */
 
 /** 行のまとまりに付ける見出しの帯。灰色の地の上に置く。 */
@@ -124,6 +125,47 @@ export function ListRow({
     <button type="button" onClick={onClick} className={outer} aria-current={current ? "page" : undefined}>
       {inner}
     </button>
+  );
+}
+
+/**
+ * ヘッダーの下に置く画面名の帯（白・高さ 52px・下に 1px の線）。
+ * 出品・受け取り・マイページの各タブなど、戻り先がある画面で使う。
+ */
+export function SubBar({
+  title,
+  backHref,
+  onBack,
+  backLabel = "戻る",
+}: {
+  title: string;
+  /** 戻り先。決まっていなければ `onBack` で 1 つ前の画面へ戻す。 */
+  backHref?: string;
+  onBack?: () => void;
+  backLabel?: string;
+}) {
+  // 画面名は帯の中央。左の戻るの幅に引きずられないよう、帯いっぱいに重ねて中央寄せする。
+  // 戻るはその上に重なるよう z を上げる（重ねないと押せない）。
+  const back = "relative z-[1] flex h-11 items-center gap-0.5 pl-2 pr-3 text-sm text-navy";
+  const inner = (
+    <>
+      <i className="fas fa-chevron-left text-base" aria-hidden="true" />
+      {backLabel}
+    </>
+  );
+  return (
+    <div className="relative flex h-13 items-center border-b border-line-light bg-white">
+      {backHref ? (
+        <Link href={backHref} className={back}>
+          {inner}
+        </Link>
+      ) : (
+        <button type="button" onClick={onBack} className={back}>
+          {inner}
+        </button>
+      )}
+      <h1 className="absolute inset-x-0 text-center text-base font-bold text-navy">{title}</h1>
+    </div>
   );
 }
 
