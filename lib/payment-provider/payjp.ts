@@ -13,6 +13,7 @@
 
 import type {
   CardSetupSession,
+  CardSummary,
   ChargeInput,
   ChargeOutcome,
   PaymentProvider,
@@ -33,6 +34,15 @@ function form(params: Record<string, string>): URLSearchParams {
 }
 
 type PayjpError = { error?: { message?: string } };
+
+/** PAY.jp のカード。表示に使う項目だけ。 */
+type PayjpCard = {
+  id?: string;
+  brand?: string;
+  last4?: string;
+  exp_month?: number;
+  exp_year?: number;
+};
 
 /**
  * PAY.jp のトークンを取得し 3DS 認証済みかを検証する。
@@ -149,6 +159,64 @@ export function createPayjpProvider(secretKey: string): PaymentProvider {
         return { ok: true, value: { payjpCustomerId: created.id } };
       } catch {
         return { ok: false, status: 502, error: "通信エラーが発生しました" };
+      }
+    },
+
+    async getCardSummary(
+      customer: StoredCustomer | null,
+    ): Promise<ProviderResult<CardSummary | null>> {
+      const cus = customer?.payjpCustomerId;
+      if (!cus) return { ok: true, value: null };
+      try {
+        const res = await fetch(`${PAYJP_BASE}/customers/${encodeURIComponent(cus)}`, {
+          headers: { Authorization: auth },
+        });
+        // 顧客が消えている（PAY.jp 側で削除された等）なら「カード無し」と同じ扱い。
+        if (res.status === 404) return { ok: true, value: null };
+        const data = (await res.json().catch(() => null)) as
+          | (PayjpError & {
+              default_card?: string;
+              cards?: { data?: PayjpCard[] };
+            })
+          | null;
+        if (!res.ok || !data) {
+          return { ok: false, status: 502, error: "カード情報を取得できませんでした" };
+        }
+        const cards = data.cards?.data ?? [];
+        // 課金は既定カードに対して行うので、表示も既定カードに合わせる。
+        const card = cards.find((c) => c.id === data.default_card) ?? cards[0];
+        if (!card?.last4) return { ok: true, value: null };
+        return {
+          ok: true,
+          value: {
+            brand: card.brand ?? "",
+            last4: card.last4,
+            expMonth: card.exp_month ?? 0,
+            expYear: card.exp_year ?? 0,
+          },
+        };
+      } catch {
+        return { ok: false, status: 502, error: "カード情報を取得できませんでした" };
+      }
+    },
+
+    async removeCard(customer: StoredCustomer | null): Promise<ProviderResult<void>> {
+      const cus = customer?.payjpCustomerId;
+      if (!cus) return { ok: true, value: undefined };
+      try {
+        // PAY.jp はカードを顧客にぶら下げる作りなので、顧客ごと消す。
+        // カードだけ消しても既定カードの無い顧客が残り、課金できない点は同じ。
+        const res = await fetch(`${PAYJP_BASE}/customers/${encodeURIComponent(cus)}`, {
+          method: "DELETE",
+          headers: { Authorization: auth },
+        });
+        // 既に消えている場合は成功と同じ（利用者から見て結果は同じ）。
+        if (!res.ok && res.status !== 404) {
+          return { ok: false, status: 502, error: "カードを削除できませんでした" };
+        }
+        return { ok: true, value: undefined };
+      } catch {
+        return { ok: false, status: 502, error: "カードを削除できませんでした" };
       }
     },
 

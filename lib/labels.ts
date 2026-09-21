@@ -59,3 +59,39 @@ export function formatSlot(date: string, time: string): string {
   const d = m ? `${Number(m[2])}/${Number(m[3])}` : date;
   return [d, time].filter(Boolean).join(" ");
 }
+
+/**
+ * カードのブランド名を表示用にそろえる（#53）。
+ * 決済会社ごとに表記が違う（Stripe は "visa"、PAY.jp は "Visa"）ので、
+ * 小文字にしてから引き当てる。知らないブランドはそのまま出す。
+ */
+export function cardBrandLabel(brand: string): string {
+  const map: Record<string, string> = {
+    visa: "VISA",
+    mastercard: "Mastercard",
+    "master card": "Mastercard",
+    jcb: "JCB",
+    amex: "American Express",
+    "american express": "American Express",
+    diners: "Diners Club",
+    "diners club": "Diners Club",
+    discover: "Discover",
+    unionpay: "UnionPay",
+  };
+  const key = brand.trim().toLowerCase();
+  return map[key] ?? (brand.trim() || "カード");
+}
+
+/** カードの有効期限。例: (12, 2030) -> "2030年12月"。不明なら空文字。 */
+export function cardExpiryLabel(month: number, year: number): string {
+  if (!month || !year) return "";
+  return `${year}年${month}月`;
+}
+
+/** 有効期限が切れているか（その月の末日までは使える）。 */
+export function isCardExpired(month: number, year: number, now: Date = new Date()): boolean {
+  if (!month || !year) return false;
+  const 期限 = year * 12 + month;
+  const 今 = now.getFullYear() * 12 + (now.getMonth() + 1);
+  return 期限 < 今;
+}
