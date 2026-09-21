@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
+import FormCard from "@/components/FormCard";
+import NarrowPage from "@/components/NarrowPage";
 
 // AccountLink は1回きりで数分で失効する。Stripe はリンクが切れて中断された場合、
 // ここ（refresh_url）に戻す。ユーザーの操作を待たず、新しいリンクを発行して
@@ -38,20 +40,18 @@ export default function SellConnectRefreshPage() {
     });
   }, [ready, user]);
 
-  const wrap = (children: React.ReactNode) => (
-    <main style={{ maxWidth: 520, margin: "40px auto", padding: "0 16px" }}>{children}</main>
-  );
+  const wrap = (children: React.ReactNode) => <NarrowPage>{children}</NarrowPage>;
 
   if (ready && !user) return wrap(<p>ログインが必要です。</p>);
   if (error) {
     return wrap(
-      <div className="form-card">
+      <FormCard>
         <h2>再開できませんでした</h2>
         <p className="form-hint">{error}</p>
         <a href="/sell/connect" className="btn-navy btn-full" style={{ marginTop: 16 }}>
           登録画面にもどる
         </a>
-      </div>,
+      </FormCard>,
     );
   }
   return wrap(<p>リンクを再発行しています…</p>);

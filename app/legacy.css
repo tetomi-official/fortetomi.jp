@@ -87,6 +87,11 @@ ul, ol { list-style: none; }
 .btn-lg { padding: 15px 36px !important; font-size: 15px !important; }
 .btn-sm { padding: 8px 18px !important; font-size: 12px !important; }
 .btn-full { width: 100%; justify-content: center; }
+/* スマホ（md 未満）：全幅ボタンは高さ 52px・角丸 10px にする（#52）。
+   指で押せる大きさ（44px 以上）を、決済に限らず全幅ボタン全体でそろえる。 */
+@media (max-width: 767px) {
+  .btn-full { min-height: 52px; border-radius: 10px; font-size: 15px; }
+}
 .btn-danger { background: #ef4444; color: white; padding: 10px 20px; border-radius: var(--r-sm); font-weight: 700; font-size: 13px; transition: background 0.2s; display: inline-flex; align-items: center; gap: 6px; }
 .btn-danger:hover { background: #dc2626; }
 
@@ -277,6 +282,13 @@ ul, ol { list-style: none; }
   box-shadow: 0 0 0 3px rgba(20,49,74,0.08);
 }
 .form-group textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+/* スマホ（md 未満）：入力欄の文字は 16px 以上にする（#52）。
+   これを下回ると、iOS がタップのたびに画面を勝手に拡大する。 */
+@media (max-width: 767px) {
+  .form-group input,
+  .form-group select,
+  .form-group textarea { font-size: 16px; }
+}
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .form-hint { font-size: 11px; color: var(--text-muted); margin-top: 5px; }
 .form-group.required label::after { content: ' *'; color: var(--navy); }

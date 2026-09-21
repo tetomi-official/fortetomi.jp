@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import FormCard from "@/components/FormCard";
 
 // 支払いカードの登録フォーム（PB-036 Phase 1 / Phase 2: EMV 3-Dセキュア必須化）。
 // カード入力〜トークン化はすべて payjp.js v2（クライアント）で完結し、カード番号は自社サーバーを通らない。
@@ -18,7 +19,8 @@ import { useEffect, useRef, useState } from "react";
 const PAYJP_SCRIPT_SRC = "https://js.pay.jp/v2/pay.js";
 
 type PayjpCardElement = { mount: (selector: string) => void };
-type PayjpElements = { create: (type: "card") => PayjpCardElement };
+type PayjpCardOptions = { style?: { base?: { fontSize?: string } } };
+type PayjpElements = { create: (type: "card", options?: PayjpCardOptions) => PayjpCardElement };
 type ThreeDSecureStatus = "unverified" | "verified" | "attempted" | "error";
 type PayjpTokenResponse = {
   id?: string;
@@ -97,7 +99,9 @@ export default function PaymentFormPayjp({
         // 3DS は iframe 型で inline 表示（ポップアップブロック回避）。
         const payjp = window.Payjp(publicKey, { threeDSecureWorkflow: "iframe" });
         const elements = payjp.elements();
-        const cardElement = elements.create("card");
+        // 文字は 16px 以上にする。これを下回ると iOS がタップのたびに画面を拡大する。
+        // カード欄は payjp.js が作る iframe なので、CSS ではなくここから渡すしかない。
+        const cardElement = elements.create("card", { style: { base: { fontSize: "16px" } } });
         cardElement.mount("#payjp-card");
         payjpRef.current = payjp;
         cardElementRef.current = cardElement;
@@ -171,17 +175,17 @@ export default function PaymentFormPayjp({
 
   if (done) {
     return (
-      <div className="form-card">
+      <FormCard>
         <h2>カードを登録しました</h2>
         <p className="form-hint">
           受け渡し時に、このカードへ自動で決済されます。QRコードを出品者に見せてください。
         </p>
-      </div>
+      </FormCard>
     );
   }
 
   return (
-    <div className="form-card">
+    <FormCard>
       <h2>支払いカードの登録</h2>
       <div className="form-group">
         <label htmlFor="payjp-name">カード名義</label>
@@ -230,6 +234,6 @@ export default function PaymentFormPayjp({
       >
         {submitting ? "登録中…" : submitLabel}
       </button>
-    </div>
+    </FormCard>
   );
 }
