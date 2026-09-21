@@ -46,10 +46,11 @@ export default function RootLayout({
           href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css"
         />
       </head>
-      {/* 下タブバーに隠れないよう本文の下に余白を作る（--bottom-nav-h は PC では 0）。
+      {/* 下タブバーと、画面ごとの下部固定バー（商品詳細の「価格＋購入」）に隠れないよう
+          本文の下に余白を作る（どちらも PC では 0）。
           legacy.css の * リセット（padding:0）に勝たせるため、utilities レイヤーに乗る
           Tailwind のクラスで指定している。 */}
-      <body className="pb-[var(--bottom-nav-h)]">
+      <body className="pb-[calc(var(--bottom-nav-h)+var(--page-bottom-bar-h,0px))]">
         <AuthProvider>
           <ActionRequiredProvider>
             <ToastProvider>

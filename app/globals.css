@@ -116,6 +116,10 @@
   /* スマホの下タブバーの高さ（ホームバーの余白込み）。PC では 0 になる。
      本文の下端にこの分の余白を足さないと、一番下のボタンがバーに隠れて押せなくなる。 */
   --bottom-nav-h: calc(56px + env(safe-area-inset-bottom, 0px));
+  /* 画面ごとの下部固定バー（今は商品詳細の「価格＋購入」）の高さ。バーを出す画面が
+     <html> に data-bottom-bar を付ける。下タブバーと同じで、本文の下にこの分の
+     余白を足さないと、いちばん下のフッターがバーに隠れる。 */
+  --page-bottom-bar-h: 0px;
   --max-w: 1280px;
 
   /* --- 旧変数名のエイリアス（未移行の画面が参照している。移行完了まで消さない） --- */
@@ -146,10 +150,14 @@
   --r-full: 9999px;
 }
 
-/* PC（md 以上）：Navbar を高くし、下タブバーは出さないのでその余白も消す。 */
+[data-bottom-bar] { --page-bottom-bar-h: 76px; }
+
+/* PC（md 以上）：Navbar を高くし、下タブバーも画面ごとの下部バーも出さないので
+   その余白も消す。 */
 @media (min-width: 48rem) {
   :root {
     --nav-h: 72px;
     --bottom-nav-h: 0px;
   }
+  [data-bottom-bar] { --page-bottom-bar-h: 0px; }
 }
