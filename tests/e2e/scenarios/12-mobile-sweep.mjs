@@ -18,7 +18,7 @@ import { ACCOUNTS, go, login, openPersona, wait } from "../helpers.mjs";
 
 /** 巡回する画面。済み=true にした画面は、崩れたらテストが落ちる。 */
 const 画面 = [
-  { path: "/", 名前: "トップ", 済み: false, ログイン: false },
+  { path: "/", 名前: "トップ", 済み: true, ログイン: false },
   { 下タブなし: true, path: "/login", 名前: "ログイン", 済み: true, ログイン: false },
   { 下タブなし: true, path: "/signup", 名前: "新規登録", 済み: true, ログイン: false },
   { 下タブなし: true, path: "/forgot-password", 名前: "パスワード再設定", 済み: true, ログイン: false },
