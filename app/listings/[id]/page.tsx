@@ -17,12 +17,16 @@ import { useAuth } from "@/lib/auth";
 import { canReserve } from "@/lib/prerelease";
 import { loginHref } from "@/lib/redirect";
 import { useToast } from "@/components/Toast";
+import { DataRow, RowGroup, SectionLabel } from "@/components/ListRow";
 import type { CandidateSlot, Listing } from "@/lib/types";
 
-// 画面の作り（docs/mockups/mobile/V1Detail.dc.html、docs/decisions/mobile-ui-no-boxes.md）
+// 画面の作り（docs/mockups/mobile/V2Detail.dc.html、docs/mockups/mobile/HANDOFF.md、
+// docs/decisions/mobile-ui-no-boxes.md）
 //
-// ■ md（768px）未満：案1「余白と見出し」
-//   白い1枚の地に、見出しと余白だけで区切る。カード・枠線・影でグループを囲まない。
+// ■ md（768px）未満：案2「リスト型」
+//   灰色の地に、白い行のまとまりと 1px の線で並べる。カード・枠線・影で囲まない。
+//   画像は全幅（高さ240px）、その下に白のタイトル帯、以下は灰色の地。
+//   行・見出しの帯・区切り線は components/ListRow.tsx の共通部品を使う。
 //   紺の帯（パンくず）は出さず、画像の左上の「←」で一覧に戻る。
 //   価格は本文に出さず、画面の下に固定するバー（下タブバーの上）に置く。
 //   購入希望の入力は、下から出る全画面シート。入力欄は52px・文字16px
@@ -52,9 +56,6 @@ const CONTROL =
 const SHEET_ACTION =
   "flex h-13 w-full items-center justify-center gap-2 rounded-[10px] bg-navy font-en text-base font-bold " +
   "text-white disabled:bg-line md:h-auto md:rounded-sm md:py-3.5 md:text-sm md:font-extrabold md:hover:bg-navy-dark";
-
-/** セクション見出し（md未満だけ。md以上はもとの作りに見出しが無い）。 */
-const SECTION_TITLE = "text-[17px] font-black text-navy md:hidden";
 
 // 「気になる」はこの端末の localStorage に保存している。表示はそこから直接読む
 // （読んだ値を state に写すと、最初の表示と食い違ったり二重に描画したりするため）。
@@ -209,14 +210,28 @@ export default function DetailPage() {
   // PB-051: 受け渡し候補日の選択肢（今日から暦7日分）。時刻は昼休み固定。
   const dateOptions = upcomingHandoverDates(7);
 
+  const listedAt = formatDate(listing.created_at);
+  const isbn = listing.isbn || "—";
+  const publishedYear = listing.publication_year || "—";
+
+  // md 以上：これまでどおりの2列。並び順と幅（ISBN が2列ぶん）を変えない。
   const metas = [
     { label: "状態", value: listing.condition },
     // 価格は md 未満では下のバーに出るので、ここでは出さない（二重になるため）。
     { label: "価格", value: yen(listing.price), pcOnly: true },
     { label: "受け渡し場所", value: pickupLocation },
-    { label: "出品日", value: formatDate(listing.created_at) },
-    { label: "ISBN", value: listing.isbn || "—", wide: true },
-    { label: "出版年", value: listing.publication_year || "—" },
+    { label: "出品日", value: listedAt },
+    { label: "ISBN", value: isbn, wide: true },
+    { label: "出版年", value: publishedYear },
+  ];
+
+  // md 未満：案2の「左ラベル・右値」の行。価格は下部バーに出すので入れない。
+  const infoRows = [
+    { label: "状態", value: listing.condition },
+    { label: "受け渡し場所", value: pickupLocation },
+    { label: "出品日", value: listedAt },
+    { label: "出版年", value: publishedYear },
+    { label: "ISBN", value: isbn },
   ];
 
   // PB-058: 「この教科書が使われる授業」を学部でグループ化（閲覧者の学部を先頭に）。
@@ -326,7 +341,7 @@ export default function DetailPage() {
   const isSold = listing.status !== "出品中";
 
   return (
-    <div className="min-h-screen bg-white md:bg-bg-gray">
+    <div className="min-h-screen bg-bg-light md:bg-bg-gray">
       {/* 紺の帯とパンくず。md 未満では出さない（戻るのは画像の左上の「←」）。 */}
       <div className="page-header hidden md:block">
         <div className="page-header-inner">
@@ -346,7 +361,7 @@ export default function DetailPage() {
           <div className="md:grid md:grid-cols-1 md:items-start md:gap-13 lg:grid-cols-2">
             {/* 画像。md 未満は左右の余白も角丸も無しで全幅。 */}
             <div className="md:flex md:flex-col md:gap-2.5 lg:sticky lg:top-[calc(var(--header-h)+24px)]">
-              <div className="relative h-70 w-full overflow-hidden bg-bg-gray md:aspect-4/3 md:h-auto md:rounded-xl md:shadow-lg">
+              <div className="relative h-60 w-full overflow-hidden bg-bg-gray md:aspect-4/3 md:h-auto md:rounded-xl md:shadow-lg">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={listing.image_url || "/images/book-placeholder.jpg"}
@@ -372,23 +387,30 @@ export default function DetailPage() {
             </div>
 
             {/* 本文 */}
-            <div className="flex flex-col gap-8 px-4 pt-5 md:gap-6 md:px-0 md:pt-0">
-              <div className="flex flex-col gap-1.5">
-                <div className="flex flex-wrap items-center gap-2">
+            <div className="md:flex md:flex-col md:gap-6">
+              {/* タイトル帯。md 未満は白い帯（下に 1px の線）、md 以上はこれまでどおり。 */}
+              <div className="flex flex-col gap-1 border-b border-line-light bg-white p-4 md:gap-1.5 md:border-0 md:bg-transparent md:p-0">
+                {/* 状態のバッジ。md 未満では「科目・取引状況」の行にまとめたので出さない。 */}
+                <div className="hidden flex-wrap items-center gap-2 md:flex">
                   <span
                     className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-bold md:px-3 md:py-1 md:text-[11px] md:font-extrabold md:tracking-[0.08em] md:uppercase ${st.cls}`}
                   >
                     {st.label}
                   </span>
-                  {/* 状態は md 以上では画像の上に出している。 */}
-                  <span className={`card-condition text-xs font-bold md:hidden ${cnd.cls}`}>{cnd.label}</span>
                 </div>
-                <h2 className="font-en text-[22px] leading-[1.35] font-black text-navy md:text-[clamp(1.4rem,2.5vw,1.9rem)] md:leading-[1.3] md:tracking-[0.01em]">
+                <h2 className="font-en text-xl leading-[1.35] font-black text-navy md:text-[clamp(1.4rem,2.5vw,1.9rem)] md:leading-[1.3] md:tracking-[0.01em]">
                   {listing.title}
                 </h2>
-                <p className="flex items-center gap-1.5 text-[13px] text-ink-muted">
-                  <i className="fas fa-graduation-cap" />
-                  <span>{listing.subject}</span>
+                {/* Font Awesome の CSS はレイヤーの外にあり Tailwind の hidden より強いので、
+                    アイコンの出し分けは span で包む。 */}
+                <p className="flex items-center gap-1.5 text-[13px] text-ink-sub md:text-ink-muted">
+                  <span className="hidden md:inline">
+                    <i className="fas fa-graduation-cap" />
+                  </span>
+                  <span>
+                    {listing.subject}
+                    <span className="md:hidden">・{st.label}</span>
+                  </span>
                 </p>
               </div>
 
@@ -402,42 +424,54 @@ export default function DetailPage() {
                 </span>
               </div>
 
-              <section className="flex flex-col gap-3 md:contents">
-                <h3 className={SECTION_TITLE}>商品情報</h3>
-                <div className="grid grid-cols-2 gap-4 md:gap-2.5">
+              <section className="md:contents">
+                {/* md 未満：見出しの帯＋「左ラベル・右値」の行のまとまり（案2） */}
+                <SectionLabel className="md:hidden">商品情報</SectionLabel>
+                <RowGroup className="md:hidden">
+                  {infoRows.map((r) => (
+                    <DataRow key={r.label} label={r.label} value={r.value} />
+                  ))}
+                </RowGroup>
+                {/* 閲覧数はモックに無いが、案1から引き続き出す。行にはせず灰色の地に小さく置く。 */}
+                <p className="px-4 pt-2 text-right text-xs text-ink-muted md:hidden">
+                  <i className="fas fa-eye" /> {listing.views} 回閲覧
+                </p>
+
+                {/* md 以上：これまでどおりの2列 */}
+                <div className="hidden grid-cols-2 gap-2.5 md:grid">
                   {metas.map((m) => (
                     <MetaItem
                       key={m.label}
                       label={m.label}
                       value={m.value}
-                      className={`${m.wide ? "col-span-2 md:col-span-1" : ""} ${m.pcOnly ? "hidden md:block" : ""}`}
+                      className={m.wide ? "col-span-2 md:col-span-1" : ""}
                     />
                   ))}
                 </div>
-                <p className="flex items-center gap-1.5 text-xs text-ink-muted md:hidden">
-                  <i className="fas fa-eye" />
-                  {listing.views} 回閲覧
-                </p>
               </section>
 
               {listing.description && (
-                <section className="flex flex-col gap-3 md:block md:rounded-lg md:border md:border-line-light md:bg-white md:px-6 md:py-[22px] md:shadow-[inset_4px_0_0_var(--color-navy)]">
-                  <h3 className="text-[17px] font-black text-navy md:mb-2.5 md:text-[10px] md:tracking-[0.14em] md:text-ink-muted md:uppercase">
-                    <span className="md:hidden">出品者のコメント</span>
-                    <span className="hidden md:inline">コメント</span>
-                  </h3>
-                  <p className="text-sm leading-[1.8] whitespace-pre-line text-ink md:leading-[1.85]">
-                    {listing.description}
-                  </p>
+                <section className="md:contents">
+                  <SectionLabel className="md:hidden">出品者のコメント</SectionLabel>
+                  <div className="border-y border-line-light bg-white px-4 py-4 md:rounded-lg md:border md:px-6 md:py-[22px] md:shadow-[inset_4px_0_0_var(--color-navy)]">
+                    <h3 className="mb-2.5 hidden text-[10px] tracking-[0.14em] text-ink-muted uppercase md:block">
+                      コメント
+                    </h3>
+                    <p className="text-sm leading-[1.8] whitespace-pre-line text-ink md:leading-[1.85]">
+                      {listing.description}
+                    </p>
+                  </div>
                 </section>
               )}
 
               {courses.length > 0 && (
-                <section className="flex flex-col gap-3 md:block md:rounded-md md:border md:border-line-light md:px-4 md:py-3.5">
-                  <h3 className="flex items-center gap-2 text-[17px] font-black text-navy md:mb-2.5 md:text-sm md:font-bold">
-                    <i className="fas fa-graduation-cap" /> この教科書が使われる授業
-                  </h3>
-                  <div className="flex flex-col gap-3">
+                <section className="md:contents">
+                  <SectionLabel className="md:hidden">この教科書が使われる授業</SectionLabel>
+                  <div className="border-y border-line-light bg-white px-4 py-4 md:rounded-md md:border md:border-line-light md:bg-transparent md:py-3.5">
+                    <h3 className="mb-2.5 hidden items-center gap-2 text-sm font-bold text-navy md:flex">
+                      <i className="fas fa-graduation-cap" /> この教科書が使われる授業
+                    </h3>
+                    <div className="flex flex-col gap-3">
                     {courseGroups.map((g) => (
                       <div className="flex flex-col gap-1.5" key={g.faculty}>
                         <div className="text-xs font-bold text-navy md:mb-1.5 md:border-b md:border-line-light md:pb-1">
@@ -479,23 +513,22 @@ export default function DetailPage() {
                           ))}
                         </ul>
                       </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </section>
               )}
 
-              <section className="flex flex-col gap-3 md:contents">
-                <h3 className={SECTION_TITLE}>出品者</h3>
-                <div className="flex items-center gap-3 md:gap-4 md:rounded-lg md:border md:border-line-light md:bg-white md:px-[22px] md:py-5">
-                  <div className="font-en flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-bg-light text-xl font-black text-navy md:h-14 md:w-14 md:bg-navy md:text-[1.4rem] md:text-white">
+              <section className="md:contents">
+                <SectionLabel className="md:hidden">出品者</SectionLabel>
+                {/* md 未満：アバター40px・名前・右に★の1行（案2）。出品者だけのページがまだ
+                    無いので、モックにある山形は出さない（押せない行に山形を出すと誤解を招く）。 */}
+                <div className="flex min-h-16 items-center gap-3 border-y border-line-light bg-white px-4 md:min-h-0 md:gap-4 md:rounded-lg md:border md:border-line-light md:px-[22px] md:py-5">
+                  <div className="font-en flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-navy text-base font-black text-white md:h-14 md:w-14 md:text-[1.4rem]">
                     {(seller?.name ?? "?").charAt(0)}
                   </div>
-                  <div className="flex-1">
+                  <div className="min-w-0 flex-1">
                     <h4 className="text-[15px] font-bold text-navy">{seller?.name ?? listing.seller_name}</h4>
-                    <p className="text-[13px] text-ink-muted md:hidden">
-                      {`${seller?.faculty ?? ""} ${seller?.grade ?? ""}`.trim()} ★{seller?.rating ?? "5.0"}（
-                      {seller?.rating_count ?? 0}件）
-                    </p>
                     <p className="hidden text-xs text-ink-muted md:mt-0.5 md:block">
                       {`${seller?.faculty ?? ""} ${seller?.grade ?? ""}`.trim()}
                     </p>
@@ -505,10 +538,15 @@ export default function DetailPage() {
                       <span className="text-xs font-normal text-ink-muted">（{seller?.rating_count ?? 0}件）</span>
                     </div>
                   </div>
+                  <div className="flex shrink-0 items-center gap-1 text-[13px] font-bold text-navy md:hidden">
+                    <i className="fas fa-star" />
+                    <span>{seller?.rating ?? "5.0"}</span>
+                  </div>
                 </div>
               </section>
 
-              <div className="flex flex-col gap-3 md:gap-2.5">
+              {/* md 未満は灰色の地の上。本文と違って行ではないので、左右 16px の余白を付ける。 */}
+              <div className="flex flex-col gap-3 px-4 pt-6 pb-4 md:gap-2.5 md:p-0">
                 {/* md 未満：画面の下に固定する「価格＋購入」のバー（下タブバーの上）。
                     md 以上：これまでどおり本文の中の購入ボタン。 */}
                 <div className="fixed inset-x-0 bottom-[var(--bottom-nav-h)] z-[390] flex h-19 items-center gap-3 border-t border-line-light bg-white px-4 md:static md:z-auto md:block md:h-auto md:border-0 md:bg-transparent md:px-0">
