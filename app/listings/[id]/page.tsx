@@ -19,7 +19,7 @@ import { loginHref } from "@/lib/redirect";
 import { useToast } from "@/components/Toast";
 import type { CandidateSlot, Listing } from "@/lib/types";
 
-// 画面の作り（docs/mockups/mobile-v1/V1Detail.dc.html、docs/decisions/mobile-ui-no-boxes.md）
+// 画面の作り（docs/mockups/mobile/V1Detail.dc.html、docs/decisions/mobile-ui-no-boxes.md）
 //
 // ■ md（768px）未満：案1「余白と見出し」
 //   白い1枚の地に、見出しと余白だけで区切る。カード・枠線・影でグループを囲まない。
