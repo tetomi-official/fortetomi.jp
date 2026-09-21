@@ -150,6 +150,28 @@
   --r-full: 9999px;
 }
 
+/* ===================================================
+   .container — ページの内枠
+
+   Tailwind にも同じ名前の container があり、utilities レイヤーなので legacy.css の
+   .container に必ず勝つ。Tailwind 既定の container は 640px / 768px … と段階的に
+   max-width を付けるため、640〜767px では幅が 640px に絞られて左右が余る。
+   画面ごとに打ち消すのではなく、ここで TETOMI の定義に丸ごと置き換える。
+   （legacy.css 側の .container は削除済み。二重に持たないこと。）
+   =================================================== */
+@utility container {
+  max-width: var(--max-w);
+  margin-inline: auto;
+  padding-inline: 16px;
+  /* xs(480) 以上 / lg(1024) 以上で左右を広げる。移行前の CSS と同じ値。 */
+  @media (width >= 30rem) {
+    padding-inline: 24px;
+  }
+  @media (width >= 64rem) {
+    padding-inline: 40px;
+  }
+}
+
 [data-bottom-bar] { --page-bottom-bar-h: 76px; }
 
 /* PC（md 以上）：Navbar を高くし、下タブバーも画面ごとの下部バーも出さないので

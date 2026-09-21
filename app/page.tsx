@@ -259,8 +259,9 @@ export default function HomePage() {
               すべて見る <i className="fas fa-arrow-right" />
             </Link>
           </div>
+          {/* ListingCard は md 未満で1列の行になるので、ここも2列をやめる（トップの手入れは別Issue） */}
           {newest.length > 0 ? (
-            <div className="listings-grid">
+            <div className="listings-grid flex flex-col gap-0 md:grid md:gap-5">
               {newest.map((item) => (
                 <ListingCard key={item.id} item={item} />
               ))}

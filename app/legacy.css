@@ -25,7 +25,6 @@ img { max-width: 100%; display: block; }
 button { cursor: pointer; border: none; background: none; font-family: var(--font-en); }
 input, select, textarea { font-family: var(--font-en); }
 ul, ol { list-style: none; }
-.container { max-width: var(--max-w); margin: 0 auto; padding: 0 40px; }
 
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: var(--bg-gray); }
@@ -479,7 +478,6 @@ button.candidate-row:hover { border-color: var(--navy); }
 
 /* RESPONSIVE */
 @media (max-width: 1024px) {
-  .container { padding: 0 24px; }
   .section { padding: 64px 24px; }
   .mypage-layout { grid-template-columns: 1fr; }
   .mypage-sidebar { position: static; }
@@ -495,7 +493,6 @@ button.candidate-row:hover { border-color: var(--navy); }
   .page-header { padding: calc(var(--header-h) + 32px) 20px 32px; }
 }
 @media (max-width: 480px) {
-  .container { padding: 0 16px; }
   .section { padding: 48px 16px; }
   .listings-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
   .card-img { height: 120px; font-size: 2.5rem; }
