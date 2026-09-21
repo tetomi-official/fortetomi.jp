@@ -20,6 +20,7 @@ import { getStripeClient } from "./stripe-client";
 import { declineMessage } from "./errors";
 import type {
   CardSetupSession,
+  CardSummary,
   ChargeInput,
   ChargeOutcome,
   PaymentProvider,
@@ -102,6 +103,7 @@ export function createStripeProvider(secretKey: string): PaymentProvider {
     },
 
     async registerCard({
+      existing,
       payload,
     }: {
       userId: string;
@@ -134,12 +136,63 @@ export function createStripeProvider(secretKey: string): PaymentProvider {
         if (!customerId || !paymentMethodId) {
           return { ok: false, status: 500, error: "カードの登録に失敗しました" };
         }
+
+        // 差し替えのとき、前のカードは顧客から外す。外さないと使わないカードが
+        // Stripe 側に溜まり続ける。ここで失敗しても新しいカードの登録は成立して
+        // いるので、握りつぶして先へ進む（買い手に見せる話ではない）。
+        const previous = existing?.stripePaymentMethodId;
+        if (previous && previous !== paymentMethodId) {
+          await stripe.paymentMethods.detach(previous).catch(() => null);
+        }
+
         return {
           ok: true,
           value: { stripeCustomerId: customerId, stripePaymentMethodId: paymentMethodId },
         };
       } catch {
         return { ok: false, status: 502, error: "カードの確認に失敗しました" };
+      }
+    },
+
+    async getCardSummary(
+      customer: StoredCustomer | null,
+    ): Promise<ProviderResult<CardSummary | null>> {
+      const paymentMethodId = customer?.stripePaymentMethodId;
+      if (!paymentMethodId) return { ok: true, value: null };
+      try {
+        const pm = await stripe.paymentMethods.retrieve(paymentMethodId);
+        // 顧客から外れている（Stripe 側で消された等）なら「カード無し」と同じ扱い。
+        if (!pm.card || !pm.customer) return { ok: true, value: null };
+        return {
+          ok: true,
+          value: {
+            brand: pm.card.brand,
+            last4: pm.card.last4,
+            expMonth: pm.card.exp_month,
+            expYear: pm.card.exp_year,
+          },
+        };
+      } catch (err) {
+        // 既に消えているIDなら 404 が返る。エラーにせず「カード無し」とする。
+        if (err instanceof Stripe.errors.StripeError && err.statusCode === 404) {
+          return { ok: true, value: null };
+        }
+        return { ok: false, status: 502, error: "カード情報を取得できませんでした" };
+      }
+    },
+
+    async removeCard(customer: StoredCustomer | null): Promise<ProviderResult<void>> {
+      const paymentMethodId = customer?.stripePaymentMethodId;
+      if (!paymentMethodId) return { ok: true, value: undefined };
+      try {
+        await stripe.paymentMethods.detach(paymentMethodId);
+        return { ok: true, value: undefined };
+      } catch (err) {
+        // 既に外れている場合は成功と同じ（利用者から見て結果は同じ）。
+        if (err instanceof Stripe.errors.StripeError && err.statusCode === 404) {
+          return { ok: true, value: undefined };
+        }
+        return { ok: false, status: 502, error: "カードを削除できませんでした" };
       }
     },
 

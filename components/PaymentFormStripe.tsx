@@ -97,7 +97,9 @@ function StripeSetupForm({
     const { error: confirmError, setupIntent } = await stripe.confirmSetup({
       elements,
       confirmParams: {
-        return_url: `${window.location.origin}${window.location.pathname}`,
+        // 今いる画面へそのまま戻す。マイページは ?tab=payment で画面が決まるので、
+        // 検索文字列を落とすと別の画面に戻ってしまい、登録が仕上がらない。
+        return_url: `${window.location.origin}${window.location.pathname}${window.location.search}`,
       },
       redirect: "if_required",
     });
@@ -147,6 +149,16 @@ function readRedirectReturn(): { setupIntentId: string; status: string } | null 
   return setupIntentId && status ? { setupIntentId, status } : null;
 }
 
+/** 戻ってきたときのURLから、Stripe が付けた印だけを取り除く（?tab= などは残す）。 */
+function urlWithoutStripeParams(): string {
+  const params = new URLSearchParams(window.location.search);
+  for (const key of ["setup_intent", "setup_intent_client_secret", "redirect_status"]) {
+    params.delete(key);
+  }
+  const query = params.toString();
+  return `${window.location.pathname}${query ? `?${query}` : ""}`;
+}
+
 export default function PaymentFormStripe({
   onRegistered,
   submitLabel = "カードを登録する",
@@ -191,7 +203,7 @@ export default function PaymentFormStripe({
     if (redirectReturn) {
       // URLからパラメータを取り除く（再読み込みで二重処理させない）。
       // 失敗ケースの表示は error の初期値で済んでいるので、ここでは何もしない。
-      window.history.replaceState(null, "", window.location.pathname);
+      window.history.replaceState(null, "", urlWithoutStripeParams());
       if (redirectReturn.status === "succeeded") {
         finalizeRegistration(redirectReturn.setupIntentId).then((result) => {
           if (!result.ok) {

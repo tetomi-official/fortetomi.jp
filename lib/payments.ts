@@ -14,6 +14,60 @@ export async function hasRegisteredCard(): Promise<boolean> {
   }
 }
 
+/** 登録済みカードの見え方。カード番号そのものは受け取らない。 */
+export type CardSummary = {
+  brand: string;
+  last4: string;
+  expMonth: number;
+  expYear: number;
+};
+
+/**
+ * マイページ「お支払い方法」の中身を読む（#53）。
+ * card が null なら未登録。pendingHandovers は受け渡し待ちの取引の件数で、
+ * 1件以上あるとカードを削除できない（削除すると受け渡しQRが出せなくなるため）。
+ */
+export async function fetchPaymentMethod(): Promise<{
+  card: CardSummary | null;
+  pendingHandovers: number;
+  error: string | null;
+}> {
+  try {
+    const res = await fetch("/api/payments/card");
+    const data = (await res.json().catch(() => null)) as
+      | { card?: CardSummary | null; pendingHandovers?: number; error?: string }
+      | null;
+    if (!res.ok || !data) {
+      return {
+        card: null,
+        pendingHandovers: 0,
+        error: data?.error ?? "カード情報を読み込めませんでした",
+      };
+    }
+    return {
+      card: data.card ?? null,
+      pendingHandovers: data.pendingHandovers ?? 0,
+      error: null,
+    };
+  } catch {
+    return { card: null, pendingHandovers: 0, error: "通信エラーが発生しました" };
+  }
+}
+
+/** 登録済みカードを削除する（#53）。受け渡し待ちの取引があるとサーバー側で断られる。 */
+export async function deleteRegisteredCard(): Promise<{ error: string | null }> {
+  try {
+    const res = await fetch("/api/payments/card", { method: "DELETE" });
+    const data = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
+    if (!res.ok || !data?.ok) {
+      return { error: data?.error ?? "カードを削除できませんでした" };
+    }
+    return { error: null };
+  } catch {
+    return { error: "通信エラーが発生しました" };
+  }
+}
+
 /** 受け渡しQR用のワンタイム nonce をサーバーから取得する（買い手）。 */
 export async function requestPaymentNonce(
   reservationId: string,
