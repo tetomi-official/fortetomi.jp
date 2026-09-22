@@ -232,10 +232,21 @@
   （決済会社をまたいでカード情報を移すことはできない）。利用の少ない時間帯に行うこと。
 
 ### H-6. 法定ページの整合 ☐ **本番前に必須**
-- **利用規約の「振込申請」「売上残高」まわりが Stripe の実際の動きと食い違う。**
-  詳細と代替案は [`docs/decisions/stripe-legal-review.md`](../decisions/stripe-legal-review.md) にまとめてある。
-- 特に第11条2項（振込手数料250円）と第12条（売上金の管理および振込）は、
-  Stripe を本番で有効にする前に必ず直すこと。
+- 文言は Stripe の実際の動きに合わせて直した（issue #55）。直したのは
+  利用規約の第7条（退会）・第11条（手数料）・第12条（売上金の受け取り）、
+  特商法の「販売価格以外に必要な費用」「売上金の入金について」、
+  プライバシーポリシーの取得情報・第三者提供・委託先。
+  根拠は [`docs/decisions/stripe-legal-review.md`](../decisions/stripe-legal-review.md) と
+  [`docs/decisions/stripe-payout-behavior.md`](../decisions/stripe-payout-behavior.md)。
+- **残っている手作業は取扱ブランドの突き合わせだけ。** 特商法の「支払方法」は
+  `lib/legal-info.ts` の `cardBrands`（VISA / Mastercard / JCB / American Express /
+  Diners Club / Discover）をそのまま出している。**本番のダッシュボードで実際に
+  有効なブランドと突き合わせ、有効にしていないものは `cardBrands` から消すこと。**
+  テスト環境からは確認できない（プラットフォームのテストアカウントには
+  capabilities が返らない）。
+- 文面の最終決定は PO。改定日・施行日を動かすかどうかも PO の判断。
+- 未対応で残っているもの: チャージバックを出品者に負担させるかの取り決め
+  （`stripe-legal-review.md` の7節）。規約に記載が無い。
 
 ### H-7. 出品者への案内（運用） ☐
 - 口座登録には**公的な写真付き身分証**が要る（運転免許証／パスポート／
