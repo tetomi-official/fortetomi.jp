@@ -17,6 +17,12 @@
 // 手数料と損失の負担者は application（＝TETOMI）。Express ダッシュボードを
 // 使う場合、Stripe 側の制約でこの2つは application である必要がある。
 // これは計画どおり（Stripeの決済手数料とチャージバックはプラットフォーム負担）。
+//
+// なお fees_collector が効くのはダイレクト支払いだけで、destination charge では
+// 設定に関係なく Stripe は必ずプラットフォームへ請求する。決済手数料も、送金の
+// 0.25% も、入金の ¥250 + 0.25% も、有効アカウント月額 ¥200 も運営負担。
+// 出品者に負担させるには決済方式そのものを変えることになる（＝決済上の売主が
+// 出品者本人になり、特商法の表記も変わる）。docs/decisions/stripe-payout-behavior.md。
 // ===================================================
 
 import { getStripeClient } from "./stripe-client";
@@ -273,4 +279,130 @@ export async function isSellerReadyToReceive(
     console.error("connect status refresh failed (falling back to cache):", e);
     return { ready: existing.transfersEnabled, stripeAccountId: existing.stripeAccountId };
   }
+}
+
+// ===================================================
+// 残高と入金予定（issue #54）
+// ---------------------------------------------------
+// TETOMI は売上金を預かっていない。決済が成立した時点で出品者の Stripe 残高へ移り、
+// 銀行への入金も Stripe が自動で行う。だからマイページに出すのは自前の集計ではなく
+// Stripe の実残高でなければならない（予約テーブルから足し算すると、返金・入金済みの
+// ぶんがずれて「画面の数字と実際の残高が違う」状態になる）。
+//
+// 任意振込（出品者が自分で振込を操作する機能）はやらないと決めた。
+// 振込1回につき 0.25% + ¥250 が運営に請求され、Stripe 側に最低金額が無いため、
+// 回数を出品者に決めさせると運営のコストが読めなくなる。
+// 経緯と実測は docs/decisions/stripe-payout-behavior.md。
+// ===================================================
+
+export interface ConnectBalance {
+  /** 今すぐ入金に回せる額（円）。 */
+  available: number;
+  /** まだ入金に回せない額（円）。決済から4営業日は here に入る。 */
+  pending: number;
+  /** pending のうち一番早く使えるようになる日（YYYY-MM-DD・JST）。無ければ null。 */
+  pendingAvailableOn: string | null;
+  /** 進行中の入金の着金予定日（YYYY-MM-DD・JST）。無ければ null。 */
+  nextPayoutDate: string | null;
+  /** 進行中の入金の額（円）。無ければ null。 */
+  nextPayoutAmount: number | null;
+  /** 自動入金の間隔の説明（例「毎週金曜」）。取れなければ null。 */
+  scheduleLabel: string | null;
+}
+
+const WEEKDAY_JA: Record<string, string> = {
+  monday: "月",
+  tuesday: "火",
+  wednesday: "水",
+  thursday: "木",
+  friday: "金",
+};
+
+/** Unix秒を日本時間の YYYY-MM-DD にする。 */
+function jstDate(unixSeconds: number): string {
+  return new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Tokyo" }).format(
+    new Date(unixSeconds * 1000),
+  );
+}
+
+/** 自動入金の間隔を日本語の一言にする。分からない形なら null（＝画面に出さない）。 */
+function scheduleLabel(schedule: {
+  interval?: string | null;
+  weekly_payout_days?: string[];
+  monthly_payout_days?: number[];
+} | null): string | null {
+  if (!schedule?.interval) return null;
+  switch (schedule.interval) {
+    case "daily":
+      return "毎日";
+    case "weekly": {
+      const days = (schedule.weekly_payout_days ?? [])
+        .map((d) => WEEKDAY_JA[d])
+        .filter(Boolean);
+      return days.length > 0 ? `毎週${days.join("・")}曜` : "毎週";
+    }
+    case "monthly": {
+      const days = schedule.monthly_payout_days ?? [];
+      return days.length > 0 ? `毎月${days.join("・")}日` : "毎月";
+    }
+    case "manual":
+      // 自動入金が止まっている状態。出品者には「自動で入金される」と言えない。
+      return null;
+    default:
+      return null;
+  }
+}
+
+/**
+ * 出品者の Stripe 残高と入金予定を取る。受取口座が未登録なら null。
+ *
+ * 通貨は円だけを見る（このサービスは日本の学生同士の売買で、他通貨の残高は発生しない）。
+ */
+export async function loadConnectBalance(
+  secretKey: string,
+  userId: string,
+): Promise<ConnectBalance | null> {
+  const existing = await loadConnectAccountRow(userId);
+  if (!existing) return null;
+
+  const stripe = getStripeClient(secretKey);
+  const opts = { stripeAccount: existing.stripeAccountId };
+
+  // 進行中の入金は pending（作成済み）と in_transit（銀行へ送信済み）の2状態がある。
+  // 出品者にとってはどちらも「これから届く」なので、着金予定日が近い方を1件だけ出す。
+  const [balance, settings, pendingPayouts, inTransitPayouts] = await Promise.all([
+    stripe.balance.retrieve({}, opts),
+    stripe.balanceSettings.retrieve({}, opts).catch(() => null),
+    stripe.payouts.list({ limit: 1, status: "pending" }, opts),
+    stripe.payouts.list({ limit: 1, status: "in_transit" }, opts),
+  ]);
+
+  const jpy = (rows: { amount: number; currency: string }[]) =>
+    rows.filter((r) => r.currency === "jpy").reduce((s, r) => s + r.amount, 0);
+
+  const pending = jpy(balance.pending);
+
+  // 「いつ使えるようになるか」は残高オブジェクトには入っていないので、取引から拾う。
+  // pending は4営業日以内に発生したものだけなので、直近100件で必ず足りる。
+  let pendingAvailableOn: string | null = null;
+  if (pending > 0) {
+    const txns = await stripe.balanceTransactions.list({ limit: 100 }, opts);
+    const dates = txns.data
+      .filter((t) => t.status === "pending" && t.currency === "jpy")
+      .map((t) => t.available_on);
+    if (dates.length > 0) pendingAvailableOn = jstDate(Math.min(...dates));
+  }
+
+  const upcoming = [...pendingPayouts.data, ...inTransitPayouts.data].sort(
+    (a, b) => a.arrival_date - b.arrival_date,
+  )[0];
+
+  return {
+    available: jpy(balance.available),
+    pending,
+    pendingAvailableOn,
+    nextPayoutDate: upcoming ? jstDate(upcoming.arrival_date) : null,
+    nextPayoutAmount: upcoming ? upcoming.amount : null,
+    scheduleLabel: scheduleLabel(settings?.payments?.payouts?.schedule ?? null),
+  };
 }

@@ -3,6 +3,7 @@ import {
   cardBrandLabel,
   cardExpiryLabel,
   formatSlot,
+  formatYmd,
   isCardExpired,
   reservationBadgeClass,
   statusLabel,
@@ -24,6 +25,18 @@ describe("表示の整形", () => {
 
   it("旧データ（日付が YYYY-MM-DD でない）はそのまま出す", () => {
     expect(formatSlot("6月30日", "午前中（9:00〜12:00）")).toBe("6月30日 午前中（9:00〜12:00）");
+  });
+
+  it("入金予定日は 月/日（曜日） の形になる", () => {
+    expect(formatYmd("2026-09-25")).toBe("9/25（金）");
+    expect(formatYmd("2026-09-29")).toBe("9/29（火）");
+    // 元日。時差で前日にずれないこと（Stripe から来る日付は日本時間で解釈済み）。
+    expect(formatYmd("2027-01-01")).toBe("1/1（金）");
+  });
+
+  it("入金予定日が無い・形が違うときはそのまま返す", () => {
+    expect(formatYmd("")).toBe("");
+    expect(formatYmd("2026/09/25")).toBe("2026/09/25");
   });
 
   it("予約ステータスごとに違うバッジの色が付く", () => {

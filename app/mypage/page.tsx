@@ -13,8 +13,8 @@ import {
   proposeReschedule,
   selectCandidateSlot,
 } from "@/lib/reservations";
-import { reservationBadgeClass, yen, formatSlot } from "@/lib/labels";
-import { sellerNet, PLATFORM_FEE_RATE, PAYOUT_FEE_YEN } from "@/lib/constants";
+import { reservationBadgeClass, yen, formatSlot, formatYmd } from "@/lib/labels";
+import { sellerNet, PLATFORM_FEE_RATE } from "@/lib/constants";
 import { decodePaymentQR } from "@/lib/payments";
 import { canReserve, canChangeLoginEmail } from "@/lib/prerelease";
 import MessagesPanel from "@/components/MessagesPanel";
@@ -50,6 +50,42 @@ const TABS: Tab[] = [
 /** ?tab= を受け取る。知らない値と未指定はダッシュボード。 */
 function tabFromQuery(value: string | null): Tab {
   return TABS.includes(value as Tab) ? (value as Tab) : "dashboard";
+}
+
+/**
+ * 売上残高と入金予定（issue #54）。
+ *
+ * TETOMI は売上金を預かっていない。決済が成立した時点で出品者本人の Stripe 残高へ移り、
+ * 銀行への入金も Stripe が自動で行う。だからこの数字は自前で集計せず、必ず Stripe から取る。
+ * 経緯と実測は docs/decisions/stripe-payout-behavior.md。
+ */
+type ConnectBalance = {
+  connected: boolean;
+  available?: number;
+  pending?: number;
+  pendingAvailableOn?: string | null;
+  nextPayoutDate?: string | null;
+  nextPayoutAmount?: number | null;
+  scheduleLabel?: string | null;
+};
+
+type BalanceResult = { ok: true; balance: ConnectBalance } | { ok: false; error: string };
+
+// effect の中から直接 setState する関数を呼ぶと ESLint（react-hooks/set-state-in-effect）に
+// 引っかかるため、取得は純粋な関数として外に出し、.then() の中で setState する。
+async function fetchConnectBalance(): Promise<BalanceResult> {
+  try {
+    const res = await fetch("/api/payments/connect/balance");
+    const data = (await res.json().catch(() => null)) as
+      | (ConnectBalance & { error?: string })
+      | null;
+    if (!res.ok || !data || typeof data.connected !== "boolean") {
+      return { ok: false, error: data?.error ?? "残高を取得できませんでした" };
+    }
+    return { ok: true, balance: data };
+  } catch {
+    return { ok: false, error: "通信エラーが発生しました" };
+  }
 }
 
 const GRADES = ["1年", "2年", "3年", "4年", "院生"];
@@ -156,6 +192,22 @@ function MyPageInner() {
       if (!active) return;
       setSent(s);
       setReceived(r);
+    });
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
+  // 売上残高は Stripe から取る（issue #54）。受取口座が未登録なら connected:false が返る。
+  const [balance, setBalance] = useState<ConnectBalance | null>(null);
+  const [balanceError, setBalanceError] = useState<string | null>(null);
+  useEffect(() => {
+    if (!user || !canReserve) return;
+    let active = true;
+    fetchConnectBalance().then((result) => {
+      if (!active) return;
+      if (result.ok) setBalance(result.balance);
+      else setBalanceError(result.error);
     });
     return () => {
       active = false;
@@ -439,12 +491,12 @@ function MyPageInner() {
   const sentPending = sent.filter((r) => r.status === "申請中").length;
   const recvPending = received.filter((r) => r.status === "申請中").length;
 
-  // PB-045：売上残高。決済済み（paid_at あり）の受け取り予約から、手数料10%差引後の受取額を集計する。
-  // 振込（PB-046）は未実装のため、ここでは「引き出し可能な残高＝これまでの受取額の総計」として表示する。
+  // TETOMI 側の取引実績。ここは「これまでいくら売れたか」であって残高ではない
+  // （残高と入金予定は Stripe から取る。issue #54）。
   const paidSales = received.filter((r) => r.paid_at);
   const grossSales = paidSales.reduce((s, r) => s + r.price, 0);
-  const netBalance = paidSales.reduce((s, r) => s + sellerNet(r.price), 0);
-  const feeTotal = grossSales - netBalance;
+  const netSales = paidSales.reduce((s, r) => s + sellerNet(r.price), 0);
+  const feeTotal = grossSales - netSales;
 
   const saveProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -737,7 +789,12 @@ function MyPageInner() {
                       </div>
                     </div>
 
-                    {/* PB-045：売上残高。決済済みの受取額（手数料10%差引後）を表示する。 */}
+                    {/* 売上残高と入金予定（issue #54）。
+                        TETOMI は売上金を預かっていない。決済が成立した時点で出品者本人の
+                        Stripe 残高へ移り、銀行への入金も Stripe が自動で行う。だからここは
+                        自前の集計ではなく Stripe の実データを出す。
+                        「振込申請」ボタンと「振込手数料 ¥250／回」は存在しない機能だったので消した。
+                        経緯と実測は docs/decisions/stripe-payout-behavior.md。 */}
                     <div
                       style={{
                         marginTop: 20,
@@ -749,41 +806,80 @@ function MyPageInner() {
                     >
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <div style={{ fontSize: 12, opacity: 0.85, display: "flex", alignItems: "center", gap: 6 }}>
-                          <i className="fas fa-wallet" /> 売上残高（受取見込み）
+                          <i className="fas fa-wallet" /> 売上金
                         </div>
                         <div style={{ fontSize: 11, opacity: 0.7 }}>取引 {paidSales.length} 件</div>
                       </div>
-                      <div style={{ fontSize: 30, fontWeight: 800, marginTop: 6, letterSpacing: "0.02em" }}>
-                        {yen(netBalance)}
-                      </div>
-                      <div style={{ display: "flex", gap: 16, marginTop: 10, fontSize: 12, opacity: 0.85 }}>
-                        <span>売上総額 {yen(grossSales)}</span>
-                        <span>
-                          サービス手数料（{Math.round(PLATFORM_FEE_RATE * 100)}%） −{yen(feeTotal)}
-                        </span>
-                      </div>
+
+                      {balance === null ? (
+                        <div style={{ fontSize: 13, opacity: 0.8, marginTop: 10 }}>
+                          {balanceError ?? "読み込み中…"}
+                        </div>
+                      ) : !balance.connected ? (
+                        <>
+                          <div style={{ fontSize: 13, opacity: 0.9, marginTop: 10, lineHeight: 1.7 }}>
+                            受取口座を登録すると、売れた代金がご自身の銀行口座へ自動で振り込まれます。
+                          </div>
+                          <Link
+                            href="/sell/connect"
+                            className="btn-xs"
+                            style={{ background: "rgba(255,255,255,0.16)", color: "#fff", marginTop: 12 }}
+                          >
+                            <i className="fas fa-university" /> 受取口座を登録する
+                          </Link>
+                        </>
+                      ) : (
+                        <>
+                          <div style={{ fontSize: 30, fontWeight: 800, marginTop: 6, letterSpacing: "0.02em" }}>
+                            {yen((balance.available ?? 0) + (balance.pending ?? 0))}
+                          </div>
+                          <div style={{ fontSize: 11, opacity: 0.75, marginTop: 2 }}>
+                            まだ銀行口座へ届いていない分
+                          </div>
+
+                          <div style={{ marginTop: 12, fontSize: 12, opacity: 0.9, lineHeight: 1.9 }}>
+                            {(balance.pending ?? 0) > 0 && (
+                              <div>
+                                このうち {yen(balance.pending ?? 0)} は準備中
+                                {balance.pendingAvailableOn
+                                  ? `（${formatYmd(balance.pendingAvailableOn)}に振込の対象になります）`
+                                  : "（受け渡しから4営業日で振込の対象になります）"}
+                              </div>
+                            )}
+                            {balance.nextPayoutDate ? (
+                              <div>
+                                次の入金：{formatYmd(balance.nextPayoutDate)}
+                                {balance.nextPayoutAmount != null && ` ・ ${yen(balance.nextPayoutAmount)}`}
+                              </div>
+                            ) : balance.scheduleLabel ? (
+                              <div>入金：{balance.scheduleLabel}に自動で振り込まれます</div>
+                            ) : null}
+                          </div>
+                        </>
+                      )}
+
                       <div
                         style={{
                           marginTop: 14,
                           paddingTop: 12,
                           borderTop: "1px solid rgba(255,255,255,0.18)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          gap: 12,
+                          fontSize: 11,
+                          opacity: 0.8,
+                          lineHeight: 1.8,
                         }}
                       >
-                        <span style={{ fontSize: 11, opacity: 0.8 }}>
-                          振込申請は準備中です（振込手数料 {yen(PAYOUT_FEE_YEN)}／回）
-                        </span>
-                        <button
-                          type="button"
-                          disabled
-                          className="btn-xs"
-                          style={{ background: "rgba(255,255,255,0.16)", color: "#fff", cursor: "not-allowed", opacity: 0.7 }}
-                        >
-                          <i className="fas fa-university" /> 振込申請
-                        </button>
+                        <div>
+                          TETOMIでの取引 {yen(grossSales)} ／ サービス手数料（
+                          {Math.round(PLATFORM_FEE_RATE * 100)}%） −{yen(feeTotal)} ／ 受取 {yen(netSales)}
+                        </div>
+                        {balance?.connected && (
+                          <Link
+                            href="/sell/connect"
+                            style={{ color: "#fff", textDecoration: "underline", opacity: 0.9 }}
+                          >
+                            入金の履歴・銀行口座の変更
+                          </Link>
+                        )}
                       </div>
                     </div>
 
