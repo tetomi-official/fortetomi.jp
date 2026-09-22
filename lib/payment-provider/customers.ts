@@ -10,8 +10,8 @@
 // ===================================================
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { RegisteredCardIds, StoredCustomer } from "./types";
-import type { TablesInsert } from "@/lib/database.types";
+import type { ProviderName, RegisteredCardIds, StoredCustomer } from "./types";
+import type { TablesInsert, TablesUpdate } from "@/lib/database.types";
 
 /** 買い手の保存済みカード情報を読む。未登録なら null。 */
 export async function loadStoredCustomer(userId: string): Promise<StoredCustomer | null> {
@@ -51,5 +51,41 @@ export async function saveRegisteredCard(
   if (ids.stripePaymentMethodId) row.stripe_payment_method_id = ids.stripePaymentMethodId;
 
   const { error } = await admin.from("payment_customers").upsert(row);
+  return { error: error?.message ?? null };
+}
+
+/**
+ * 保存済みカードのIDを消す（決済会社側で外したあとに呼ぶ）。
+ *
+ * 今の決済会社の列だけを空にする。もう一方の決済会社のIDが残っていれば行は残す
+ * （決済会社を戻したときに、以前のカードがそのまま使えるように）。どちらも空に
+ * なるなら行ごと消す。空のIDだけが残った行は「登録済みか」の判定を分かりにくくする。
+ */
+export async function clearRegisteredCard(
+  userId: string,
+  provider: ProviderName,
+): Promise<{ error: string | null }> {
+  const admin = createAdminClient();
+  const current = await loadStoredCustomer(userId);
+  if (!current) return { error: null };
+
+  const otherProviderRemains =
+    provider === "stripe" ? !!current.payjpCustomerId : !!current.stripeCustomerId;
+
+  if (!otherProviderRemains) {
+    const { error } = await admin.from("payment_customers").delete().eq("user_id", userId);
+    return { error: error?.message ?? null };
+  }
+
+  const cleared: TablesUpdate<"payment_customers"> = {
+    updated_at: new Date().toISOString(),
+    ...(provider === "stripe"
+      ? { stripe_customer_id: null, stripe_payment_method_id: null, provider: "payjp" }
+      : { payjp_customer_id: null, provider: "stripe" }),
+  };
+  const { error } = await admin
+    .from("payment_customers")
+    .update(cleared)
+    .eq("user_id", userId);
   return { error: error?.message ?? null };
 }

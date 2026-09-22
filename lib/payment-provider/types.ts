@@ -39,6 +39,18 @@ export interface RegisteredCardIds {
   stripePaymentMethodId?: string;
 }
 
+/**
+ * 登録済みカードの見え方。カード番号そのものは決済会社にしか無く、
+ * ここに来るのは「誰のカードか分かる最小限」（ブランド・下4桁・有効期限）だけ。
+ */
+export interface CardSummary {
+  /** 決済会社が返すブランド名（"visa" / "Visa" など表記は会社ごとに違う）。 */
+  brand: string;
+  last4: string;
+  expMonth: number;
+  expYear: number;
+}
+
 /** クライアントのカード入力欄を出す前に必要な準備。PAY.jp は不要。 */
 export type CardSetupSession =
   | { kind: "none" }
@@ -95,6 +107,20 @@ export interface PaymentProvider {
     existing: StoredCustomer | null;
     payload: RegisterCardPayload;
   }): Promise<ProviderResult<RegisteredCardIds>>;
+
+  /**
+   * 登録済みカードの見え方を決済会社に問い合わせる。
+   * 保存されているのはIDだけなので、ブランドや下4桁は毎回ここで取り直す
+   * （DBに写しを持つと、カードを差し替えたときに古い表示が残る）。
+   * カードが無ければ value は null。
+   */
+  getCardSummary(customer: StoredCustomer | null): Promise<ProviderResult<CardSummary | null>>;
+
+  /**
+   * 登録済みカードを決済会社から外す。保存済みIDの消去は呼び出し側（ルート）の仕事。
+   * すでに外れている場合も ok を返す（二度押しでエラーにしない）。
+   */
+  removeCard(customer: StoredCustomer | null): Promise<ProviderResult<void>>;
 
   /**
    * 「今の決済会社で課金できるカード」が保存されているか。

@@ -20,6 +20,7 @@ import { canReserve, canChangeLoginEmail } from "@/lib/prerelease";
 import MessagesPanel from "@/components/MessagesPanel";
 import { ListRow, RowGroup, SectionLabel } from "@/components/ListRow";
 import SupportPanel from "@/components/SupportPanel";
+import PaymentMethodPanel from "@/components/PaymentMethodPanel";
 import BarcodeScanner from "@/components/BarcodeScanner";
 import { BarcodeFormat } from "@zxing/library";
 import type { Listing, Reservation, ReservationStatus, User } from "@/lib/types";
@@ -33,6 +34,7 @@ type Tab =
   | "receivedRes"
   | "messages"
   | "support"
+  | "payment"
   | "profile";
 const TABS: Tab[] = [
   "dashboard",
@@ -41,6 +43,7 @@ const TABS: Tab[] = [
   "receivedRes",
   "messages",
   "support",
+  "payment",
   "profile",
 ];
 
@@ -707,6 +710,11 @@ function MyPageInner() {
               <ListRow icon="fa-comments" label="メッセージ" href="/mypage?tab=messages" />
               <ListRow icon="fa-headset" label="運営サポート" href="/mypage?tab=support" />
             </RowGroup>
+            <SectionLabel>設定</SectionLabel>
+            <RowGroup>
+              <ListRow icon="fa-credit-card" label="お支払い方法" href="/mypage?tab=payment" />
+              <ListRow icon="fa-user-cog" label="プロフィール編集" href="/mypage?tab=profile" />
+            </RowGroup>
             <RowGroup className="mt-6">
               <ListRow
                 icon="fa-sign-out-alt"
@@ -746,6 +754,7 @@ function MyPageInner() {
                 {navItem("receivedRes", "fa-inbox", "受け取った購入希望", recvPending)}
                 {navItem("messages", "fa-comments", "メッセージ")}
                 {navItem("support", "fa-headset", "運営サポート")}
+                {navItem("payment", "fa-credit-card", "お支払い方法")}
                 {navItem("profile", "fa-user-cog", "プロフィール編集")}
                 <div className="sidebar-nav-item danger" onClick={() => setLogoutConfirm(true)}>
                   <i className="fas fa-sign-out-alt" /> ログアウト
@@ -1347,6 +1356,9 @@ function MyPageInner() {
 
               {/* 運営サポート（PB-042） */}
               {tab === "support" && <SupportPanel />}
+
+              {/* お支払い方法（#53）：カードの登録・変更・削除 */}
+              {tab === "payment" && <PaymentMethodPanel />}
 
               {/* PROFILE */}
               {tab === "profile" && (

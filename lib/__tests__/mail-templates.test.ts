@@ -9,6 +9,7 @@ import {
   type ReservationMailData,
 } from "@/lib/mail-templates";
 import { sellerNet } from "@/lib/constants";
+import { SUPPORT_CONTACT } from "@/lib/support";
 
 // ===================================================
 // 取引の通知メールの文面（A-1）
@@ -116,6 +117,68 @@ describe("取引の各段階のメール", () => {
   });
 });
 
+describe("日程確定メールの当日の手順", () => {
+  // 当日その場で迷わせないことが目的。集合・QR・現金なし・連絡先の4つは
+  // どちらの宛先でも必ず入っていること。
+  it("買い手宛：集合する日時と場所が手順にも書いてある", () => {
+    const m = scheduleConfirmedMail(取引, "buyer");
+    expect(m.html).toContain("9/15 昼休み");
+    expect(m.html).toContain("Forest Gateway 3F");
+  });
+
+  it("買い手宛：QRを見せると決済されること・現金は渡さないことが書いてある", () => {
+    const m = scheduleConfirmedMail(取引, "buyer");
+    expect(m.html).toContain("QRを出品者に見せる");
+    expect(m.html).toContain("読み取ると");
+    expect(m.html).toContain("現金のやり取りはありません");
+  });
+
+  it("出品者宛：QRを読み取ると決済されること・現金は受け取らないことが書いてある", () => {
+    const m = scheduleConfirmedMail(取引, "seller");
+    expect(m.html).toContain("QRを読み取って決済");
+    expect(m.html).toContain("現金のやり取りはありません");
+    expect(m.html).toContain("受け取らないでください");
+  });
+
+  it("どちらの宛先にも、うまくいかないときの連絡先が入る", () => {
+    for (const 宛先 of ["buyer", "seller"] as const) {
+      const m = scheduleConfirmedMail(取引, 宛先);
+      expect(m.html, 宛先).toContain("決済が通らない");
+      expect(m.html, 宛先).toContain(SUPPORT_CONTACT);
+    }
+  });
+
+  it("手順は <table> で組む（レイアウト用のCSSが効かないメールソフトがあるため）", () => {
+    for (const 宛先 of ["buyer", "seller"] as const) {
+      const m = scheduleConfirmedMail(取引, 宛先);
+      // 番号つきの手順が table の行として並んでいる（<ol> や flex に頼らない）
+      expect(m.html, 宛先).toContain("<table");
+      expect(m.html, 宛先).not.toContain("<ol");
+      expect(m.html, 宛先).not.toContain("display:flex");
+    }
+  });
+
+  it("逆提案で日程が決まったときは、その場所を手順にも出す", () => {
+    const m = scheduleConfirmedMail(
+      { ...取引, proposedDate: "2026-09-20", proposedTime: "12:30", proposedLocation: "中央図書館前" },
+      "seller",
+    );
+    expect(m.html).toContain("「中央図書館前」へ行き");
+  });
+});
+
+describe("決済完了メールの問い合わせ先", () => {
+  it("買い手宛：受け取った教科書に問題があったときの連絡先が入る", () => {
+    const m = paymentCompletedBuyerMail(取引);
+    expect(m.html).toContain("説明と違う");
+    expect(m.html).toContain(SUPPORT_CONTACT);
+  });
+
+  it("出品者宛にも連絡先が入る", () => {
+    expect(paymentCompletedSellerMail(取引).html).toContain(SUPPORT_CONTACT);
+  });
+});
+
 describe("すべてのメールに共通すること", () => {
   const 全部 = () => [
     purchaseRequestMail(取引),
@@ -140,5 +203,9 @@ describe("すべてのメールに共通すること", () => {
 
   it("本文に行き先のボタンがある", () => {
     for (const m of 全部()) expect(m.html, m.subject).toContain("<a href=");
+  });
+
+  it("画像に頼らない（画像を表示しない設定でも意味が通る）", () => {
+    for (const m of 全部()) expect(m.html, m.subject).not.toContain("<img");
   });
 });

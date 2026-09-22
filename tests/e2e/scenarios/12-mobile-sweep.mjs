@@ -37,6 +37,7 @@ const 画面 = [
   { path: "/sell", 名前: "出品", 済み: true, ログイン: true },
   { path: "/mypage", 名前: "マイページ", 済み: true, ログイン: true },
   { path: "/mypage?tab=messages", 名前: "マイページ（メッセージ）", 済み: true, ログイン: true },
+  { path: "/mypage?tab=payment", 名前: "マイページ（お支払い方法）", 済み: true, ログイン: true },
   { path: "/sell/connect", 名前: "受取口座の登録", 済み: true, ログイン: true },
   { path: `/checkout/${承認済みの予約}`, 名前: "決済（カード登録）", 済み: true, ログイン: "買い手" },
 ];

@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { formatSlot, formatYmd, reservationBadgeClass, statusLabel, yen } from "@/lib/labels";
+import {
+  cardBrandLabel,
+  cardExpiryLabel,
+  formatSlot,
+  formatYmd,
+  isCardExpired,
+  reservationBadgeClass,
+  statusLabel,
+  yen,
+} from "@/lib/labels";
 import { isAllowedEmail, isValidEmail } from "@/lib/constants";
 
 describe("表示の整形", () => {
@@ -60,5 +69,36 @@ describe("メールアドレスの判定", () => {
     expect(isValidEmail("a@b.co")).toBe(true);
     expect(isValidEmail("a@b")).toBe(false);
     expect(isValidEmail("a b@c.co")).toBe(false);
+  });
+});
+
+describe("カードの表示（#53）", () => {
+  it("決済会社ごとの表記ゆれを1つにそろえる", () => {
+    // Stripe は小文字、PAY.jp は表記付きで返す。
+    expect(cardBrandLabel("visa")).toBe("VISA");
+    expect(cardBrandLabel("Visa")).toBe("VISA");
+    expect(cardBrandLabel("mastercard")).toBe("Mastercard");
+    expect(cardBrandLabel("MasterCard")).toBe("Mastercard");
+    expect(cardBrandLabel("amex")).toBe("American Express");
+    expect(cardBrandLabel("American Express")).toBe("American Express");
+  });
+
+  it("知らないブランドはそのまま出す", () => {
+    expect(cardBrandLabel("なにこれPay")).toBe("なにこれPay");
+    expect(cardBrandLabel("  ")).toBe("カード");
+  });
+
+  it("有効期限は年月で出す。分からなければ空", () => {
+    expect(cardExpiryLabel(12, 2030)).toBe("2030年12月");
+    expect(cardExpiryLabel(1, 2027)).toBe("2027年1月");
+    expect(cardExpiryLabel(0, 0)).toBe("");
+  });
+
+  it("有効期限はその月の末日まで使える", () => {
+    const 今 = new Date("2026-09-21T00:00:00+09:00");
+    expect(isCardExpired(9, 2026, 今)).toBe(false); // 今月ちょうど
+    expect(isCardExpired(8, 2026, 今)).toBe(true); // 先月
+    expect(isCardExpired(1, 2027, 今)).toBe(false);
+    expect(isCardExpired(0, 0, 今)).toBe(false); // 分からないものは切れ扱いにしない
   });
 });

@@ -12,6 +12,7 @@ import { T32, T33 } from "./09-mail.mjs";
 import { T34, T35, T36 } from "./10-stripe.mjs";
 import { T37, T38 } from "./11-mobile.mjs";
 import { T39 } from "./12-mobile-sweep.mjs";
+import { T40 } from "./13-mypage-card.mjs";
 
 export const SCENARIOS = [
   // 出品
@@ -40,6 +41,8 @@ export const SCENARIOS = [
   T20, T20b, T21, T26, T27,
   // 在籍期限切れ
   T28, T29,
+  // マイページのお支払い方法（カードを消すので、決済を使うシナリオより後に置く）
+  T40,
   // 断られるカード（separate: 名前を指定したときだけ流す）。
   // 同じブラウザで断られるカードを何度も試すと、Stripe の「カードの総当たり対策」が働いて
   // カード入力欄が出なくなることがある。全体の実行とは分け、新しいブラウザで単独で流す：
