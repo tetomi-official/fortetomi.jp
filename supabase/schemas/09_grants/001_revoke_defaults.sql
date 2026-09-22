@@ -16,6 +16,7 @@ REVOKE ALL ON TABLE "public"."email_recovery_requests" FROM "anon", "authenticat
 REVOKE ALL ON TABLE "public"."enrollment_reverifications" FROM "anon", "authenticated";
 REVOKE ALL ON TABLE "public"."recovery_email_verifications" FROM "anon", "authenticated";
 REVOKE ALL ON TABLE "public"."rate_limits" FROM "anon", "authenticated";
+REVOKE ALL ON TABLE "public"."handover_reminders" FROM "anon", "authenticated";
 REVOKE ALL ON TABLE "public"."syllabus_courses" FROM "anon", "authenticated";
 REVOKE ALL ON TABLE "public"."syllabus_textbooks" FROM "anon", "authenticated";
 

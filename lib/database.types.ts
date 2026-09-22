@@ -145,6 +145,35 @@ export type Database = {
           },
         ]
       }
+      handover_reminders: {
+        Row: {
+          kind: string
+          reservation_id: string
+          sent_at: string
+          side: string
+        }
+        Insert: {
+          kind: string
+          reservation_id: string
+          sent_at?: string
+          side: string
+        }
+        Update: {
+          kind?: string
+          reservation_id?: string
+          sent_at?: string
+          side?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "handover_reminders_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listings: {
         Row: {
           author: string | null
