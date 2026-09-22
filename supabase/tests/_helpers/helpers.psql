@@ -81,3 +81,8 @@ begin
 exception when others then
   return -1;
 end $$;
+
+-- 運営フラグを立てる。画面からは立てられない列なので、準備側（superuser）で直接書く。
+create or replace function pg_temp.make_admin(p_id uuid) returns void language sql as $$
+  update public.profiles set is_admin = true where id = p_id;
+$$;

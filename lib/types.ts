@@ -26,6 +26,8 @@ export interface User {
   recovery_email_verified?: boolean;
   /** 在籍確認の有効期限（ISO文字列）。これを過ぎると出品・購入が停止する。 */
   enrollment_valid_until?: string | null;
+  /** 運営かどうか（#60）。運営は学生ではないので在籍確認の対象外。 */
+  is_admin?: boolean;
   university: string;
   faculty: string;
   grade: string;

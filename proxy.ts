@@ -43,6 +43,16 @@ export async function proxy(request: NextRequest) {
     response.cookies.set(SESSION_EXP_COOKIE, "", { path: "/", maxAge: 0 });
   }
 
+  // 運営の画面（#60）。ログインしていない人はここで止めてログイン画面へ送る。
+  // 「運営かどうか」は DB を見ないと分からないのでページ側で見る（notFound）。
+  // 最後の砦は RLS と view なので、ここを抜けられても取引は1件も読めない。
+  if (!user && request.nextUrl.pathname.startsWith("/admin")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.search = `?next=${encodeURIComponent(request.nextUrl.pathname)}`;
+    return NextResponse.redirect(url);
+  }
+
   // プレリリース段階解禁：現在のフェーズで許可されていないルートはサーバー側で弾く。
   // UI 非表示だけだと URL 直打ちでバイパスできるため、ここで実効的に遮断する。
   const blocked = blockedRoute(request.nextUrl.pathname);

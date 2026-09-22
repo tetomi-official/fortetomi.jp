@@ -95,3 +95,38 @@ export function isCardExpired(month: number, year: number, now: Date = new Date(
   const 今 = now.getFullYear() * 12 + (now.getMonth() + 1);
   return 期限 < 今;
 }
+
+/**
+ * 取引の「決済がどうなっているか」を一言にする（#60 の管理画面用）。
+ *
+ * reservations の paid_at と payment_status を突き合わせる。
+ * payment_status は「成立しなかったとき」だけ入る列なので、
+ * 困りごとのある状態を先に見て、最後に「支払い済み / 未決済」に落とす。
+ * tone は画面の色分け（ng=赤 / warn=黄 / ok=緑 / none=灰）に使う。
+ */
+export type PaymentTone = "ng" | "warn" | "ok" | "none";
+
+export function paymentStateLabel(
+  paidAt: string | null,
+  paymentStatus: string | null,
+): { label: string; tone: PaymentTone; alert: boolean } {
+  switch (paymentStatus) {
+    case "disputed":
+      return { label: "チャージバック", tone: "ng", alert: true };
+    case "failed":
+      return { label: "決済失敗", tone: "ng", alert: true };
+    case "requires_action":
+      return { label: "本人認証待ち", tone: "warn", alert: true };
+  }
+  if (paidAt) return { label: "支払い済み", tone: "ok", alert: false };
+  return { label: "未決済", tone: "none", alert: false };
+}
+
+/** 日時を「6/30 10:03」の形にする。無ければ空文字。 */
+export function formatDateTime(ts: string | null): string {
+  if (!ts) return "";
+  const d = new Date(ts);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getMonth() + 1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}

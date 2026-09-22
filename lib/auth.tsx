@@ -108,6 +108,7 @@ interface ProfileRow {
   recovery_email_verified: boolean | null;
   enrollment_verified: boolean | null;
   enrollment_valid_until: string | null;
+  is_admin: boolean | null;
   rating: number | null;
   rating_count: number | null;
 }
@@ -130,6 +131,7 @@ function rowToUser(session: Session, row: ProfileRow | null): User {
     recovery_email: row?.recovery_email ?? "",
     recovery_email_verified: row?.recovery_email_verified ?? false,
     enrollment_valid_until: row?.enrollment_valid_until ?? null,
+    is_admin: row?.is_admin ?? false,
     university: row?.university ?? "",
     faculty: row?.faculty ?? "",
     grade: row?.grade ?? "",
