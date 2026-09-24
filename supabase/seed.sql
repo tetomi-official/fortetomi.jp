@@ -34,7 +34,8 @@ delete from auth.users where id in (
   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
   'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
   'cccccccc-cccc-cccc-cccc-cccccccccccc',
-  'dddddddd-dddd-dddd-dddd-dddddddddddd'
+  'dddddddd-dddd-dddd-dddd-dddddddddddd',
+  'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'
 );
 
 -- ---------------------------------------------------
@@ -114,6 +115,14 @@ values
    'authenticated', 'authenticated', 'shimizu@g.chuo-u.ac.jp', crypt('password123', gen_salt('bf')),
    now(), now(), now(), '{"provider":"email","providers":["email"]}',
    '{"name":"清水 健太","university":"中央大学","faculty":"文学部","grade":"3年","gender":"男性","recovery_email":"shimizu.kenta@example.com"}',
+   '', '', '', ''),
+  -- 運営アカウント（#60）。本番と同じアドレスにしてある。
+  -- どの取引にも当事者として出てこないので、「他人の取引が運営にだけ見える」ことを
+  -- 手元で確かめられる。在籍は付けない（運営は学生ではないので本番でも付かない）。
+  ('00000000-0000-0000-0000-000000000000', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
+   'authenticated', 'authenticated', 'tetomitextbook@gmail.com', crypt('password123', gen_salt('bf')),
+   now(), now(), now(), '{"provider":"email","providers":["email"]}',
+   '{}',
    '', '', '', '');
 
 -- ---------------------------------------------------
@@ -347,6 +356,10 @@ values
    '最新版です。書き込み少しあり。', '教科書', '書き込み少し', 1000, 'Forest Gateway 3F', '{}',
    '55555555-5555-5555-5555-555555555555', '出品中', 40, 6, now() - interval '1 day');
 
+-- 運営フラグ（is_admin）はここでは立てない。
+-- handle_new_user トリガーが、運営のアドレス（03_functions/005_is_operator_email.sql）を
+-- 見て自動で立てる。ここで手で立てると、そのトリガーが壊れても気づけなくなる。
+
 -- ---------------------------------------------------
 -- 4) 予約（reservations）サンプル
 -- ---------------------------------------------------
@@ -383,6 +396,7 @@ values
 --     'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
 --     'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
 --     'cccccccc-cccc-cccc-cccc-cccccccccccc',
---     'dddddddd-dddd-dddd-dddd-dddddddddddd'
+--     'dddddddd-dddd-dddd-dddd-dddddddddddd',
+--     'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'
 --   );
 -- ===================================================

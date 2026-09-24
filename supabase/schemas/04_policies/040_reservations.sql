@@ -5,3 +5,8 @@ CREATE POLICY "buyers can insert own reservations" ON "public"."reservations" FO
 ALTER TABLE "public"."reservations" ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "reservations viewable by buyer or seller" ON "public"."reservations" FOR SELECT USING (((( SELECT "auth"."uid"() AS "uid") = "buyer_id") OR (( SELECT "auth"."uid"() AS "uid") = "seller_id")));
+
+-- 運営は全部の取引を読める（#60）。
+-- ポリシーは足し算なので、上の「買い手か出品者なら読める」はそのまま効く。
+-- TO authenticated に限るのは、ログインしていない経路で is_admin() を評価させないため。
+CREATE POLICY "admins can read all reservations" ON "public"."reservations" FOR SELECT TO "authenticated" USING ("public"."is_admin"());

@@ -169,6 +169,13 @@ export type Database = {
             foreignKeyName: "handover_reminders_reservation_id_fkey"
             columns: ["reservation_id"]
             isOneToOne: false
+            referencedRelation: "admin_reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "handover_reminders_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
             referencedRelation: "reservations"
             referencedColumns: ["id"]
           },
@@ -269,6 +276,13 @@ export type Database = {
             foreignKeyName: "message_reads_reservation_id_fkey"
             columns: ["reservation_id"]
             isOneToOne: false
+            referencedRelation: "admin_reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_reads_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
             referencedRelation: "reservations"
             referencedColumns: ["id"]
           },
@@ -304,6 +318,13 @@ export type Database = {
           sender_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "messages_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "admin_reservations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "messages_reservation_id_fkey"
             columns: ["reservation_id"]
@@ -366,6 +387,7 @@ export type Database = {
           faculty: string | null
           grade: string | null
           id: string
+          is_admin: boolean
           name: string | null
           rating: number
           rating_count: number
@@ -378,6 +400,7 @@ export type Database = {
           faculty?: string | null
           grade?: string | null
           id: string
+          is_admin?: boolean
           name?: string | null
           rating?: number
           rating_count?: number
@@ -390,6 +413,7 @@ export type Database = {
           faculty?: string | null
           grade?: string | null
           id?: string
+          is_admin?: boolean
           name?: string | null
           rating?: number
           rating_count?: number
@@ -709,7 +733,61 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      admin_reservations: {
+        Row: {
+          buyer_faculty: string | null
+          buyer_grade: string | null
+          buyer_id: string | null
+          buyer_name: string | null
+          candidate_slots: Json | null
+          created_at: string | null
+          id: string | null
+          listing_id: string | null
+          listing_status: string | null
+          listing_title: string | null
+          paid_at: string | null
+          payment_error_code: string | null
+          payment_provider: string | null
+          payment_status: string | null
+          preferred_date: string | null
+          preferred_location: string | null
+          preferred_time: string | null
+          price: number | null
+          proposed_date: string | null
+          proposed_location: string | null
+          proposed_time: string | null
+          search_text: string | null
+          selected_slot: number | null
+          seller_faculty: string | null
+          seller_grade: string | null
+          seller_id: string | null
+          seller_name: string | null
+          status: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservations_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservations_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservations_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       check_rate_limit: {
@@ -729,7 +807,9 @@ export type Database = {
           title: string
         }[]
       }
+      is_admin: { Args: never; Returns: boolean }
       is_enrollment_active: { Args: { uid: string }; Returns: boolean }
+      is_operator_email: { Args: { p_email: string }; Returns: boolean }
       is_university_email_taken: { Args: { p_email: string }; Returns: boolean }
     }
     Enums: {

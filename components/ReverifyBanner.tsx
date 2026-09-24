@@ -12,6 +12,9 @@ export default function ReverifyBanner() {
 
   // 未ログイン / 在籍有効 / 初期化前 / 再認証ページ自身では出さない。
   if (!ready || !user || enrollmentActive || pathname === "/reverify") return null;
+  // 運営は学生ではないので在籍確認をしない（大学メールを持っていない）。
+  // 出しても直す手段が無く、消えない警告になるだけなので出さない。#60
+  if (user.is_admin) return null;
 
   return (
     <HeaderBanner

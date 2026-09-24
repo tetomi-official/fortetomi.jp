@@ -9,6 +9,7 @@ import BottomTabBar from "@/components/BottomTabBar";
 import HeaderStack from "@/components/HeaderStack";
 import { ActionRequiredProvider } from "@/lib/action-required";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import HideForOperator from "@/components/HideForOperator";
 
 export const metadata: Metadata = {
   title: "TETOMI【教科書取引サービス】",
@@ -54,14 +55,20 @@ export default function RootLayout({
         <AuthProvider>
           <ActionRequiredProvider>
             <ToastProvider>
-              <SideTab />
+              <HideForOperator>
+                <SideTab />
+              </HideForOperator>
               <HeaderStack />
               {children}
-              <Footer />
+              <HideForOperator>
+                <Footer />
+              </HideForOperator>
               {/* スマホの主動線。?tab= を読むので Suspense で囲う（静的生成の制約）。 */}
-              <Suspense fallback={null}>
-                <BottomTabBar />
-              </Suspense>
+              <HideForOperator>
+                <Suspense fallback={null}>
+                  <BottomTabBar />
+                </Suspense>
+              </HideForOperator>
             </ToastProvider>
           </ActionRequiredProvider>
         </AuthProvider>

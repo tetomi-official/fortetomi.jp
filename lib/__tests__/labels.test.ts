@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   cardBrandLabel,
+  formatDateTime,
+  paymentStateLabel,
   cardExpiryLabel,
   formatSlot,
   formatYmd,
@@ -100,5 +102,49 @@ describe("カードの表示（#53）", () => {
     expect(isCardExpired(8, 2026, 今)).toBe(true); // 先月
     expect(isCardExpired(1, 2027, 今)).toBe(false);
     expect(isCardExpired(0, 0, 今)).toBe(false); // 分からないものは切れ扱いにしない
+  });
+});
+
+describe("決済の状況（管理画面 #60）", () => {
+  it("成立しなかった状態を、支払い済みより先に出す", () => {
+    // チャージバックは決済が成立したあとに起きるので paid_at が入ったまま来る。
+    // 「支払い済み」を先に見てしまうと、いちばん困る状態が隠れる。
+    expect(paymentStateLabel("2026-09-20T10:00:00Z", "disputed")).toEqual({
+      label: "チャージバック",
+      tone: "ng",
+      alert: true,
+    });
+  });
+
+  it("決済失敗と本人認証待ちを見分ける", () => {
+    expect(paymentStateLabel(null, "failed").label).toBe("決済失敗");
+    expect(paymentStateLabel(null, "failed").tone).toBe("ng");
+    expect(paymentStateLabel(null, "requires_action").label).toBe("本人認証待ち");
+    expect(paymentStateLabel(null, "requires_action").tone).toBe("warn");
+  });
+
+  it("困りごとが無ければ、支払い済みか未決済になる", () => {
+    expect(paymentStateLabel("2026-09-20T10:00:00Z", null)).toEqual({
+      label: "支払い済み",
+      tone: "ok",
+      alert: false,
+    });
+    expect(paymentStateLabel(null, null)).toEqual({
+      label: "未決済",
+      tone: "none",
+      alert: false,
+    });
+  });
+});
+
+describe("日時の整形（管理画面 #60）", () => {
+  it("月/日 時:分 の形にする", () => {
+    const d = new Date(2026, 8, 20, 9, 5);
+    expect(formatDateTime(d.toISOString())).toBe("9/20 09:05");
+  });
+
+  it("無いときと壊れているときは空文字", () => {
+    expect(formatDateTime(null)).toBe("");
+    expect(formatDateTime("ではない")).toBe("");
   });
 });

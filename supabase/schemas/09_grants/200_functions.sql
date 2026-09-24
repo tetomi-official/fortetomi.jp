@@ -30,6 +30,20 @@ GRANT ALL ON FUNCTION "public"."is_enrollment_active"("uid" "uuid") TO "authenti
 
 GRANT ALL ON FUNCTION "public"."is_enrollment_active"("uid" "uuid") TO "service_role";
 
+-- 運営かどうかの判定。ポリシーの中から呼ばれるので authenticated に EXECUTE が要る。
+-- anon には付けない（呼ぶポリシーはすべて TO authenticated に限っている）。
+REVOKE ALL ON FUNCTION "public"."is_admin"() FROM PUBLIC;
+
+GRANT ALL ON FUNCTION "public"."is_admin"() TO "authenticated";
+
+GRANT ALL ON FUNCTION "public"."is_admin"() TO "service_role";
+
+-- 運営のアドレス一覧。呼ぶのは enforce_email_domain と handle_new_user（どちらも
+-- SECURITY DEFINER なので所有者の権限で動く）だけ。ブラウザからは呼ばせない。
+REVOKE ALL ON FUNCTION "public"."is_operator_email"("p_email" "text") FROM PUBLIC;
+
+GRANT ALL ON FUNCTION "public"."is_operator_email"("p_email" "text") TO "service_role";
+
 GRANT ALL ON FUNCTION "public"."is_university_email_taken"("p_email" "text") TO "anon";
 
 GRANT ALL ON FUNCTION "public"."is_university_email_taken"("p_email" "text") TO "authenticated";

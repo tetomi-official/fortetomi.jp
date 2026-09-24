@@ -20,8 +20,13 @@ REVOKE ALL ON TABLE "public"."rate_limits" FROM "anon", "authenticated";
 REVOKE ALL ON TABLE "public"."handover_reminders" FROM "anon", "authenticated";
 REVOKE ALL ON TABLE "public"."syllabus_courses" FROM "anon", "authenticated";
 REVOKE ALL ON TABLE "public"."syllabus_textbooks" FROM "anon", "authenticated";
+-- view にも既定の権限が付く。運営用なので、いったん全部はがしてから
+-- 09_grants/050_views.sql で authenticated にだけ付け直す。
+REVOKE ALL ON TABLE "public"."admin_reservations" FROM "anon", "authenticated";
 
 REVOKE ALL ON FUNCTION "public"."is_enrollment_active"("uid" "uuid") FROM PUBLIC, "anon", "authenticated";
+REVOKE ALL ON FUNCTION "public"."is_admin"() FROM PUBLIC, "anon", "authenticated";
+REVOKE ALL ON FUNCTION "public"."is_operator_email"("p_email" "text") FROM PUBLIC, "anon", "authenticated";
 REVOKE ALL ON FUNCTION "public"."check_rate_limit"("p_bucket" "text", "p_limit" integer, "p_window_seconds" integer) FROM PUBLIC, "anon", "authenticated";
 REVOKE ALL ON FUNCTION "public"."count_active_listings"() FROM PUBLIC, "anon", "authenticated";
 REVOKE ALL ON FUNCTION "public"."enforce_email_domain"() FROM PUBLIC, "anon", "authenticated";
