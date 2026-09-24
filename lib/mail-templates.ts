@@ -3,7 +3,7 @@ import { applicationFeeAmount } from "./payment-provider/fees";
 import { formatSlot, yen } from "./labels";
 import { mailButton, mailLayout, mailSteps, mailTable, siteUrl } from "./mail";
 import { SUPPORT_CONTACT } from "./support";
-import type { CandidateSlot } from "./types";
+import type { CandidateSlot, ReminderKind } from "./types";
 
 // ===================================================
 // 取引の通知メールの文面
@@ -60,6 +60,41 @@ function 困ったときは(状況: string): string {
     </p>`;
 }
 
+/**
+ * 当日の流れ。日程確定のメール（#57）と受け渡し前のリマインド（#58）で同じものを使う。
+ *
+ * 2通で書き方が違うと「どちらが正しいのか」を当日その場で迷わせるので、
+ * 手順の文言はここ1か所にしか置かない。
+ */
+function 当日の流れ(d: ReservationMailData, 宛先: "buyer" | "seller"): string {
+  const 日時 = 確定した日時(d) ?? "調整した日時";
+  const 場所 = d.proposedLocation || d.location;
+  if (宛先 === "buyer") {
+    return mailSteps([
+      `${日時}に「${場所}」へ行き、${d.sellerName} さんと会う`,
+      "教科書を受け取り、その場で状態を確かめる",
+      "「受け取り・支払い」の画面を開き、QRを出品者に見せる",
+      `出品者がQRを読み取ると、その場で登録済みのカードに ${yen(d.price)} が決済されます`,
+    ]);
+  }
+  return mailSteps([
+    `${日時}に「${場所}」へ行き、${d.buyerName} さんと会う`,
+    "教科書を渡す",
+    "マイページの「QRを読み取って決済」を開き、買い手が見せるQRを読み取る",
+    `読み取った時点で ${yen(d.price)} の決済が成立し、売上が確定します`,
+  ]);
+}
+
+/** 受け渡しの明細（教科書・日時・場所・金額）。 */
+function 受け渡しの明細(d: ReservationMailData): string {
+  return mailTable([
+    ["教科書", d.listingTitle],
+    ["受け渡し日時", 確定した日時(d) ?? "調整した日時"],
+    ["場所", d.proposedLocation || d.location],
+    ["金額", yen(d.price)],
+  ]);
+}
+
 /** 購入希望が届いた（→出品者） */
 export function purchaseRequestMail(d: ReservationMailData): Mail {
   const 候補 = (d.candidateSlots ?? []).map((s) => formatSlot(s.date, s.time)).join(" / ") || "—";
@@ -87,14 +122,7 @@ export function purchaseRequestMail(d: ReservationMailData): Mail {
  * やることが違うので、宛先ごとに本文を変える。
  */
 export function scheduleConfirmedMail(d: ReservationMailData, 宛先: "buyer" | "seller"): Mail {
-  const 日時 = 確定した日時(d) ?? "調整した日時";
-  const 場所 = d.proposedLocation || d.location;
-  const 明細 = mailTable([
-    ["教科書", d.listingTitle],
-    ["受け渡し日時", 日時],
-    ["場所", 場所],
-    ["金額", yen(d.price)],
-  ]);
+  const 明細 = 受け渡しの明細(d);
 
   if (宛先 === "buyer") {
     return {
@@ -104,12 +132,7 @@ export function scheduleConfirmedMail(d: ReservationMailData, 宛先: "buyer" | 
         `<p>${d.sellerName} さんが受け渡しの日程を確定しました。</p>` +
           明細 +
           `<p><strong>支払いは受け渡しの場で行います。</strong>当日の流れは次のとおりです。</p>` +
-          mailSteps([
-            `${日時}に「${場所}」へ行き、${d.sellerName} さんと会う`,
-            "教科書を受け取り、その場で状態を確かめる",
-            "「受け取り・支払い」の画面を開き、QRを出品者に見せる",
-            `出品者がQRを読み取ると、その場で登録済みのカードに ${yen(d.price)} が決済されます`,
-          ]) +
+          当日の流れ(d, "buyer") +
           `<p><strong>現金のやり取りはありません。</strong>出品者にその場でお金を渡す必要はなく、
            求められた場合も渡さないでください。</p>` +
           `<p>QRは支払いカードを登録すると表示されます。当日あわてないよう、先に登録しておいてください。</p>` +
@@ -128,12 +151,7 @@ export function scheduleConfirmedMail(d: ReservationMailData, 宛先: "buyer" | 
       `<p>${d.buyerName} さんが提案した日程を承諾しました。</p>` +
         明細 +
         `<p>当日の流れは次のとおりです。</p>` +
-        mailSteps([
-          `${日時}に「${場所}」へ行き、${d.buyerName} さんと会う`,
-          "教科書を渡す",
-          "マイページの「QRを読み取って決済」を開き、買い手が見せるQRを読み取る",
-          `読み取った時点で ${yen(d.price)} の決済が成立し、売上が確定します`,
-        ]) +
+        当日の流れ(d, "seller") +
         `<p><strong>現金のやり取りはありません。</strong>その場で代金を受け取らないでください。
          受け取ってしまうと二重に支払わせることになります。</p>` +
         mailButton("マイページで確認する", mypage()) +
@@ -226,6 +244,79 @@ export function paymentCompletedSellerMail(d: ReservationMailData): Mail {
           `受け渡しの内容について確認したいことがあれば、
            まずマイページのメッセージで ${d.buyerName} さんに連絡してください。`,
         ),
+    ),
+  };
+}
+
+/**
+ * 受け渡しの前に出すリマインド（→買い手・出品者の両方）。
+ *
+ * 日程が決まったあと当日まで何も届かないと、そのまま忘れられて取引が流れる。
+ * 当日の流れは日程確定メールと同じものを使い回す（当日の流れ()）。
+ */
+export function handoverReminderMail(
+  d: ReservationMailData,
+  宛先: "buyer" | "seller",
+  kind: ReminderKind,
+): Mail {
+  const いつ = kind === "前日" ? "明日" : "あさって";
+  const 日時 = 確定した日時(d) ?? "調整した日時";
+  const 相手 = 宛先 === "buyer" ? d.sellerName : d.buyerName;
+  const 準備 =
+    宛先 === "buyer"
+      ? `<p><strong>支払いカードの登録はお済みですか。</strong>QRは登録を済ませると表示されます。
+         まだのときは${kind === "前日" ? "今夜のうちに" : "当日までに"}登録しておいてください。</p>`
+      : `<p><strong>教科書を持って行くのを忘れないでください。</strong>決済は、あなたが買い手のQRを
+         読み取った時点で成立します。</p>`;
+
+  return {
+    subject: `【TETOMI】${いつ}は「${d.listingTitle}」の受け渡しです`,
+    html: mailLayout(
+      `受け渡しは${いつ}です`,
+      `<p>${相手} さんとの受け渡しが${いつ}（${日時}）に予定されています。</p>` +
+        受け渡しの明細(d) +
+        準備 +
+        `<p>当日の流れは次のとおりです。</p>` +
+        当日の流れ(d, 宛先) +
+        `<p><strong>現金のやり取りはありません。</strong>${
+          宛先 === "buyer"
+            ? "その場でお金を渡す必要はなく、求められた場合も渡さないでください。"
+            : "その場で代金を受け取らないでください。受け取ってしまうと二重に支払わせることになります。"
+        }</p>` +
+        (宛先 === "buyer"
+          ? mailButton("受け取り・支払いの画面へ", checkout(d.reservationId))
+          : mailButton("マイページで確認する", mypage())) +
+        困ったときは(
+          `都合が悪くなった、場所を変えたい ── こうしたときは、当日を待たずに
+           マイページのメッセージで ${相手} さんに連絡してください。`,
+        ),
+    ),
+  };
+}
+
+/**
+ * 新しいメッセージが届いた（→相手）。
+ *
+ * **本文は載せない。** メールは転送・誤送信・盗み見が起こりやすく、
+ * やりとりの中身まで漏らす必要はないため、載せるのは「誰から・どの取引か」と
+ * アプリで開くリンクだけにする。
+ */
+export function newMessageMail(d: {
+  reservationId: string;
+  listingTitle: string;
+  senderName: string;
+}): Mail {
+  const スレッド = `${siteUrl()}/mypage?tab=messages&thread=${d.reservationId}`;
+  return {
+    subject: `【TETOMI】${d.senderName} さんからメッセージが届きました`,
+    html: mailLayout(
+      "メッセージが届きました",
+      `<p>${d.senderName} さんから、「${d.listingTitle}」の取引について新しいメッセージが届いています。</p>` +
+        `<p>内容はアプリで確認してください。<strong>やりとりの中身はこのメールには書いていません。</strong></p>` +
+        mailButton("メッセージを見る", スレッド) +
+        `<p style="font-size:13px;color:#374151">
+          このあと続けて届いたぶんは、いちどアプリで開くまでお知らせを送りません。
+        </p>`,
     ),
   };
 }

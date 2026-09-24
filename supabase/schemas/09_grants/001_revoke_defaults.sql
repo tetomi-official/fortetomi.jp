@@ -10,12 +10,14 @@ REVOKE ALL ON TABLE "public"."profiles_private" FROM "anon", "authenticated";
 REVOKE ALL ON TABLE "public"."listings" FROM "anon", "authenticated";
 REVOKE ALL ON TABLE "public"."reservations" FROM "anon", "authenticated";
 REVOKE ALL ON TABLE "public"."messages" FROM "anon", "authenticated";
+REVOKE ALL ON TABLE "public"."message_reads" FROM "anon", "authenticated";
 REVOKE ALL ON TABLE "public"."payment_customers" FROM "anon", "authenticated";
 REVOKE ALL ON TABLE "public"."connect_accounts" FROM "anon", "authenticated";
 REVOKE ALL ON TABLE "public"."email_recovery_requests" FROM "anon", "authenticated";
 REVOKE ALL ON TABLE "public"."enrollment_reverifications" FROM "anon", "authenticated";
 REVOKE ALL ON TABLE "public"."recovery_email_verifications" FROM "anon", "authenticated";
 REVOKE ALL ON TABLE "public"."rate_limits" FROM "anon", "authenticated";
+REVOKE ALL ON TABLE "public"."handover_reminders" FROM "anon", "authenticated";
 REVOKE ALL ON TABLE "public"."syllabus_courses" FROM "anon", "authenticated";
 REVOKE ALL ON TABLE "public"."syllabus_textbooks" FROM "anon", "authenticated";
 -- view にも既定の権限が付く。運営用なので、いったん全部はがしてから

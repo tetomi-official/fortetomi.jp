@@ -2,7 +2,7 @@
 -- 読み取り側（010）と同じく、塞ぎすぎて正しい操作が壊れていないかも確かめる。
 begin;
 \ir _helpers/helpers.psql
-select plan(38);
+select plan(44);
 
 -- ---- 準備：A が出品者、B が買い手、C は無関係、D は在籍切れ ----
 select pg_temp.make_user('aaaaaaaa-0000-0000-0000-000000000001', 'test-a@g.chuo-u.ac.jp', '出品者A');
@@ -140,6 +140,27 @@ select throws_ok($$ insert into public.messages (reservation_id, sender_id, body
                     values ('22222222-abab-0000-0000-000000000001', 'cccccccc-0000-0000-0000-000000000003', '割り込み') $$,
   '42501', null, '無関係な人は他人の取引にメッセージを送れない');
 
+-- ---- 既読（新着メールを送りすぎないために使う。#59）----
+select pg_temp.as_user('bbbbbbbb-0000-0000-0000-000000000002');
+select lives_ok($$ insert into public.message_reads (reservation_id, user_id)
+                   values ('22222222-abab-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000002') $$,
+  '当事者は自分の既読を記録できる');
+select lives_ok($$ update public.message_reads set last_read_at = now()
+                   where reservation_id = '22222222-abab-0000-0000-000000000001'
+                     and user_id = 'bbbbbbbb-0000-0000-0000-000000000002' $$,
+  '自分の既読は付け直せる');
+select throws_ok($$ insert into public.message_reads (reservation_id, user_id)
+                    values ('22222222-abab-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001') $$,
+  '42501', null, '相手の既読は作れない（相手への通知を勝手に止められない）');
+select throws_ok($$ delete from public.message_reads
+                    where reservation_id = '22222222-abab-0000-0000-000000000001' $$,
+  '42501', null, '既読は消せない');
+
+select pg_temp.as_user('cccccccc-0000-0000-0000-000000000003');
+select throws_ok($$ insert into public.message_reads (reservation_id, user_id)
+                    values ('22222222-abab-0000-0000-000000000001', 'cccccccc-0000-0000-0000-000000000003') $$,
+  '42501', null, '無関係な人は他人の取引に既読を作れない');
+
 -- =========================================================
 -- 決済まわり（書き込みはサーバーだけ）
 -- =========================================================
@@ -150,6 +171,13 @@ select throws_ok($$ insert into public.connect_accounts (user_id, stripe_account
 select throws_ok($$ insert into public.payment_customers (user_id, provider, stripe_customer_id)
                     values ('aaaaaaaa-0000-0000-0000-000000000001', 'stripe', 'cus_fake') $$,
   '42501', null, 'カードの保存先を自分で登録できない（他人のカードで払わせない）');
+
+-- =========================================================
+-- リマインドの送信記録（サーバーだけが書く）
+-- =========================================================
+select throws_ok($$ insert into public.handover_reminders (reservation_id, kind, side)
+                    values ('22222222-abab-0000-0000-000000000001', '前日', 'buyer') $$,
+  '42501', null, 'リマインドの送信記録を自分で書けない（送信済みに見せかけて通知を止められない）');
 
 -- =========================================================
 -- 画像の置き場（listing-images）

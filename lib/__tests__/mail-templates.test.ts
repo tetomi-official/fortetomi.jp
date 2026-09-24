@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  handoverReminderMail,
+  newMessageMail,
   paymentCompletedBuyerMail,
   paymentCompletedSellerMail,
   purchaseRequestMail,
@@ -167,6 +169,72 @@ describe("日程確定メールの当日の手順", () => {
   });
 });
 
+describe("受け渡し前のリマインドメール", () => {
+  it("前日の回：件名と見出しが「明日」になる", () => {
+    const m = handoverReminderMail(取引, "buyer", "前日");
+    expect(m.subject).toContain("明日");
+    expect(m.subject).toContain("線形代数入門 第3版");
+    expect(m.html).toContain("受け渡しは明日です");
+  });
+
+  it("2日前の回：件名と見出しが「あさって」になる", () => {
+    const m = handoverReminderMail(取引, "seller", "2日前");
+    expect(m.subject).toContain("あさって");
+    expect(m.html).toContain("受け渡しはあさってです");
+  });
+
+  it("日時・場所・金額が本文に入る（メールだけ見れば当日に行ける）", () => {
+    for (const 宛先 of ["buyer", "seller"] as const) {
+      const m = handoverReminderMail(取引, 宛先, "前日");
+      expect(m.html, 宛先).toContain("9/15 昼休み"); // selectedSlot = 1
+      expect(m.html, 宛先).toContain("Forest Gateway 3F");
+      expect(m.html, 宛先).toContain("¥1,200");
+    }
+  });
+
+  it("当日の流れは日程確定メールと同じ文言を使う", () => {
+    for (const 宛先 of ["buyer", "seller"] as const) {
+      const 確定 = scheduleConfirmedMail(取引, 宛先);
+      const リマインド = handoverReminderMail(取引, 宛先, "前日");
+      const 手順 = 宛先 === "buyer" ? "QRを出品者に見せる" : "QRを読み取って決済";
+      expect(確定.html, 宛先).toContain(手順);
+      expect(リマインド.html, 宛先).toContain(手順);
+    }
+  });
+
+  it("買い手宛：カードの登録を促す。出品者宛：教科書を持って行くことを促す", () => {
+    expect(handoverReminderMail(取引, "buyer", "前日").html).toContain("支払いカードの登録");
+    expect(handoverReminderMail(取引, "seller", "前日").html).toContain("教科書を持って行く");
+  });
+
+  it("どちらの宛先にも、現金のやり取りが無いことと連絡先が入る", () => {
+    for (const 宛先 of ["buyer", "seller"] as const) {
+      const m = handoverReminderMail(取引, 宛先, "2日前");
+      expect(m.html, 宛先).toContain("現金のやり取りはありません");
+      expect(m.html, 宛先).toContain(SUPPORT_CONTACT);
+    }
+  });
+
+  it("逆提案で決まった取引は、その日時と場所を出す", () => {
+    const m = handoverReminderMail(
+      { ...取引, proposedDate: "2026-09-20", proposedTime: "12:30", proposedLocation: "中央図書館前" },
+      "buyer",
+      "前日",
+    );
+    expect(m.html).toContain("9/20 12:30");
+    expect(m.html).toContain("中央図書館前");
+  });
+
+  it("手順は <table> で組む（レイアウト用のCSSが効かないメールソフトがあるため）", () => {
+    for (const 宛先 of ["buyer", "seller"] as const) {
+      const m = handoverReminderMail(取引, 宛先, "前日");
+      expect(m.html, 宛先).toContain("<table");
+      expect(m.html, 宛先).not.toContain("<ol");
+      expect(m.html, 宛先).not.toContain("display:flex");
+    }
+  });
+});
+
 describe("決済完了メールの問い合わせ先", () => {
   it("買い手宛：受け取った教科書に問題があったときの連絡先が入る", () => {
     const m = paymentCompletedBuyerMail(取引);
@@ -179,6 +247,25 @@ describe("決済完了メールの問い合わせ先", () => {
   });
 });
 
+describe("新着メッセージのお知らせ（#59）", () => {
+  const 中身 = {
+    reservationId: 取引.reservationId,
+    listingTitle: 取引.listingTitle,
+    senderName: 取引.buyerName,
+  };
+
+  it("やり取りの本文は載せない（誤送信で中身が漏れないように）", () => {
+    const m = newMessageMail(中身);
+    expect(m.html).not.toContain("経済学の授業で使います");
+    expect(m.subject).toContain("木村 颯太");
+  });
+
+  it("そのスレッドを開くリンクが入る", () => {
+    const m = newMessageMail(中身);
+    expect(m.html).toContain(`/mypage?tab=messages&thread=${取引.reservationId}`);
+  });
+});
+
 describe("すべてのメールに共通すること", () => {
   const 全部 = () => [
     purchaseRequestMail(取引),
@@ -188,6 +275,13 @@ describe("すべてのメールに共通すること", () => {
     reservationCancelledMail(取引, "buyer"),
     paymentCompletedBuyerMail(取引),
     paymentCompletedSellerMail(取引),
+    handoverReminderMail(取引, "buyer", "2日前"),
+    handoverReminderMail(取引, "seller", "前日"),
+    newMessageMail({
+      reservationId: 取引.reservationId,
+      listingTitle: 取引.listingTitle,
+      senderName: 取引.buyerName,
+    }),
   ];
 
   it("件名は【TETOMI】で始まる", () => {

@@ -145,6 +145,35 @@ export type Database = {
           },
         ]
       }
+      handover_reminders: {
+        Row: {
+          kind: string
+          reservation_id: string
+          sent_at: string
+          side: string
+        }
+        Insert: {
+          kind: string
+          reservation_id: string
+          sent_at?: string
+          side: string
+        }
+        Update: {
+          kind?: string
+          reservation_id?: string
+          sent_at?: string
+          side?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "handover_reminders_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listings: {
         Row: {
           author: string | null
@@ -213,6 +242,39 @@ export type Database = {
           {
             foreignKeyName: "listings_seller_id_fkey"
             columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_reads: {
+        Row: {
+          last_read_at: string
+          reservation_id: string
+          user_id: string
+        }
+        Insert: {
+          last_read_at?: string
+          reservation_id: string
+          user_id: string
+        }
+        Update: {
+          last_read_at?: string
+          reservation_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_reads_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_reads_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]

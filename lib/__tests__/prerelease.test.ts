@@ -27,6 +27,7 @@ describe("段階解禁", () => {
     expect(m.blockedRoute("/checkout/abc")).toEqual({ isApi: false });
     expect(m.blockedRoute("/api/payments/charge")).toEqual({ isApi: true });
     expect(m.blockedRoute("/api/reservations")).toEqual({ isApi: true });
+    expect(m.blockedRoute("/api/messages")).toEqual({ isApi: true });
   });
 
   it("フェーズ1で購入・決済が開く", async () => {
@@ -36,6 +37,7 @@ describe("段階解禁", () => {
     expect(m.blockedRoute("/checkout/abc")).toBeNull();
     expect(m.blockedRoute("/api/payments/charge")).toBeNull();
     expect(m.blockedRoute("/api/reservations")).toBeNull();
+    expect(m.blockedRoute("/api/messages")).toBeNull();
   });
 
   it("フェーズ2で出品が開く", async () => {

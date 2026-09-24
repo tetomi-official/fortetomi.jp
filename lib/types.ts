@@ -118,3 +118,10 @@ export interface Message {
   body: string;
   created_at: number;
 }
+
+/**
+ * 受け渡しリマインドの回（#58）。DB の handover_reminders.kind と同じ値を使う。
+ *  - 2日前: 受け渡しの2日前の朝に出す
+ *  - 前日:   受け渡しの前日の夜に出す
+ */
+export type ReminderKind = "2日前" | "前日";

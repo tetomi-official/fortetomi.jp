@@ -1,12 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { fetchMessages, sendMessage, subscribeMessages } from "@/lib/messages";
+import { fetchMessages, markThreadRead, sendMessage, subscribeMessages } from "@/lib/messages";
 import { reservationBadgeClass } from "@/lib/labels";
 import type { Message, Reservation, User } from "@/lib/types";
 
 // 取引メッセージ（PB-041）。1 予約 = 1 スレッド。
 // threads には自分が買い手 / 出品者として関わる予約を渡す（キャンセル済みは除外して渡す想定）。
+//
+// 新着メールのリンク（?tab=messages&thread=<予約ID>）から、そのスレッドを開いた
+// 状態で表示できる（#59）。開いているあいだは既読を記録し、読んでいる相手に
+// メールを送らないようにする。
 
 type Thread = {
   reservation: Reservation;
@@ -30,12 +34,16 @@ function buildThreads(reservations: Reservation[], userId: string): Thread[] {
 export default function MessagesPanel({
   user,
   threads: reservations,
+  initialThreadId,
 }: {
   user: User;
   threads: Reservation[];
+  /** メールのリンクなどから、最初に開いておくスレッド（予約ID）。 */
+  initialThreadId?: string | null;
 }) {
   const threads = buildThreads(reservations, user.id);
-  const [activeId, setActiveId] = useState<string | null>(null);
+  // 一覧が届く前に開こうとすることがあるので、見つかるまで覚えておく。
+  const [activeId, setActiveId] = useState<string | null>(initialThreadId ?? null);
   const active = threads.find((t) => t.reservation.id === activeId) ?? null;
 
   if (!active) {
@@ -124,15 +132,19 @@ function Conversation({
       setMessages(data);
       setLoadedFor(reservationId);
     });
+    // 開いた時点で既読にする。開いている間に相手から届いたぶんも、その場で既読にする
+    // （読んでいる相手にメールを送らないため。#59）。
+    void markThreadRead(reservationId, user.id);
     const unsubscribe = subscribeMessages(reservationId, (msg) => {
       // 自分の送信は楽観更新で既に追加済み。重複を避ける。
       setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
+      if (msg.sender_id !== user.id) void markThreadRead(reservationId, user.id);
     });
     return () => {
       active = false;
       unsubscribe();
     };
-  }, [reservationId]);
+  }, [reservationId, user.id]);
 
   // 末尾へ自動スクロール。
   useEffect(() => {
@@ -144,7 +156,7 @@ function Conversation({
     const body = draft.trim();
     if (!body || sending) return;
     setSending(true);
-    const { error, message } = await sendMessage(reservationId, user.id, body);
+    const { error, message } = await sendMessage(reservationId, body);
     setSending(false);
     if (error || !message) return; // 失敗時は入力を残す
     setMessages((prev) => (prev.some((m) => m.id === message.id) ? prev : [...prev, message]));

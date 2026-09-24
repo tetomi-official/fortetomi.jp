@@ -2,7 +2,7 @@
 
 このセッションで実装した機能を「本番で実際に動く」状態にするために、**コードでは完結できずダッシュボード/DNS/環境変数などの手作業が必要な項目**をまとめる。実装済みコードは各項目のリンク先ドキュメント参照。
 
-最終更新: 2026-09-18（DB の変更手順を [`docs/operations/db-workflow.md`](./db-workflow.md) に移し、SQL Editor に貼る手順をやめた）
+最終更新: 2026-09-22（受け渡しリマインドメールの定時実行を追加 → J）
 
 > **DB の変更について**：以前は `docs/` の SQL を Supabase の SQL Editor に貼って本番を変えていたが、今は `supabase/` のファイルで管理し、`supabase db push` で本番に当てる。手順は [`docs/operations/db-workflow.md`](./db-workflow.md)。下の各「DBマイグレーションの適用」はすべて本番に適用済みで、昔の SQL は [`docs/archive/sql/`](../archive/sql/) に移した。
 
@@ -232,10 +232,21 @@
   （決済会社をまたいでカード情報を移すことはできない）。利用の少ない時間帯に行うこと。
 
 ### H-6. 法定ページの整合 ☐ **本番前に必須**
-- **利用規約の「振込申請」「売上残高」まわりが Stripe の実際の動きと食い違う。**
-  詳細と代替案は [`docs/decisions/stripe-legal-review.md`](../decisions/stripe-legal-review.md) にまとめてある。
-- 特に第11条2項（振込手数料250円）と第12条（売上金の管理および振込）は、
-  Stripe を本番で有効にする前に必ず直すこと。
+- 文言は Stripe の実際の動きに合わせて直した（issue #55）。直したのは
+  利用規約の第7条（退会）・第11条（手数料）・第12条（売上金の受け取り）、
+  特商法の「販売価格以外に必要な費用」「売上金の入金について」、
+  プライバシーポリシーの取得情報・第三者提供・委託先。
+  根拠は [`docs/decisions/stripe-legal-review.md`](../decisions/stripe-legal-review.md) と
+  [`docs/decisions/stripe-payout-behavior.md`](../decisions/stripe-payout-behavior.md)。
+- **残っている手作業は取扱ブランドの突き合わせだけ。** 特商法の「支払方法」は
+  `lib/legal-info.ts` の `cardBrands`（VISA / Mastercard / JCB / American Express /
+  Diners Club / Discover）をそのまま出している。**本番のダッシュボードで実際に
+  有効なブランドと突き合わせ、有効にしていないものは `cardBrands` から消すこと。**
+  テスト環境からは確認できない（プラットフォームのテストアカウントには
+  capabilities が返らない）。
+- 文面の最終決定は PO。改定日・施行日を動かすかどうかも PO の判断。
+- 未対応で残っているもの: チャージバックを出品者に負担させるかの取り決め
+  （`stripe-legal-review.md` の7節）。規約に記載が無い。
 
 ### H-7. 出品者への案内（運用） ☐
 - 口座登録には**公的な写真付き身分証**が要る（運転免許証／パスポート／
@@ -268,17 +279,52 @@
 
 ---
 
-## J. 運営アカウントと取引一覧（#60）
+## J. 受け渡しリマインドメール（#58）
+
+受け渡しの**2日前の朝（日本時間 8:00）**と**前日の夜（日本時間 20:00）**に、買い手と出品者の両方へ
+当日の案内を送る。日程が決まったあと当日まで何も届かず、忘れられて取引が流れるのを防ぐ。
+
+- 定時実行：[`.github/workflows/handover-reminder.yml`](../../.github/workflows/handover-reminder.yml)
+- 送る中身と二度送りの防止：`app/api/cron/handover-reminder` → `lib/notify-handover-reminder.ts`
+- 送信済みの記録：`handover_reminders` 表（予約・回・相手が主キー。service_role だけが読み書きできる）
+
+### J-1. DBマイグレーションの適用 ☐
+- `supabase/migrations/20260921222800_add_handover_reminders.sql`
+- 手順は [`docs/operations/db-workflow.md`](./db-workflow.md) の 2章（`--dry-run` で確認してから `db push`）。
+
+### J-2. 共有シークレットの設定 ☐
+同じ文字列を2か所に置く。**片方だけだと 401 になって1通も届かない。**
+
+1. 値を作る：`openssl rand -hex 32`
+2. Vercel の環境変数に `CRON_SECRET` として設定（`NEXT_PUBLIC_` は付けない）。設定後に再デプロイ。
+3. GitHub → Settings → Secrets and variables → Actions → **Secrets** に `CRON_SECRET` を同じ値で登録。
+
+### J-3. 叩き先の設定（本番以外を叩くときだけ） ☐
+- 既定は `https://tetomi.jp`。別のURLを叩くときだけ、GitHub の同じ画面の
+  **Variables** に `SITE_URL` を登録する。
+
+### J-4. 動くことの確認 ☐
+1. GitHub → Actions → 「受け渡しリマインド」→ **Run workflow** → 回（2日前 / 前日）を選んで実行。
+2. 緑になり、ログに `{"kind":...,"sent":N,...}` が出ること。対象が無ければ `sent:0` でよい。
+3. もう一度同じ回を実行し、`skipped` に振り替わる（＝二度送りしない）こと。
+4. `CRON_SECRET` を空にして叩くと 401 になること。
+
+> **定時実行は既定のブランチ（`main`）のものだけが動く。** `develop` に入れただけでは動かない。
+> GitHub の定時実行は混み具合で数十分遅れることがある。取りこぼしても次の回で拾い直す作りにしてある。
+
+---
+
+## K. 運営アカウントと取引一覧（#60）
 
 運営が `/admin` で取引の状況を見るための画面。**アカウントを作るところだけが手作業**で、あとはコードと migration で済む。
 
-### J-1. DBマイグレーションの適用 ☐
+### K-1. DBマイグレーションの適用 ☐
 - `20260922042947_add_admin_flag_and_admin_reservations.sql` — `profiles.is_admin`・`is_admin()`・取引一覧の view・RLS
 - `20260922121545_allow_operator_email.sql` — 運営のメールアドレスを会員登録の例外にする
 - `20260924053434_operator_default_name.sql` — 運営の既定の名前（ダッシュボードで作ると名前欄が無いため）
 - 手順は [`docs/operations/db-workflow.md`](./db-workflow.md)（`db push --dry-run` → `db push`）。
 
-### J-2. 運営アカウントを作る ☐
+### K-2. 運営アカウントを作る ☐
 
 運営のアドレス `tetomitextbook@gmail.com` は大学のドメインではないので、**会員登録画面からは登録できない**（大学メールの先頭から入学年を読む処理があるため）。Supabase のダッシュボードから直接作る。
 
@@ -291,7 +337,7 @@
 > **アドレスを変える・増やすとき**は `supabase/schemas/03_functions/005_is_operator_email.sql` に足して migration を作る。
 > `is_admin` はどのロールからも UPDATE できない列なので、画面やAPIからは立てられない。
 
-### J-3. 運営に見せる範囲
+### K-3. 運営に見せる範囲
 
 運営は学生ではないので、教科書を探す・出品する画面は仕事に要らない。ログインしても
 **取引一覧（`/admin`）と自分のマイページ（`/mypage`）だけ**が開く。
@@ -303,7 +349,7 @@
 
 戻す場所はナビを消すだけでなく `proxy.ts` でサーバー側でも決めている。URL を直打ちしても学生向けの画面には入れない。
 
-### J-4. 確認 ☐
+### K-4. 確認 ☐
 - 運営でログイン → `/admin` が開く
 - 運営で `/listings` を直打ち → `/admin` に戻る
 - 運営で `/mypage` → 開く（ログアウトできる）
@@ -331,8 +377,9 @@
 | `STRIPE_SECRET_KEY` | Stripe(秘密) | 未設定 | **テストキー設定（H-3）** |
 | `STRIPE_WEBHOOK_SECRET` | Stripe Webhook署名 | 未設定 | **設定（H-4）** |
 | `STRIPE_3DS_REQUIRED` | 3DS要求(任意) | 未設定＝既定で要求 | 通常は未設定でOK。※日本のガイドライン該当時はこの値に関係なく Stripe が3DSを出す |
+| `CRON_SECRET` | 受け渡しリマインドの定時実行の認証 | 未設定 | **設定（J-2）**。GitHub の `secrets.CRON_SECRET` と同じ値 |
 
-> 本番（Vercel等）ではサーバー専用変数（`SUPABASE_SERVICE_ROLE_KEY` / `PAYJP_SECRET_KEY` / `PAYJP_WEBHOOK_TOKEN` / `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` / `RESEND_API_KEY`）を**サーバー環境変数**として設定し、`NEXT_PUBLIC_` を付けないこと。
+> 本番（Vercel等）ではサーバー専用変数（`SUPABASE_SERVICE_ROLE_KEY` / `PAYJP_SECRET_KEY` / `PAYJP_WEBHOOK_TOKEN` / `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` / `RESEND_API_KEY` / `CRON_SECRET`）を**サーバー環境変数**として設定し、`NEXT_PUBLIC_` を付けないこと。
 
 ---
 

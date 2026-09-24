@@ -16,6 +16,10 @@ const PROVIDER_INFO = {
     /** PAY.JP Platform（Payouts）ユーザー利用規約 */
     sellerAgreementName: "PAY.JP Platform（Payouts）ユーザー利用規約",
     sellerAgreementUrl: "https://pay.jp/terms/tos-payouts-user.pdf",
+    /** 画面・規約に出す決済会社の呼び名 */
+    companyName: "PAY.JP",
+    /** 委託先・第三者提供の欄に出す法人名 */
+    companyEntity: "PAY株式会社",
   },
   stripe: {
     // Stripe 日本で受け付けられるブランド。PAY.jp より広い。
@@ -23,6 +27,10 @@ const PROVIDER_INFO = {
     /** Stripe 連結アカウント契約（出品者が受取口座を作る際に同意する） */
     sellerAgreementName: "Stripe 接続アカウント契約",
     sellerAgreementUrl: "https://stripe.com/jp/legal/connect-account",
+    companyName: "Stripe",
+    // 日本のユーザーの契約相手。Stripe Services Agreement の Regional Terms に
+    // 「Japan: Stripe Japan, Inc.」と書かれている（stripe.com/jp/legal/ssa）。
+    companyEntity: "Stripe Japan, Inc.",
   },
 } as const;
 
@@ -42,6 +50,10 @@ export const LEGAL_INFO = {
 
   /** 取扱いクレジットカードブランド（決済会社によって変わる） */
   cardBrands: PROVIDER_INFO[PAYMENT_PROVIDER].cardBrands,
+  /** 決済会社の呼び名（規約・特商法・プライバシーポリシーの本文で使う） */
+  paymentCompanyName: PROVIDER_INFO[PAYMENT_PROVIDER].companyName,
+  /** 決済会社の法人名（委託先・第三者提供の欄で使う） */
+  paymentCompanyEntity: PROVIDER_INFO[PAYMENT_PROVIDER].companyEntity,
   /** 出品者が同意する決済会社の規約（名称） */
   sellerAgreementName: PROVIDER_INFO[PAYMENT_PROVIDER].sellerAgreementName,
   /** 同上（URL） */
