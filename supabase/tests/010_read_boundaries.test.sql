@@ -5,7 +5,7 @@
 -- ログインしていない人の出品一覧が空になった。なので両側を確かめる。
 begin;
 \ir _helpers/helpers.psql
-select plan(35);
+select plan(37);
 
 -- ---- 準備：A と B が取引中、C は無関係、D は在籍切れ ----
 select pg_temp.make_user('aaaaaaaa-0000-0000-0000-000000000001', 'test-a@g.chuo-u.ac.jp', '出品者A');
@@ -18,6 +18,8 @@ select pg_temp.make_reservation('22222222-abab-0000-0000-000000000001',
   '11111111-aaaa-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000002');
 insert into public.messages (reservation_id, sender_id, body)
   values ('22222222-abab-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000002', 'よろしくお願いします');
+insert into public.message_reads (reservation_id, user_id)
+  values ('22222222-abab-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000002');
 insert into public.connect_accounts (user_id, stripe_account_id)
   values ('aaaaaaaa-0000-0000-0000-000000000001', 'acct_test_secret');
 insert into public.payment_customers (user_id, provider, stripe_customer_id)
@@ -132,11 +134,19 @@ select is(
 select is(
   pg_temp.try_count($q$ select 1 from public.messages where reservation_id = '22222222-abab-0000-0000-000000000001' $q$),
   1, '買い手：自分の取引のメッセージは見える');
+select is(
+  pg_temp.try_count($q$ select 1 from public.message_reads
+                        where reservation_id = '22222222-abab-0000-0000-000000000001' $q$),
+  1, '買い手：自分の既読は見える');
 
 select pg_temp.as_user('aaaaaaaa-0000-0000-0000-000000000001');
 select is(
   pg_temp.try_count($q$ select 1 from public.reservations where id = '22222222-abab-0000-0000-000000000001' $q$),
   1, '出品者：自分の出品への予約は見える');
+select is(
+  pg_temp.try_count($q$ select 1 from public.message_reads
+                        where reservation_id = '22222222-abab-0000-0000-000000000001' $q$),
+  0, '出品者：相手がいつ読んだかは見えない');
 select is(
   (select transfers_enabled from public.connect_accounts where user_id = 'aaaaaaaa-0000-0000-0000-000000000001'),
   false, '出品者：自分の受取口座の状態（公開してよい列）は読める');

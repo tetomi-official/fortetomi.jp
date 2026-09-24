@@ -248,6 +248,39 @@ export type Database = {
           },
         ]
       }
+      message_reads: {
+        Row: {
+          last_read_at: string
+          reservation_id: string
+          user_id: string
+        }
+        Insert: {
+          last_read_at?: string
+          reservation_id: string
+          user_id: string
+        }
+        Update: {
+          last_read_at?: string
+          reservation_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_reads_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_reads_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           body: string

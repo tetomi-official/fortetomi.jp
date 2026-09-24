@@ -37,6 +37,8 @@ const RESTRICTED: { prefix: string; minPhase: number; isApi?: boolean }[] = [
   // 購入希望の作成・更新。画面のボタンは canReserve で消しているが、
   // API を直に叩かれても通らないようにここでも塞ぐ。
   { prefix: "/api/reservations", minPhase: 1, isApi: true },
+  // 取引メッセージ。予約があって初めて使う機能なので、同じフェーズで塞ぐ。
+  { prefix: "/api/messages", minPhase: 1, isApi: true },
 ];
 
 // フェーズに関係なく常に通すパス。

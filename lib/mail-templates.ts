@@ -293,3 +293,30 @@ export function handoverReminderMail(
     ),
   };
 }
+
+/**
+ * 新しいメッセージが届いた（→相手）。
+ *
+ * **本文は載せない。** メールは転送・誤送信・盗み見が起こりやすく、
+ * やりとりの中身まで漏らす必要はないため、載せるのは「誰から・どの取引か」と
+ * アプリで開くリンクだけにする。
+ */
+export function newMessageMail(d: {
+  reservationId: string;
+  listingTitle: string;
+  senderName: string;
+}): Mail {
+  const スレッド = `${siteUrl()}/mypage?tab=messages&thread=${d.reservationId}`;
+  return {
+    subject: `【TETOMI】${d.senderName} さんからメッセージが届きました`,
+    html: mailLayout(
+      "メッセージが届きました",
+      `<p>${d.senderName} さんから、「${d.listingTitle}」の取引について新しいメッセージが届いています。</p>` +
+        `<p>内容はアプリで確認してください。<strong>やりとりの中身はこのメールには書いていません。</strong></p>` +
+        mailButton("メッセージを見る", スレッド) +
+        `<p style="font-size:13px;color:#374151">
+          このあと続けて届いたぶんは、いちどアプリで開くまでお知らせを送りません。
+        </p>`,
+    ),
+  };
+}

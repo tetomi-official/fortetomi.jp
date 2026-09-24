@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   handoverReminderMail,
+  newMessageMail,
   paymentCompletedBuyerMail,
   paymentCompletedSellerMail,
   purchaseRequestMail,
@@ -246,6 +247,25 @@ describe("決済完了メールの問い合わせ先", () => {
   });
 });
 
+describe("新着メッセージのお知らせ（#59）", () => {
+  const 中身 = {
+    reservationId: 取引.reservationId,
+    listingTitle: 取引.listingTitle,
+    senderName: 取引.buyerName,
+  };
+
+  it("やり取りの本文は載せない（誤送信で中身が漏れないように）", () => {
+    const m = newMessageMail(中身);
+    expect(m.html).not.toContain("経済学の授業で使います");
+    expect(m.subject).toContain("木村 颯太");
+  });
+
+  it("そのスレッドを開くリンクが入る", () => {
+    const m = newMessageMail(中身);
+    expect(m.html).toContain(`/mypage?tab=messages&thread=${取引.reservationId}`);
+  });
+});
+
 describe("すべてのメールに共通すること", () => {
   const 全部 = () => [
     purchaseRequestMail(取引),
@@ -257,6 +277,11 @@ describe("すべてのメールに共通すること", () => {
     paymentCompletedSellerMail(取引),
     handoverReminderMail(取引, "buyer", "2日前"),
     handoverReminderMail(取引, "seller", "前日"),
+    newMessageMail({
+      reservationId: 取引.reservationId,
+      listingTitle: 取引.listingTitle,
+      senderName: 取引.buyerName,
+    }),
   ];
 
   it("件名は【TETOMI】で始まる", () => {
