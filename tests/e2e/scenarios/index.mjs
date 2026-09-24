@@ -13,6 +13,7 @@ import { T34, T35, T36 } from "./10-stripe.mjs";
 import { T37, T38 } from "./11-mobile.mjs";
 import { T39 } from "./12-mobile-sweep.mjs";
 import { T40 } from "./13-mypage-card.mjs";
+import { T41, T42 } from "./14-messages.mjs";
 
 export const SCENARIOS = [
   // 出品
@@ -31,6 +32,8 @@ export const SCENARIOS = [
   T30, T31,
   // 通知メール（開発サーバーが書き出したメールを読む）
   T32, T33,
+  // メッセージの知らせ（送りすぎないこと・関係ない人が送れないこと）
+  T41, T42,
   // Stripe まわり（返金・出品者向け画面・受取口座の登録の再開）
   T34, T35, T36,
   // スマホ幅での見え方と二度押し

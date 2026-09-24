@@ -5,6 +5,9 @@ import type { Message } from "./types";
 // 取引メッセージ データアクセス層（PB-041）。
 // 1 予約（reservation）= 1 スレッド。閲覧・送信はその予約の当事者本人のみ
 // （RLS / supabase/schemas/04_policies/050_messages.sql）。
+//
+// 送信だけはサーバー（POST /api/messages）を通す（#59）。相手に届いたことを
+// メールで知らせるため、書き込みとメール送信を1回のリクエストにまとめてある。
 // ===================================================
 
 type MessageRow = {
@@ -40,25 +43,55 @@ export async function fetchMessages(reservationId: string): Promise<Message[]> {
   return (data as MessageRow[]).map(rowToMessage);
 }
 
-/** メッセージを送信。senderId は送信者（= ログインユーザー）の id。 */
+/**
+ * メッセージを送信する（サーバー経由）。
+ *
+ * 送信者はサーバーがログイン中の本人から決める（他人の名前では送れない）。
+ * 送信に成功すると、相手に新着メールが送られる（送りすぎない決まりは
+ * lib/notify-message.ts を見ること）。
+ */
 export async function sendMessage(
   reservationId: string,
-  senderId: string,
   body: string,
 ): Promise<{ error: string | null; message: Message | null }> {
   const trimmed = body.trim();
   if (!trimmed) return { error: "メッセージが空です", message: null };
-  const supabase = createClient();
-  const { data, error } = await supabase
-    .from("messages")
-    .insert({ reservation_id: reservationId, sender_id: senderId, body: trimmed })
-    .select("*")
-    .single();
-  if (error) {
-    console.error("sendMessage failed:", error.message);
-    return { error: error.message, message: null };
+  try {
+    const res = await fetch("/api/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reservationId, body: trimmed }),
+    });
+    const json = (await res.json().catch(() => null)) as
+      | { message?: MessageRow; error?: string }
+      | null;
+    if (!res.ok || !json?.message) {
+      const error = json?.error ?? "メッセージを送れませんでした";
+      console.error("sendMessage failed:", error);
+      return { error, message: null };
+    }
+    return { error: null, message: rowToMessage(json.message) };
+  } catch {
+    return { error: "通信エラーが発生しました", message: null };
   }
-  return { error: null, message: rowToMessage(data as MessageRow) };
+}
+
+/**
+ * このスレッドをどこまで読んだかを記録する（#59）。
+ *
+ * 使い道は「新着メールを送りすぎない」ことだけ。未読が残っているあいだは
+ * 次のメッセージでメールを送らないので、開いたら必ず付け直す。
+ * 書けるのは自分の分だけ（RLS）。失敗しても画面は止めない。
+ */
+export async function markThreadRead(reservationId: string, userId: string): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("message_reads")
+    .upsert(
+      { reservation_id: reservationId, user_id: userId, last_read_at: new Date().toISOString() },
+      { onConflict: "reservation_id,user_id" },
+    );
+  if (error) console.error("markThreadRead failed:", error.message);
 }
 
 /**

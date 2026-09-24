@@ -1351,6 +1351,9 @@ function MyPageInner() {
                   threads={[...received, ...sent]
                     .filter((r) => r.status !== "キャンセル")
                     .sort((a, b) => b.created_at - a.created_at)}
+                  // 新着メールのリンク（?tab=messages&thread=…）から開いたとき、
+                  // そのやり取りをすぐ表示する（#59）。
+                  initialThreadId={searchParams.get("thread")}
                 />
               )}
 

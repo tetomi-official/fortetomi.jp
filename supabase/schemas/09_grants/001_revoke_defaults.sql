@@ -10,6 +10,7 @@ REVOKE ALL ON TABLE "public"."profiles_private" FROM "anon", "authenticated";
 REVOKE ALL ON TABLE "public"."listings" FROM "anon", "authenticated";
 REVOKE ALL ON TABLE "public"."reservations" FROM "anon", "authenticated";
 REVOKE ALL ON TABLE "public"."messages" FROM "anon", "authenticated";
+REVOKE ALL ON TABLE "public"."message_reads" FROM "anon", "authenticated";
 REVOKE ALL ON TABLE "public"."payment_customers" FROM "anon", "authenticated";
 REVOKE ALL ON TABLE "public"."connect_accounts" FROM "anon", "authenticated";
 REVOKE ALL ON TABLE "public"."email_recovery_requests" FROM "anon", "authenticated";
