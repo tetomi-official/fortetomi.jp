@@ -9,7 +9,7 @@
 import { ACCOUNTS, apiAs } from "../helpers.mjs";
 import { reservation, waitFor } from "../db.mjs";
 import { stripeClient } from "../stripe-api.mjs";
-import { HANDOVER_TIME, PICKUP_LOCATION } from "../constants.mjs";
+import { HANDOVER_TIME, PICKUP_LOCATION, SUPPORT_CONTACT } from "../constants.mjs";
 import { 出品を置く, 日付 } from "../fixtures.mjs";
 import { メールを待つ, 全部のメール, 受信箱を空にする } from "../mailbox.mjs";
 import { QR画面を開いて合言葉を取る } from "./05-payment.mjs";
@@ -111,7 +111,7 @@ export const T32 = {
       PICKUP_LOCATION,
       円(1500),
       "現金のやり取りはありません",
-      "support@tetomi.jp",
+      SUPPORT_CONTACT,
     ]);
     if (確定.text.includes(月日(B候補[0].date))) {
       問題.push("日程確定（→買い手）: 選ばなかった1つ目の候補の日付が入っている");

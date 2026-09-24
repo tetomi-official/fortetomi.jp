@@ -4,6 +4,8 @@
 export const HANDOVER_TIME = "昼休み";
 export const PICKUP_LOCATION = "Forest Gateway 3F";
 export const PLATFORM_FEE_RATE = 0.1;
+/** 運営の問い合わせ先。lib/legal-info.ts の LEGAL_INFO.email（= lib/support.ts の SUPPORT_CONTACT）と同じ。 */
+export const SUPPORT_CONTACT = "tetomitextbook@gmail.com";
 
 /** 出品者の受取額（手数料10%差引後・切り捨て）。lib/constants.ts の sellerNet と同じ式。 */
 export const sellerNet = (price) => Math.floor(price * (1 - PLATFORM_FEE_RATE));

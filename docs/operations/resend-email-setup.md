@@ -97,7 +97,11 @@ Supabase → **Authentication** → **Emails** → **SMTP Settings** で Custom 
 4. **復旧メール（ログイン切替）** ☐: `/recover` に大学メールを入力 → 登録時の復旧用アドレス宛に切替リンクが届き、`/api/recover/confirm` 後にログインメールが差し替わること。`RESEND_API_KEY` 未設定時はサーバーログにリンクが出る。
 
 ## 補足：メール受信について
-- `support@tetomi.jp`（`lib/support.ts` の `SUPPORT_CONTACT`）は**送信ドメイン設定だけでは受信できない**。Resend の Enable Receiving は OFF。実際に問い合わせを受けるには MX / 転送設定が別途必要。
+- `tetomi.jp` は**送信ドメイン設定だけでは受信できない**。Resend の Enable Receiving は OFF なので、
+  `support@tetomi.jp` のような受信用アドレスを使うには MX / 転送設定が別途必要。
+- そのため運営の問い合わせ窓口は `tetomitextbook@gmail.com`（`lib/legal-info.ts` の `LEGAL_INFO.email`）。
+  特商法ページ・プライバシーポリシー・サポート画面（`lib/support.ts` の `SUPPORT_CONTACT`）が全部ここを見る。
+  将来 `support@tetomi.jp` を受信できるようにしたら、`LEGAL_INFO.email` を差し替えれば3か所とも切り替わる。
 
 ## 関連
 - [`.env.example`](../../.env.example) — 環境変数の見本
