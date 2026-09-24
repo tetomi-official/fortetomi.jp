@@ -6,7 +6,7 @@
 --   ・自分で自分を運営にできないこと
 begin;
 \ir _helpers/helpers.psql
-select plan(19);
+select plan(21);
 
 -- ---- 準備 ----
 -- A(出品者) と B(買い手) が取引中。C は無関係。D は卒業した出品者で E(買い手) と取引した。
@@ -153,6 +153,31 @@ select throws_ok(
 select is(
   (select is_admin from public.profiles where id = 'aaaaaaaa-6060-0000-0000-000000000001'),
   false, '大学メールで作った人は運営にならない');
+
+-- 本番の運営アカウントは Supabase のダッシュボードから作るので、名前を入れる欄が無い。
+-- そのときでも名無しにならないこと。ここでは名前の無い（'{}'）アカウントを直に作る。
+delete from auth.users where email = 'tetomitextbook@gmail.com';
+insert into auth.users (
+  instance_id, id, aud, role, email, encrypted_password,
+  email_confirmed_at, created_at, updated_at,
+  raw_app_meta_data, raw_user_meta_data,
+  confirmation_token, recovery_token, email_change, email_change_token_new
+) values (
+  '00000000-0000-0000-0000-000000000000',
+  'ffffffff-6060-0000-0000-00000000000c',
+  'authenticated', 'authenticated', 'tetomitextbook@gmail.com', '',
+  now(), now(), now(),
+  '{"provider":"email","providers":["email"]}', '{}',
+  '', '', '', ''
+);
+
+select is(
+  (select name from public.profiles where id = 'ffffffff-6060-0000-0000-00000000000c'),
+  '運営 スタッフ', '名前を渡さなくても、運営には既定の名前が入る');
+
+select is(
+  (select is_admin from public.profiles where id = 'ffffffff-6060-0000-0000-00000000000c'),
+  true, '名前を渡さなくても、運営フラグは立つ');
 
 select * from finish();
 rollback;

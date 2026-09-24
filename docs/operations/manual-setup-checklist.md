@@ -274,7 +274,8 @@
 
 ### J-1. DBマイグレーションの適用 ☐
 - `20260922042947_add_admin_flag_and_admin_reservations.sql` — `profiles.is_admin`・`is_admin()`・取引一覧の view・RLS
-- `<日時>_allow_operator_email.sql` — 運営のメールアドレスを会員登録の例外にする
+- `20260922121545_allow_operator_email.sql` — 運営のメールアドレスを会員登録の例外にする
+- `20260924053434_operator_default_name.sql` — 運営の既定の名前（ダッシュボードで作ると名前欄が無いため）
 - 手順は [`docs/operations/db-workflow.md`](./db-workflow.md)（`db push --dry-run` → `db push`）。
 
 ### J-2. 運営アカウントを作る ☐
@@ -290,9 +291,23 @@
 > **アドレスを変える・増やすとき**は `supabase/schemas/03_functions/005_is_operator_email.sql` に足して migration を作る。
 > `is_admin` はどのロールからも UPDATE できない列なので、画面やAPIからは立てられない。
 
-### J-3. 確認 ☐
+### J-3. 運営に見せる範囲
+
+運営は学生ではないので、教科書を探す・出品する画面は仕事に要らない。ログインしても
+**取引一覧（`/admin`）と自分のマイページ（`/mypage`）だけ**が開く。
+
+- 他の URL（`/` `/listings` `/sell` など）を開くと取引一覧に戻る
+- 「探す・出品・メッセージ・マイページ」の動線（上のナビ・PCの縦タブ・スマホの下タブ・フッター）は運営には出さない
+- マイページは残してある。**ログアウトとパスワードの変更がそこにあるため**
+- 範囲を変えるときは `lib/operator.ts` の `OPERATOR_ALLOWED`
+
+戻す場所はナビを消すだけでなく `proxy.ts` でサーバー側でも決めている。URL を直打ちしても学生向けの画面には入れない。
+
+### J-4. 確認 ☐
 - 運営でログイン → `/admin` が開く
-- 運営でない人でログイン → `/admin` が **404**
+- 運営で `/listings` を直打ち → `/admin` に戻る
+- 運営で `/mypage` → 開く（ログアウトできる）
+- 運営でない人でログイン → `/admin` が **404**・他の画面は今までどおり
 - ログインなしで `/admin` → ログイン画面へ
 
 ---

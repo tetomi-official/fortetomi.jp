@@ -79,10 +79,8 @@ export default async function AdminPage({
   const rows = (data ?? []) as AdminReservationRow[];
 
   return (
-    <main className="page-main bg-bg-light pt-[var(--header-h)] pb-8 md:bg-bg-gray md:pt-[calc(var(--header-h)+32px)] md:pb-20">
-      {/* 右端は PC の縦タブ（SideTab・68px）が乗るので、その分を空けておく。
-            空けないと「申込」の列が隠れる。 */}
-        <div className="mx-auto w-full max-w-[1200px] px-4 md:pl-6 md:pr-[84px]">
+    <main className="page-main min-h-screen bg-bg-light pt-[var(--header-h)] pb-8 md:bg-bg-gray md:pt-[calc(var(--header-h)+32px)] md:pb-20">
+      <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6">
         <header className="pt-6 pb-4 md:pt-0">
           <p className="font-en text-xs font-bold tracking-widest text-ink-muted">ADMIN</p>
           <h1 className="mt-1 text-xl font-bold text-navy md:text-2xl">取引一覧</h1>

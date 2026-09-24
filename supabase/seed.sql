@@ -122,7 +122,7 @@ values
   ('00000000-0000-0000-0000-000000000000', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
    'authenticated', 'authenticated', 'tetomitextbook@gmail.com', crypt('password123', gen_salt('bf')),
    now(), now(), now(), '{"provider":"email","providers":["email"]}',
-   '{"name":"運営 スタッフ","university":"中央大学","faculty":"経済学部","grade":"4年","gender":"女性","recovery_email":"admin@example.com"}',
+   '{}',
    '', '', '', '');
 
 -- ---------------------------------------------------

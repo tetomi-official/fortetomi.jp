@@ -1,7 +1,15 @@
-CREATE OR REPLACE FUNCTION "public"."handle_new_user"() RETURNS "trigger"
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO 'public'
-    AS $$
+SET local check_function_bodies = off;
+
+REVOKE ALL ON FUNCTION "public"."is_operator_email"(text) FROM "anon";
+
+REVOKE ALL ON FUNCTION "public"."is_operator_email"(text) FROM "authenticated";
+
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+  RETURNS TRIGGER
+  LANGUAGE plpgsql
+  SECURITY DEFINER
+  SET search_path TO 'public'
+  AS $function$
 begin
   -- 運営のアドレスなら、その場で運営フラグを立てる（#60）。
   -- is_admin は誰も UPDATE できない列なので、アカウントを作った順番に関係なく
@@ -29,4 +37,4 @@ begin
   );
   return new;
 end;
-$$;
+$function$;

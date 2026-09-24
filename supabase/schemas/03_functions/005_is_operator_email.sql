@@ -17,3 +17,6 @@ CREATE OR REPLACE FUNCTION "public"."is_operator_email"("p_email" "text") RETURN
     'tetomitextbook@gmail.com'
   ]);
 $$;
+
+-- ※ アプリ側にも同じ一覧がある（lib/operator.ts）。
+--    あちらは「ログイン後にどの画面を見せるか」を決める。片方だけ変えないこと。
