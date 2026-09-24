@@ -3,7 +3,7 @@
 // - 卒業生は大学メール（@g.chuo-u.ac.jp）が失効するため、年度切替（毎年4月1日）で
 //   在籍確認を一律失効させ、再認証を要求する。
 // - 「在籍有効」の判定は profiles.enrollment_valid_until > now() の一点に集約し、
-//   RLS（docs/supabase-setup.sql の is_enrollment_active）とフロント双方で参照する。
+//   RLS（supabase/schemas/03_functions/010_is_enrollment_active.sql）とフロント双方で参照する。
 // - フロント表示とサーバールート（再認証確定）でこの関数を共用する。
 // ===================================================
 

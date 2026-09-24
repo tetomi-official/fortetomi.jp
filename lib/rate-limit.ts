@@ -2,7 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 // 自社 API のレート制限（PB-036 Phase 3）。
 // カウンタは Supabase の rate_limits 表 + check_rate_limit 関数（原子的）。
-// 詳細は docs/supabase-migration-12-rate-limits.sql / docs/security-measures.md。
+// 詳細は supabase/schemas/03_functions/100_check_rate_limit.sql / docs/decisions/security-measures.md。
 //
 // 方針:
 //  - DB エラー時は fail-open（許可）＋ console.error。レート制限ストアの障害で

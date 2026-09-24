@@ -3,6 +3,9 @@ import { createHash, randomBytes } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { getProvider, providerConfigError } from "@/lib/payment-provider";
+import { loadStoredCustomer } from "@/lib/payment-provider/customers";
+import { isSellerReadyToReceive } from "@/lib/payment-provider/stripe-connect";
 
 // 受け渡しQR用のワンタイム nonce を発行する（買い手本人）。PB-036 Phase 1。
 //  - 生の nonce は返り値（QRに載せる）だけに存在し、DB には SHA-256 ハッシュのみ保存する。
@@ -16,6 +19,11 @@ function sha256(v: string): string {
 }
 
 export async function POST(req: Request) {
+  const cfgErr = providerConfigError();
+  if (cfgErr) {
+    return NextResponse.json({ error: cfgErr }, { status: 500 });
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -42,7 +50,7 @@ export async function POST(req: Request) {
   const admin = createAdminClient();
   const { data: reservation } = await admin
     .from("reservations")
-    .select("id, buyer_id, status, paid_at")
+    .select("id, buyer_id, seller_id, status, paid_at")
     .eq("id", reservationId)
     .maybeSingle();
   if (!reservation) {
@@ -63,17 +71,36 @@ export async function POST(req: Request) {
     );
   }
 
-  // カード登録済みでなければQRを出さない（受け渡し時に課金できないため）。
-  const { data: customer } = await admin
-    .from("payment_customers")
-    .select("user_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-  if (!customer) {
+  // 今の決済会社で課金できるカードが無ければQRを出さない。
+  // 「行があるか」ではなく「その決済会社のIDが入っているか」で見る。決済会社を
+  // 切り替えた直後に、課金できないQRを買い手へ渡してしまうのを防ぐため。
+  const provider = getProvider();
+  const customer = await loadStoredCustomer(user.id);
+  if (!provider.hasUsableCard(customer)) {
     return NextResponse.json(
       { error: "先に支払いカードの登録が必要です", needsCard: true },
       { status: 400 },
     );
+  }
+
+  // 出品者が送金を受け取れないうちはQRを出さない。ここで止めるのが一番大事で、
+  // 通さないと買い手が待ち合わせ場所で「課金できないQR」を出すことになる。
+  // 見るのは「送金を受け取れるか」だけ（銀行口座への入金がまだでも課金は成立し、
+  // 売上は出品者の Stripe 残高に貯まる）。
+  if (provider.requiresSellerOnboarding) {
+    const seller = await isSellerReadyToReceive(
+      process.env.STRIPE_SECRET_KEY ?? "",
+      reservation.seller_id,
+    );
+    if (!seller.ready) {
+      return NextResponse.json(
+        {
+          error: "出品者の受取口座の設定が完了していません。出品者にご確認ください。",
+          sellerNotReady: true,
+        },
+        { status: 409 },
+      );
+    }
   }
 
   // 生の nonce を発行し、ハッシュだけ保存する。

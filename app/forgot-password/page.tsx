@@ -1,6 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import AuthShell, {
+  AuthField,
+  AuthForm,
+  AuthNote,
+  AuthSubmit,
+  AuthSwitch,
+  AuthTextLink,
+} from "@/components/AuthShell";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/Toast";
@@ -34,69 +42,67 @@ export default function ForgotPasswordPage() {
 
   if (sentTo) {
     return (
-      <main className="auth-page">
-        <div className="auth-card">
-          <div className="auth-logo">TETOMI</div>
-          <h1 className="auth-title">メールを確認してください</h1>
-          <p className="auth-sub">
+      <AuthShell
+        title="メールを確認してください"
+        description={
+          <>
             <strong>{sentTo}</strong> 宛にパスワード再設定用のリンクを送りました。
             <br />
             メール内のリンクを開いて、新しいパスワードを設定してください。
-          </p>
-          <p className="auth-note">
-            メールが届かない場合は迷惑メールフォルダをご確認ください。登録済みのアドレスにのみ送信されます。
-          </p>
-          <div className="auth-switch">
-            <Link href="/login">ログインに戻る</Link>
-          </div>
-        </div>
-      </main>
+          </>
+        }
+      >
+        <AuthNote>
+          メールが届かない場合は迷惑メールフォルダをご確認ください。登録済みのアドレスにのみ送信されます。
+        </AuthNote>
+        <AuthSwitch bottom>
+          <AuthTextLink href="/login">ログインに戻る</AuthTextLink>
+        </AuthSwitch>
+      </AuthShell>
     );
   }
 
   return (
-    <main className="auth-page">
-      <div className="auth-card">
-        <div className="auth-logo">TETOMI</div>
-        <h1 className="auth-title">パスワードをお忘れですか？</h1>
-        <p className="auth-sub">
+    <AuthShell
+      title="パスワードをお忘れですか？"
+      description={
+        <>
           ログインに使っているメールアドレスを入力してください。
           <br />
           パスワード再設定用のリンクをお送りします。
-        </p>
+        </>
+      }
+    >
+      <AuthForm onSubmit={handleSubmit}>
+        <AuthField
+          label="メールアドレス"
+          required
+          type="email"
+          autoComplete="email"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          inputMode="email"
+          placeholder="example@gmail.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <AuthSubmit icon="fa-paper-plane" disabled={submitting}>
+          {submitting ? "送信中…" : "再設定メールを送る"}
+        </AuthSubmit>
+      </AuthForm>
 
-        <form onSubmit={handleSubmit}>
-          <div className="form-group required">
-            <label>メールアドレス</label>
-            <input
-              type="email"
-              autoComplete="email"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-              inputMode="email"
-              placeholder="example@gmail.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <button type="submit" className="btn-navy btn-full" disabled={submitting}>
-            <i className="fas fa-paper-plane" /> {submitting ? "送信中…" : "再設定メールを送る"}
-          </button>
-        </form>
+      <AuthNote>
+        卒業などで大学メールが使えずログインできない方は{" "}
+        <Link href="/recover" className="font-bold text-navy underline">
+          こちらから復旧
+        </Link>
+        してください。
+      </AuthNote>
 
-        <div className="auth-switch">
-          <Link href="/login">ログインに戻る</Link>
-        </div>
-        <p className="auth-note">
-          卒業などで大学メールが使えずログインできない方は{" "}
-          <Link href="/recover" style={{ color: "var(--navy)", textDecoration: "underline" }}>
-            こちらから復旧
-          </Link>
-          してください。
-        </p>
-      </div>
-    </main>
+      <AuthSwitch bottom>
+        <AuthTextLink href="/login">ログインに戻る</AuthTextLink>
+      </AuthSwitch>
+    </AuthShell>
   );
 }

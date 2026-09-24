@@ -1,0 +1,89 @@
+# 受け渡しの前にリマインドメールを出す（#58）。
+#
+# 日程が決まったあと当日まで何も届かないと、そのまま忘れられて取引が流れる。
+# 日に2回、アプリの API を叩いてメールを出させる。送る中身とニ度送りの防止は
+# アプリ側（app/api/cron/handover-reminder）の仕事で、ここは「時間になったら叩く」だけ。
+#
+# 【時刻は日本時間で考える。cron は UTC で書く】
+#   日本時間 8:00  = UTC 前日 23:00 → 受け渡しの2日前の朝
+#   日本時間 20:00 = UTC     11:00 → 受け渡しの前日の夜
+#
+# 【必要な設定】リポジトリの Settings → Secrets and variables → Actions
+#   secrets.CRON_SECRET … アプリの環境変数 CRON_SECRET と同じ文字列。これが合わないと 401。
+#   vars.SITE_URL       … 叩き先（省略時は https://tetomi.jp）。
+#
+# 【定時実行はずれる】GitHub の定時実行は混み具合で数十分遅れることがある。
+# どの回かは時計から当てず、ここから明示して渡す（遅れても違う回にならない）。
+# 一度取りこぼしても、次の回や翌日の回で拾い直せるように作ってある。
+
+name: 受け渡しリマインド
+
+on:
+  schedule:
+    - cron: "0 23 * * *" # 日本時間 8:00 … 2日前の朝
+    - cron: "0 11 * * *" # 日本時間 20:00 … 前日の夜
+  workflow_dispatch:
+    inputs:
+      kind:
+        description: どの回を送るか
+        required: true
+        type: choice
+        options: ["2日前", "前日"]
+
+# 前の実行が残っていても、重ねて走らせない。
+concurrency:
+  group: handover-reminder
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  send:
+    name: リマインドメールを送る
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      # 定時実行のときは cron の書き方で、手で動かすときは入力で決める。
+      # ${{ }} を直接シェルに埋めず、環境変数を経由する（値に細工されても実行されない）。
+      - name: どの回かを決める
+        id: kind
+        env:
+          SCHEDULE: ${{ github.event.schedule }}
+          INPUT_KIND: ${{ inputs.kind }}
+        run: |
+          case "$SCHEDULE" in
+            "0 23 * * *") kind="2日前" ;;
+            "0 11 * * *") kind="前日"  ;;
+            *)            kind="$INPUT_KIND" ;;
+          esac
+          if [ -z "$kind" ]; then
+            echo "::error::どの回か決まりませんでした（SCHEDULE=$SCHEDULE）"
+            exit 1
+          fi
+          echo "kind=$kind" >> "$GITHUB_OUTPUT"
+          echo "送る回: $kind"
+
+      - name: アプリの API を叩く
+        env:
+          SITE_URL: ${{ vars.SITE_URL || 'https://tetomi.jp' }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          KIND: ${{ steps.kind.outputs.kind }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::secrets.CRON_SECRET が未設定です。設定するまでメールは出ません。"
+            exit 1
+          fi
+          # 回の名前は日本語なので、URL ではなく JSON の本文で渡す（文字化けを避ける）。
+          status=$(curl -sS --max-time 120 -o response.json -w '%{http_code}' \
+            -X POST "${SITE_URL%/}/api/cron/handover-reminder" \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -H "Content-Type: application/json" \
+            --data "$(printf '{"kind":"%s"}' "$KIND")")
+          echo "HTTP $status"
+          cat response.json
+          echo
+          if [ "$status" != "200" ]; then
+            echo "::error::リマインドの送信に失敗しました（HTTP $status）"
+            exit 1
+          fi

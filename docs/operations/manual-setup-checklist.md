@@ -1,0 +1,391 @@
+# 手動作業チェックリスト（コード実装後に人がやる設定）
+
+このセッションで実装した機能を「本番で実際に動く」状態にするために、**コードでは完結できずダッシュボード/DNS/環境変数などの手作業が必要な項目**をまとめる。実装済みコードは各項目のリンク先ドキュメント参照。
+
+最終更新: 2026-09-22（受け渡しリマインドメールの定時実行を追加 → J）
+
+> **DB の変更について**：以前は `docs/` の SQL を Supabase の SQL Editor に貼って本番を変えていたが、今は `supabase/` のファイルで管理し、`supabase db push` で本番に当てる。手順は [`docs/operations/db-workflow.md`](./db-workflow.md)。下の各「DBマイグレーションの適用」はすべて本番に適用済みで、昔の SQL は [`docs/archive/sql/`](../archive/sql/) に移した。
+
+> 記号：☐ 未対応 ／ ⏸ 保留（外部依存待ち） ／ 記入欄は完了時にチェック。
+
+---
+
+## A. 決済（PB-036 Phase 1 / PAY.jp）
+
+実装済み：カード登録 → 受け渡しQR表示 → 出品者がスキャンで保存済みカードへ課金 → 取引完了。
+**この2つ（A-1 / A-2）が済むまで実課金は動かない。**
+
+### A-1. DBマイグレーションの適用 ✅ 適用済み
+- 対象SQL（記録）：[`docs/archive/sql/supabase-migration-9-payments.sql`](../archive/sql/supabase-migration-9-payments.sql)
+  - `reservations` に `charge_id / paid_at / payment_nonce_hash` を追加
+  - `payment_customers` 表を新規作成（買い手のPAY.jp Customer保存先・書き込みは service_role のみ）
+- 本番に適用済み（2026-09-18 に DB の管理を `supabase/` へ移した時点で本番に入っていることを確認済み。今後の DB 変更は [`docs/operations/db-workflow.md`](./db-workflow.md) の手順で行う）。
+- ※ `SUPABASE_SERVICE_ROLE_KEY`（データAPI用）だけでは DDL は実行**できない**。
+
+### A-2. PAY.jp テストキーの設定 ☐
+- 現状 `.env.local` はプレースホルダ（`pk_test_xxxxx` / `sk_test_xxxxx`）。
+- PAY.jp ダッシュボード（テスト環境）→「API」からテストキーを取得し設定：
+  - `NEXT_PUBLIC_PAYJP_PUBLIC_KEY=pk_test_...`（クライアント露出OK）
+  - `PAYJP_SECRET_KEY=sk_test_...`（**サーバー専用・NEXT_PUBLIC_厳禁**）
+- 本番公開時は本番キー（`pk_live_ / sk_live_`）＋ PAY.jp 本番申請（PB-049）が別途必要。
+
+### A-3. 疎通テスト（A-1・A-2 完了後） ☐
+1. `npm run dev` で起動。
+2. 買い手アカウントで購入希望を送る → 出品者アカウントで「この日時で確定」（→ 承認済み）。
+3. 買い手：マイページの承認済み予約 → 「受け取り・支払いへ」→ カード名義・メール入力 → カード登録（テストカード `4242 4242 4242 4242` / 任意の未来の有効期限 / 任意CVC）→ **3Dセキュア認証画面が表示され完了** → QR表示。
+4. 出品者：マイページの承認済み予約 → 「QRを読み取って決済」→ 買い手のQRをスキャン。
+5. 確認：決済成功トースト → 予約が「完了」→ 出品が「完了」。PAY.jp ダッシュボードに charge が記録され、`reservations.charge_id / paid_at` が入っていること。
+
+### A-4. 3Dセキュア（Phase 2・実装済み / PDF要件） ✅コード実装済み・要疎通確認
+- カード登録時に payjp.js の 3DS（iframe型）で本人認証を行い、認証済みトークンのみ登録を許可。
+  サーバー（`app/api/payments/register-card`）でも token の `three_d_secure_status` を再検証。
+- 追加の環境変数は不要（既定で必須）。開発中に一時的に無効化したい場合のみ `PAYJP_3DS_REQUIRED=false`。
+- テスト環境でもテストカードで 3DS 画面が出る（本番申請不要）。A-3 の手順3で認証画面が出ることを確認。
+
+### A-5. Webhook（Phase 2・実装済み） ✅コード実装済み・要設定
+- エンドポイント：`POST /api/payments/webhook`。用途は「PAY.jpでは課金成立したがDB更新に失敗した」ケースの自動補正（安全網）。
+- 設定手順：
+  1. `.env.local`（本番は各サーバー環境変数）に `PAYJP_WEBHOOK_TOKEN=任意の十分長い文字列` を設定。
+  2. PAY.jp ダッシュボード（テスト環境）→「Webhook」→ URL に `https://<デプロイ先>/api/payments/webhook` を登録。
+     ローカル確認は ngrok 等で公開して登録。
+  3. 送信ヘッダ `X-Payjp-Webhook-Token` が `PAYJP_WEBHOOK_TOKEN` と一致するよう設定（不一致は 401）。
+  4. 購読イベント：`charge.succeeded`（最低限）。`charge.updated` も可。
+
+### A-6. 本番前の残作業（次段階・今回スコープ外） ⏸
+- Payouts型（出品者テナント＝口座登録 PB-053 ＋ 資金決済法などPO法務）、手数料・送金（PB-045/046/054/055）。
+  ※ Payouts は「申請→有効化→テスト実装」の順（テスト環境でも Platform 申請が前提）。
+
+---
+
+## B. メール送信（Resend / 認証・再認証メール）
+
+登録確認メール（PB-009/010）と再認証メール（PB-015）を本番品質で送るための設定。コード側（再送信ボタン・疎通テスト・env見本）は実装済み。詳細手順は [`docs/operations/resend-email-setup.md`](./resend-email-setup.md)。
+
+> **本番ドメインは `tetomi.jp`**（`fortetomi.jp` は未登録の誤りだった）。DNS は **Vercel** が管理（NS が `*.vercel-dns.com`）。**お名前.com ではない**ため、DNS レコードは Vercel ダッシュボードで追加する。
+
+### B-1. Resend アカウント & ドメイン認証 ✅（2026-07-12 完了）
+- Resend アカウント作成 → ドメイン **`tetomi.jp`** 追加。
+- 表示された DNS レコード（DKIM `resend._domainkey` / MX・SPF `send` /（任意）DMARC `_dmarc`）を **Vercel の DNS**（tetomi.jp のプロジェクト → Settings → Domains / DNS Records）に登録 → Resend で Verify（緑）。
+- 送信元は **`no-reply@tetomi.jp`**。詳細は [`resend-email-setup.md`](./resend-email-setup.md) 参照。
+
+### B-2. Supabase Auth の SMTP を Resend に ☐（本命・未対応）
+- Supabase → Authentication → Emails → SMTP Settings に Resend の SMTP を設定
+  （host `smtp.resend.com` / port `465` or `587` / user `resend` / pass = Resend APIキー / 送信元 `no-reply@tetomi.jp`）。
+- Authentication → Rate Limits を引き上げ。
+- メールテンプレ確認（Confirm signup / Confirm email change を `{{ .SiteURL }}/auth/confirm?...` 形式、Secure email change は OFF 推奨）。
+
+### B-3. 再認証メール用の環境変数
+- ローカル `.env.local`：`RESEND_API_KEY` / `REVERIFY_MAIL_FROM=TETOMI <no-reply@tetomi.jp>` 設定済み ✅。疎通確認済み（`npm run test:resend`）✅。
+- ☐ **本番（Vercel）の環境変数**に `RESEND_API_KEY` / `REVERIFY_MAIL_FROM=TETOMI <no-reply@tetomi.jp>` / `NEXT_PUBLIC_SITE_URL=https://tetomi.jp` を設定。
+
+---
+
+## C. その他 Supabase 手動作業（過去分・未確認なら要対応）
+
+以下は認証・セキュリティ関連で過去に必要とされた手作業。適用済みか不明なら確認する（詳細は認証系メモ／[`docs/archive/sql/supabase-setup.sql`](../archive/sql/supabase-setup.sql) 冒頭注意書き）。
+
+- ✅ DB の中身が最新か：`supabase/migrations/` がすべて本番に当たっていればよい。確認は [`docs/operations/db-workflow.md`](./db-workflow.md) の 2章 7（`db push --dry-run` で「当てるものが無い」と出ればよい）。
+- ☐ Auth → URL Configuration に Site URL と Redirect URL(`/auth/confirm`) が登録済みか。
+- ☐ Authentication → Leaked Password Protection を ON（要手動）。
+- ☐ **パスワード再設定メールのテンプレ（PB-012）**：Authentication → Emails → Templates →「Reset Password」の本文リンクを
+  `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery` に変更（signup/email_change と同じ token_hash 形式）。
+  ※ これを設定しないと再設定リンクが `/auth/confirm` を通らず、パスワード変更が完了できない。
+
+---
+
+## D. ログイン保持（PB-011）— 手作業は不要、ただし1点注意 ℹ️
+- コードのみで完結（DB変更なし）。追加設定は不要。
+- **注意**：この機能の導入前からログイン中だったセッション（`tetomi_session_exp` Cookie 無し）は、次回アクセス時に**一度だけ強制ログアウト**される（再ログインで期限Cookieが付与される）。プレローンチのため許容。ユーザー影響を周知する場合のみ留意。
+
+---
+
+## E. シラバス・スクレイピング（PB-056）
+
+実装済み：中央大学シラバスDB（`syllabus.chuo-u.ac.jp`）を巡回して `syllabus_courses` /
+`syllabus_textbooks` に保存するスクリプト。将来の PB-058（ISBN→授業名 自動照合）の土台。
+
+### E-1. DBマイグレーションの適用 ✅ 適用済み
+- 対象SQL（記録）：[`docs/archive/sql/supabase-migration-10-syllabus.sql`](../archive/sql/supabase-migration-10-syllabus.sql)
+  - `syllabus_courses`（1科目1行・`id` はシラバスサイトの数値ID）
+  - `syllabus_textbooks`（科目×ISBN の逆引き・`isbn13` にインデックス）
+  - どちらも RLS 有効・`authenticated` は SELECT のみ・書き込みは service_role。
+- 本番に適用済み（2026-09-18 に DB の管理を `supabase/` へ移した時点で本番に入っていることを確認済み。今後の DB 変更は [`docs/operations/db-workflow.md`](./db-workflow.md) の手順で行う）。
+
+### E-2. スクレイピング実行（E-1 完了後） ☐
+- 動作確認（DB書込みなし・ネットワークのみ）：
+  `npm run scrape:syllabus -- --from 1090 --to 1096 --dry-run`
+  → 簿記論(id=1092) が `9784502345012` として抽出されればOK。
+- 小範囲を実書込み：`npm run scrape:syllabus -- --from 1090 --to 1096`
+  → Supabase で `syllabus_courses` / `syllabus_textbooks` に行が入ることを確認。
+- 全件取得（実測の最大IDは ~14,700。逐次・404スキップ・再開可）：
+  `npm run scrape:syllabus`（数百件ごとに進捗ログ。途中で止めても `--from` で続行可）。
+- `.env.local` に `NEXT_PUBLIC_SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` が必要（既存で設定済み）。
+- 注意：礼儀のため既定 `--delay 300`（ms）。短縮するとサイトに負荷。年1回程度の運用想定（年度切替時に再実行）。
+
+---
+
+## F. 教科書→授業 紐付け＋学部横断出品（PB-058 Phase 1）
+
+実装済み：出品時に ISBN からシラバスを照合し、使用学部を選んで**学部横断で出品**、
+詳細ページに「この教科書が使われる授業」を表示。照合は `lib/syllabus.ts`（ISBN完全一致）。
+※ E（スクレイピング）でデータ投入済みが前提。ISBN不一致時のOCR書名照合（PB-059）は次回。
+
+### F-1. DBマイグレーションの適用 ✅ 適用済み（**/listings 表示に必須**）
+- 対象SQL（記録）：[`docs/archive/sql/supabase-migration-11-listing-faculties.sql`](../archive/sql/supabase-migration-11-listing-faculties.sql)
+  - `listings.faculties text[]` を追加（この出品が表示される学部の集合）＋ GIN インデックス。
+  - 既存の出品は「出品者の学部のみ」でバックフィル（従来挙動を維持）。
+- 本番に適用済み（2026-09-18 に DB の管理を `supabase/` へ移した時点で本番に入っていることを確認済み。今後の DB 変更は [`docs/operations/db-workflow.md`](./db-workflow.md) の手順で行う）。
+- ⚠ **注意**：このマイグレーション適用前は、一覧/検索（`/listings`）と学部別件数（LP）が
+  `faculties` 列を参照してエラーになる。**コード配備とセットで適用すること**。
+
+### F-2. 動作確認（F-1 ＋ E-2 完了後） ☐
+1. `npm run dev` → ある学部の出品者で、複数学部で使われる ISBN（例 `978-4-502-34501-2`）を入力/スキャン
+   → 出品フォームに「対象学部」チェックボックスと使われる授業が出る → 2学部選んで出品。
+2. 別学部（選んだ学部の1つ）のアカウントで `/listings` → その出品が並ぶ（学部横断）。選ばなかった学部では出ない。
+3. 出品詳細ページ → 「この教科書が使われる授業」（学部グループ＋シラバスリンク）が表示。
+4. リグレッション：ISBN無し/一致無しの出品は従来どおり出品者学部のみに表示。
+
+### F-3. 対象外（次タスク） ⏸
+- PB-057 ISBN API 組み込み調査。
+- PB-059 / PB-058 Phase 2：ISBN不一致時に教科書写真を OCR→書名抽出→`references_raw` と曖昧照合→候補提示、
+  一致の無い学部でも出品者が手動で授業/学部を追加できるよう拡張。
+
+---
+
+## G. セキュリティ対策（PB-036 Phase 3 / PAY.jp 本番申請）
+
+実装済み：セキュリティヘッダ（`next.config.ts`）／レート制限（Supabase）／特商法・利用規約・プライバシーの確定文言。
+対策の全体像は [`docs/decisions/security-measures.md`](../decisions/security-measures.md) 参照。
+
+### G-1. レート制限のDBマイグレーション適用 ✅ 適用済み
+- 対象SQL（記録）：[`docs/archive/sql/supabase-migration-12-rate-limits.sql`](../archive/sql/supabase-migration-12-rate-limits.sql)
+  - `rate_limits` 表（service_role 専用）＋原子的判定関数 `check_rate_limit()` を作成。
+- 本番に適用済み（2026-09-18 に DB の管理を `supabase/` へ移した時点で本番に入っていることを確認済み。今後の DB 変更は [`docs/operations/db-workflow.md`](./db-workflow.md) の手順で行う）。
+- 未適用でもアプリは動く（`check_rate_limit` 不在時は fail-open で素通り＝制限が効かないだけ）。**本番では必ず適用すること。**
+- （任意）pg_cron を使う場合は、上の SQL 末尾コメントの `cron.schedule(...)` を参考に、[`docs/operations/db-workflow.md`](./db-workflow.md) の手順で migration として足す。
+
+### G-2. セキュリティヘッダの本番確認 ☐
+- コードのみで完結（追加設定不要）。デプロイ後、`curl -sI https://tetomi.jp/` で以下が付くことを確認：
+  `strict-transport-security` / `x-frame-options` / `x-content-type-options` / `referrer-policy` / `permissions-policy`。
+- ⚠ `Permissions-Policy` は `camera=(self)`。QR受け渡しスキャナ（カメラ）が動くことも確認。
+
+### G-3. 法定ページの内容確認 ☐
+- [`/legal`](../../app/legal/page.tsx)（特商法）・[`/terms`](../../app/terms/page.tsx)（利用規約）・[`/privacy`](../../app/privacy/page.tsx)（プライバシー）は確定文言を掲載済み（`draft={false}`）。事業者情報は [`lib/legal-info.ts`](../../lib/legal-info.ts) に集約。
+- ⚠ 規約類に**振込申請・売上残高・銀行口座（Payouts型）**の記述があるが、この機能は現状「未実装（次段階・A-6）」。掲載＝提供の約束になるため、機能提供時期との整合を運営で確認すること。
+
+---
+
+## H. Stripe（決済会社の第2の選択肢 / Connect）
+
+**現在の既定は Stripe。** PAY.jp を使わない方針になったため（2026-09）、
+環境変数が未設定なら Stripe が選ばれる。PAY.jp の実装は退路として残してあり、
+戻すときは `NEXT_PUBLIC_PAYMENT_PROVIDER=payjp` を明示する。
+
+日本の C2C は Stripe Connect が必須（Connect 外の C2C は禁止業種）。そのため
+出品者ひとりひとりに Stripe の連結アカウントを作り、本人確認と銀行口座の登録を
+してもらう必要がある。この負担は PAY.jp の Payouts型より重い。
+
+### H-1. DBマイグレーションの適用 ✅ 適用済み
+- [`docs/archive/sql/supabase-migration-13-stripe.sql`](../archive/sql/supabase-migration-13-stripe.sql)（記録）
+  - `payment_customers` に Stripe 用の列を追加（PAY.jp の列は消さず共存）
+  - `reservations` に `payment_provider` / `payment_intent_id` / `payment_status` などを追加
+  - `connect_accounts`（出品者の受取口座）を新規作成
+- [`docs/archive/sql/supabase-migration-14-connect-accounts-v2.sql`](../archive/sql/supabase-migration-14-connect-accounts-v2.sql)（記録）
+  - Stripe が新規連携での Accounts v1 を廃止したため、v2 の形に合わせる
+  - `charges_enabled` → `transfers_enabled` に改名、`details_submitted` を削除
+- 本番に適用済み（2026-09-18 に DB の管理を `supabase/` へ移した時点で本番に入っていることを確認済み。今後の DB 変更は [`docs/operations/db-workflow.md`](./db-workflow.md) の手順で行う）。
+
+### H-2. Connect の有効化 ☐
+- Stripe ダッシュボードで Connect を有効化する（一度きり）。
+  未有効だと連結アカウントの作成が
+  `You can only configure Connect...` で拒否される。
+- 業態の質問には「マーケットプレイス」で回答する。
+
+### H-3. Stripe キーの設定 ☐
+- ダッシュボード（テストモード）→ 開発者 → APIキー から取得し `.env.local` へ：
+  - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`（`pk_test_...`）
+  - `STRIPE_SECRET_KEY`（`sk_test_...`。**`NEXT_PUBLIC_` を付けないこと**）
+
+### H-4. Webhook の設定 ☐
+- 送信先：`https://tetomi.jp/api/payments/stripe/webhook`
+- 受け取るイベント：`payment_intent.succeeded` / `payment_intent.payment_failed`
+  / `charge.dispute.created`
+- 発行された署名シークレット（`whsec_...`）を `STRIPE_WEBHOOK_SECRET` に設定。
+- ローカルで試す場合は Stripe CLI（ブラウザログイン不要。テストキーで動く）：
+  ```bash
+  npm install -g @stripe/cli
+  export STRIPE_API_KEY=<sk_test_...>
+  stripe listen --forward-to localhost:3000/api/payments/stripe/webhook
+  ```
+  出力された `whsec_...` を `.env.local` に入れる。
+- ℹ️ 出品者の口座状態は Webhook に依存していない。Accounts v2 は従来の
+  `account.updated` を出さない（別系統の「薄いイベント」になる）ため、QR発行と
+  課金の直前に Stripe へ直接問い合わせる作りにしてある。
+
+### H-5. 決済会社の切り替え ☐
+- 既定が Stripe なので、**新規に設定する変数は無い**（H-3・H-4 のキーが入っていれば動く）。
+- PAY.jp に戻す場合のみ `NEXT_PUBLIC_PAYMENT_PROVIDER=payjp` を設定する。
+- ⚠ `NEXT_PUBLIC_*` はビルド時に埋め込まれるため、切り替えには**再デプロイが必要**。
+- ⚠ Stripe のキー（H-3）が未設定のまま本番に出ると、決済APIが 500 を返して止まる。
+  黙って PAY.jp で動いてしまうより安全な倒れ方だが、**設定漏れに注意**。
+- ⚠ **PAY.jp でカード登録済みの買い手は、登録し直しが必要**になる
+  （決済会社をまたいでカード情報を移すことはできない）。利用の少ない時間帯に行うこと。
+
+### H-6. 法定ページの整合 ☐ **本番前に必須**
+- 文言は Stripe の実際の動きに合わせて直した（issue #55）。直したのは
+  利用規約の第7条（退会）・第11条（手数料）・第12条（売上金の受け取り）、
+  特商法の「販売価格以外に必要な費用」「売上金の入金について」、
+  プライバシーポリシーの取得情報・第三者提供・委託先。
+  根拠は [`docs/decisions/stripe-legal-review.md`](../decisions/stripe-legal-review.md) と
+  [`docs/decisions/stripe-payout-behavior.md`](../decisions/stripe-payout-behavior.md)。
+- **残っている手作業は取扱ブランドの突き合わせだけ。** 特商法の「支払方法」は
+  `lib/legal-info.ts` の `cardBrands`（VISA / Mastercard / JCB / American Express /
+  Diners Club / Discover）をそのまま出している。**本番のダッシュボードで実際に
+  有効なブランドと突き合わせ、有効にしていないものは `cardBrands` から消すこと。**
+  テスト環境からは確認できない（プラットフォームのテストアカウントには
+  capabilities が返らない）。
+- 文面の最終決定は PO。改定日・施行日を動かすかどうかも PO の判断。
+- 未対応で残っているもの: チャージバックを出品者に負担させるかの取り決め
+  （`stripe-legal-review.md` の7節）。規約に記載が無い。
+
+### H-7. 出品者への案内（運用） ☐
+- 口座登録には**公的な写真付き身分証**が要る（運転免許証／パスポート／
+  マイナンバーカード／在留カード）。**学生証は使えない。**
+- 免許を持っていない学生はマイナンバーカードかパスポートが必要になるため、
+  出品前の案内で先に伝えないと途中で詰まる。
+
+---
+
+## I. 取引ステータスの歯止め（A-3 / A-4 / A-5）
+
+通しテストで見つかった不備の修正（[`docs/testing/test-findings-2026-09-12.md`](../testing/test-findings-2026-09-12.md)）。
+**このマイグレーションを当てるまで、画面を直しても抜け道は残る。**
+
+### I-1. DBマイグレーションの適用 ✅ 適用済み
+- [`docs/archive/sql/supabase-migration-15-reservation-status-guard.sql`](../archive/sql/supabase-migration-15-reservation-status-guard.sql)（記録）
+  - 予約ステータスの遷移を決められた順番だけに限る
+    （**買い手が支払わずに「完了」と書ける状態を塞ぐ**）
+  - 取引が承認済みになったら出品を「予約済み」にし、取りやめたら「出品中」に戻す
+    （**同じ本に複数の購入希望が付く＝二重売りを止める**）
+  - キャンセル時に発行済みQRの合言葉を無効化する
+  - 適用時点で承認済みなのに押さえられていない出品を一度だけ揃える
+- 本番に適用済み（2026-09-18 に DB の管理を `supabase/` へ移した時点で本番に入っていることを確認済み。今後の DB 変更は [`docs/operations/db-workflow.md`](./db-workflow.md) の手順で行う）。
+- 効いているかの確認：
+  ```bash
+  npm run test:e2e -- T11 T26 T27
+  ```
+  3件とも緑になれば効いている。
+- ℹ️ 遷移表は `lib/reservation-flow.ts` にも同じものがある。**変えるときは両方**。
+
+---
+
+## J. 受け渡しリマインドメール（#58）
+
+受け渡しの**2日前の朝（日本時間 8:00）**と**前日の夜（日本時間 20:00）**に、買い手と出品者の両方へ
+当日の案内を送る。日程が決まったあと当日まで何も届かず、忘れられて取引が流れるのを防ぐ。
+
+- 定時実行：[`.github/workflows/handover-reminder.yml`](../../.github/workflows/handover-reminder.yml)
+- 送る中身と二度送りの防止：`app/api/cron/handover-reminder` → `lib/notify-handover-reminder.ts`
+- 送信済みの記録：`handover_reminders` 表（予約・回・相手が主キー。service_role だけが読み書きできる）
+
+### J-1. DBマイグレーションの適用 ☐
+- `supabase/migrations/20260921222800_add_handover_reminders.sql`
+- 手順は [`docs/operations/db-workflow.md`](./db-workflow.md) の 2章（`--dry-run` で確認してから `db push`）。
+
+### J-2. 共有シークレットの設定 ☐
+同じ文字列を2か所に置く。**片方だけだと 401 になって1通も届かない。**
+
+1. 値を作る：`openssl rand -hex 32`
+2. Vercel の環境変数に `CRON_SECRET` として設定（`NEXT_PUBLIC_` は付けない）。設定後に再デプロイ。
+3. GitHub → Settings → Secrets and variables → Actions → **Secrets** に `CRON_SECRET` を同じ値で登録。
+
+### J-3. 叩き先の設定（本番以外を叩くときだけ） ☐
+- 既定は `https://tetomi.jp`。別のURLを叩くときだけ、GitHub の同じ画面の
+  **Variables** に `SITE_URL` を登録する。
+
+### J-4. 動くことの確認 ☐
+1. GitHub → Actions → 「受け渡しリマインド」→ **Run workflow** → 回（2日前 / 前日）を選んで実行。
+2. 緑になり、ログに `{"kind":...,"sent":N,...}` が出ること。対象が無ければ `sent:0` でよい。
+3. もう一度同じ回を実行し、`skipped` に振り替わる（＝二度送りしない）こと。
+4. `CRON_SECRET` を空にして叩くと 401 になること。
+
+> **定時実行は既定のブランチ（`main`）のものだけが動く。** `develop` に入れただけでは動かない。
+> GitHub の定時実行は混み具合で数十分遅れることがある。取りこぼしても次の回で拾い直す作りにしてある。
+
+---
+
+## K. 運営アカウントと取引一覧（#60）
+
+運営が `/admin` で取引の状況を見るための画面。**アカウントを作るところだけが手作業**で、あとはコードと migration で済む。
+
+### K-1. DBマイグレーションの適用 ☐
+- `20260922042947_add_admin_flag_and_admin_reservations.sql` — `profiles.is_admin`・`is_admin()`・取引一覧の view・RLS
+- `20260922121545_allow_operator_email.sql` — 運営のメールアドレスを会員登録の例外にする
+- `20260924053434_operator_default_name.sql` — 運営の既定の名前（ダッシュボードで作ると名前欄が無いため）
+- 手順は [`docs/operations/db-workflow.md`](./db-workflow.md)（`db push --dry-run` → `db push`）。
+
+### K-2. 運営アカウントを作る ☐
+
+運営のアドレス `tetomitextbook@gmail.com` は大学のドメインではないので、**会員登録画面からは登録できない**（大学メールの先頭から入学年を読む処理があるため）。Supabase のダッシュボードから直接作る。
+
+1. Supabase ダッシュボード → Authentication → Users → **Add user**
+2. Email に `tetomitextbook@gmail.com`、パスワードを設定し、「Auto Confirm User」を有効にする
+3. できたら `/admin` を開いて、取引一覧が出ることを確認する
+
+`is_admin` は `handle_new_user` トリガーがこのアドレスを見て自動で立てるので、**作る順番は問わない**（J-1 が先でも J-2 が先でもよい）。
+
+> **アドレスを変える・増やすとき**は `supabase/schemas/03_functions/005_is_operator_email.sql` に足して migration を作る。
+> `is_admin` はどのロールからも UPDATE できない列なので、画面やAPIからは立てられない。
+
+### K-3. 運営に見せる範囲
+
+運営は学生ではないので、教科書を探す・出品する画面は仕事に要らない。ログインしても
+**取引一覧（`/admin`）と自分のマイページ（`/mypage`）だけ**が開く。
+
+- 他の URL（`/` `/listings` `/sell` など）を開くと取引一覧に戻る
+- 「探す・出品・メッセージ・マイページ」の動線（上のナビ・PCの縦タブ・スマホの下タブ・フッター）は運営には出さない
+- マイページは残してある。**ログアウトとパスワードの変更がそこにあるため**
+- 範囲を変えるときは `lib/operator.ts` の `OPERATOR_ALLOWED`
+
+戻す場所はナビを消すだけでなく `proxy.ts` でサーバー側でも決めている。URL を直打ちしても学生向けの画面には入れない。
+
+### K-4. 確認 ☐
+- 運営でログイン → `/admin` が開く
+- 運営で `/listings` を直打ち → `/admin` に戻る
+- 運営で `/mypage` → 開く（ログアウトできる）
+- 運営でない人でログイン → `/admin` が **404**・他の画面は今までどおり
+- ログインなしで `/admin` → ログイン画面へ
+
+---
+
+## 環境変数まとめ（`.env.local` と本番環境変数の両方に）
+
+| 変数 | 用途 | 現状 | 必要な作業 |
+|---|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase | 設定済み | — |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase | 設定済み | — |
+| `SUPABASE_SERVICE_ROLE_KEY` | 決済/再認証API（admin） | 設定済み | 本番環境変数にも設定 |
+| `NEXT_PUBLIC_PAYJP_PUBLIC_KEY` | PAY.jp(公開) | 設定済み | PAY.jp に戻す場合のみ必要 |
+| `PAYJP_SECRET_KEY` | PAY.jp(秘密) | 設定済み | PAY.jp に戻す場合のみ必要 |
+| `PAYJP_3DS_REQUIRED` | 3DS必須化(任意) | 未設定＝既定で必須 | 通常は未設定でOK。開発で無効化する時だけ `false`（A-4） |
+| `PAYJP_WEBHOOK_TOKEN` | Webhook検証(秘密) | 未設定 | **設定（A-5）**。PAY.jp側の `X-Payjp-Webhook-Token` と一致 |
+| `RESEND_API_KEY` | 再認証メール送信 | 未設定 | B-3（ドメイン認証後） |
+| `REVERIFY_MAIL_FROM` | 送信元（任意） | 未設定 | 任意 |
+| `NEXT_PUBLIC_SITE_URL` | 確認リンクorigin／Connectの戻り先 | 未設定 | 本番URL。**Stripe では Connect の戻り先にも使うため本番では必須** |
+| `NEXT_PUBLIC_PAYMENT_PROVIDER` | 決済会社の切替 | 未設定＝`stripe` | 通常は未設定でOK。PAY.jp に戻すときだけ `payjp`（H-5） |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe(公開) | 未設定 | **テストキー設定（H-3）** |
+| `STRIPE_SECRET_KEY` | Stripe(秘密) | 未設定 | **テストキー設定（H-3）** |
+| `STRIPE_WEBHOOK_SECRET` | Stripe Webhook署名 | 未設定 | **設定（H-4）** |
+| `STRIPE_3DS_REQUIRED` | 3DS要求(任意) | 未設定＝既定で要求 | 通常は未設定でOK。※日本のガイドライン該当時はこの値に関係なく Stripe が3DSを出す |
+| `CRON_SECRET` | 受け渡しリマインドの定時実行の認証 | 未設定 | **設定（J-2）**。GitHub の `secrets.CRON_SECRET` と同じ値 |
+
+> 本番（Vercel等）ではサーバー専用変数（`SUPABASE_SERVICE_ROLE_KEY` / `PAYJP_SECRET_KEY` / `PAYJP_WEBHOOK_TOKEN` / `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` / `RESEND_API_KEY` / `CRON_SECRET`）を**サーバー環境変数**として設定し、`NEXT_PUBLIC_` を付けないこと。
+
+---
+
+## 関連ドキュメント
+- [`docs/operations/resend-email-setup.md`](./resend-email-setup.md) — Resend の詳細手順（B）
+- [`docs/operations/db-workflow.md`](./db-workflow.md) — DB の変更・手元での開発・本番への適用の手順
+- `supabase/schemas/` — DB の今の姿（テーブル・関数・権限など）。シラバスの取得は `scripts/scrape-syllabus.mjs`、学部の照合は `lib/syllabus.ts`
+- [`docs/archive/sql/`](../archive/sql/) — 昔の SQL（A-1 / E-1 / F-1 / G-1 / H-1 / I-1 の記録。もう流さない）
+- [`.env.example`](../../.env.example) — 環境変数の見本

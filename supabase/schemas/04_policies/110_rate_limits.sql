@@ -1,0 +1,1 @@
+ALTER TABLE "public"."rate_limits" ENABLE ROW LEVEL SECURITY;

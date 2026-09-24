@@ -29,14 +29,14 @@ import {
 // - 登録時の「個人メール」は復旧用アドレス（recovery_email）として保持し、
 //   卒業前に本人が個人メールへログインを切り替える（changeLoginEmail）。
 //   切替を忘れてロックアウトした場合は recovery_email 経由で救済する（/recover）。
-// - プロフィール項目は profiles / profiles_private テーブルに保持（docs/supabase-setup.sql）。
-// - デモユーザーはシード済みアカウント（docs/supabase-seed.sql）で実セッションを張る。
+// - プロフィール項目は profiles / profiles_private テーブルに保持（supabase/schemas/02_tables/）。
+// - デモユーザーはシード済みアカウント（supabase/seed.sql）で実セッションを張る。
 //   これにより一覧・検索・出品など本物のログインと同じ経路で動作する（開発・体験用）。
 // ===================================================
 
 // 旧デモ実装が使っていた localStorage キー。現在は掃除（削除）専用に残す。
 const DEMO_KEY = "tetomi_demo_user";
-// デモ用シードアカウントの共通パスワード（docs/supabase-seed.sql と一致）。
+// デモ用シードアカウントの共通パスワード（supabase/seed.sql と一致）。
 const DEMO_PASSWORD = "password123";
 
 // メール確認リンク・リダイレクトのベースURL。
@@ -95,7 +95,7 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-/** profiles テーブルの1行（カラムは docs/supabase-setup.sql 参照） */
+/** profiles テーブルの1行（カラムは supabase/schemas/02_tables/010_profiles.sql 参照） */
 interface ProfileRow {
   id: string;
   name: string | null;
@@ -108,6 +108,7 @@ interface ProfileRow {
   recovery_email_verified: boolean | null;
   enrollment_verified: boolean | null;
   enrollment_valid_until: string | null;
+  is_admin: boolean | null;
   rating: number | null;
   rating_count: number | null;
 }
@@ -130,6 +131,7 @@ function rowToUser(session: Session, row: ProfileRow | null): User {
     recovery_email: row?.recovery_email ?? "",
     recovery_email_verified: row?.recovery_email_verified ?? false,
     enrollment_valid_until: row?.enrollment_valid_until ?? null,
+    is_admin: row?.is_admin ?? false,
     university: row?.university ?? "",
     faculty: row?.faculty ?? "",
     grade: row?.grade ?? "",

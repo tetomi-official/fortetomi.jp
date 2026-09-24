@@ -1,11 +1,15 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth";
 import { ToastProvider } from "@/components/Toast";
 import Footer from "@/components/Footer";
 import SideTab from "@/components/SideTab";
+import BottomTabBar from "@/components/BottomTabBar";
 import HeaderStack from "@/components/HeaderStack";
+import { ActionRequiredProvider } from "@/lib/action-required";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import HideForOperator from "@/components/HideForOperator";
 
 export const metadata: Metadata = {
   title: "TETOMI【教科書取引サービス】",
@@ -43,14 +47,30 @@ export default function RootLayout({
           href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css"
         />
       </head>
-      <body>
+      {/* 下タブバーと、画面ごとの下部固定バー（商品詳細の「価格＋購入」）に隠れないよう
+          本文の下に余白を作る（どちらも PC では 0）。
+          legacy.css の * リセット（padding:0）に勝たせるため、utilities レイヤーに乗る
+          Tailwind のクラスで指定している。 */}
+      <body className="pb-[calc(var(--bottom-nav-h)+var(--page-bottom-bar-h,0px))]">
         <AuthProvider>
-          <ToastProvider>
-            <SideTab />
-            <HeaderStack />
-            {children}
-            <Footer />
-          </ToastProvider>
+          <ActionRequiredProvider>
+            <ToastProvider>
+              <HideForOperator>
+                <SideTab />
+              </HideForOperator>
+              <HeaderStack />
+              {children}
+              <HideForOperator>
+                <Footer />
+              </HideForOperator>
+              {/* スマホの主動線。?tab= を読むので Suspense で囲う（静的生成の制約）。 */}
+              <HideForOperator>
+                <Suspense fallback={null}>
+                  <BottomTabBar />
+                </Suspense>
+              </HideForOperator>
+            </ToastProvider>
+          </ActionRequiredProvider>
         </AuthProvider>
         <ServiceWorkerRegister />
       </body>

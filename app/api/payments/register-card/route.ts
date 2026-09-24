@@ -1,61 +1,21 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { PAYMENT_PROVIDER, getProvider, providerConfigError } from "@/lib/payment-provider";
+import { loadStoredCustomer, saveRegisteredCard } from "@/lib/payment-provider/customers";
+import type { RegisterCardPayload } from "@/lib/payment-provider/types";
 
-// 買い手のカード登録（PAY.jp Customer 作成 / カード追加）。PB-036 Phase 1 / Phase 2（3DS必須化）。
-//  - カード番号はクライアントの payjp.js がトークン化済み。ここには token だけ来る。
-//  - 秘密鍵はサーバー専用。payjp_customer_id は payment_customers（service_role 専用書き込み）に保存。
+// 買い手のカード登録。PB-036 Phase 1 / Phase 2（3DS必須化）。
+//  - カード番号はクライアント（payjp.js / Stripe.js）がトークン化済み。ここには成果物だけ来る。
+//  - 秘密鍵はサーバー専用。保存先の payment_customers は service_role 専用書き込み。
 //  - 対面のQR受け渡し時は、この保存済みカードに課金する（買い手不在でも課金できるように）。
-//  - 3DS: クライアントで 3DS 認証済みのトークンだけを受け付ける。サーバーでも token の
-//    three_d_secure_status を PAY.jp から取得して再検証し、未認証トークンでの登録を拒否する
-//    （クライアント検証は迂回されうるため）。PAYJP_3DS_REQUIRED=false で明示的に無効化可能（開発用）。
+//  - 3DS の再検証など決済会社ごとの処理は lib/payment-provider の実装側に閉じている。
 export const runtime = "nodejs";
 
-const PAYJP_BASE = "https://api.pay.jp/v1";
-
-function basicAuth(secret: string): string {
-  return `Basic ${Buffer.from(`${secret}:`).toString("base64")}`;
-}
-
-// PAY.jp のトークンを取得し 3DS 認証済みかを検証する。
-// verified / attempted を成功とみなす（PAY.jp 指針に準拠）。
-async function verifyToken3ds(
-  token: string,
-  auth: string,
-): Promise<{ ok: true } | { ok: false; error: string; status: number }> {
-  if (process.env.PAYJP_3DS_REQUIRED === "false") return { ok: true };
-  try {
-    const res = await fetch(`${PAYJP_BASE}/tokens/${encodeURIComponent(token)}`, {
-      headers: { Authorization: auth },
-    });
-    const data = (await res.json().catch(() => null)) as
-      | { card?: { three_d_secure_status?: string }; error?: { message?: string } }
-      | null;
-    if (!res.ok || !data) {
-      return { ok: false, error: data?.error?.message ?? "カードの確認に失敗しました", status: 402 };
-    }
-    const status = data.card?.three_d_secure_status;
-    if (status !== "verified" && status !== "attempted") {
-      return {
-        ok: false,
-        error: "3Dセキュア認証が完了していません。カード登録をやり直してください。",
-        status: 402,
-      };
-    }
-    return { ok: true };
-  } catch {
-    return { ok: false, error: "カードの確認に失敗しました", status: 502 };
-  }
-}
-
 export async function POST(req: Request) {
-  const secretKey = process.env.PAYJP_SECRET_KEY;
-  if (!secretKey) {
-    return NextResponse.json(
-      { error: "決済の設定が未完了です（PAYJP_SECRET_KEY 未設定）" },
-      { status: 500 },
-    );
+  const cfgErr = providerConfigError();
+  if (cfgErr) {
+    return NextResponse.json({ error: cfgErr }, { status: 500 });
   }
 
   // 1) 認証（買い手本人）
@@ -76,83 +36,51 @@ export async function POST(req: Request) {
     );
   }
 
-  // 2) 入力（token のみ）
-  const body = (await req.json().catch(() => null)) as { token?: unknown } | null;
-  const token = typeof body?.token === "string" ? body.token : "";
-  if (!token) {
-    return NextResponse.json({ error: "token が必要です" }, { status: 400 });
+  // 2) 入力：決済会社ごとの成果物。provider 省略時は今の決済会社とみなす（後方互換）。
+  const body = (await req.json().catch(() => null)) as {
+    provider?: unknown;
+    token?: unknown;
+    setupIntentId?: unknown;
+  } | null;
+
+  const declared = body?.provider === "stripe" || body?.provider === "payjp"
+    ? body.provider
+    : PAYMENT_PROVIDER;
+  if (declared !== PAYMENT_PROVIDER) {
+    return NextResponse.json({ error: "決済方式が一致しません" }, { status: 400 });
   }
 
-  const auth = basicAuth(secretKey);
-  const admin = createAdminClient();
-
-  // 2.5) 3DS 検証：3DS 認証済みトークンでなければカード登録を拒否する。
-  const tds = await verifyToken3ds(token, auth);
-  if (!tds.ok) {
-    return NextResponse.json({ error: tds.error }, { status: tds.status });
+  let payload: RegisterCardPayload;
+  if (declared === "stripe") {
+    const setupIntentId = typeof body?.setupIntentId === "string" ? body.setupIntentId : "";
+    if (!setupIntentId) {
+      return NextResponse.json({ error: "setupIntentId が必要です" }, { status: 400 });
+    }
+    payload = { provider: "stripe", setupIntentId };
+  } else {
+    const token = typeof body?.token === "string" ? body.token : "";
+    if (!token) {
+      return NextResponse.json({ error: "token が必要です" }, { status: 400 });
+    }
+    payload = { provider: "payjp", token };
   }
 
-  // 3) 既存の Customer を確認（あればカード追加、なければ新規作成）
-  const { data: existing } = await admin
-    .from("payment_customers")
-    .select("payjp_customer_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  try {
-    if (existing?.payjp_customer_id) {
-      const cus = existing.payjp_customer_id;
-      // カードを追加し、既定カードに設定する。
-      const cardRes = await fetch(`${PAYJP_BASE}/customers/${cus}/cards`, {
-        method: "POST",
-        headers: { Authorization: auth, "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ card: token }),
-      });
-      const card = (await cardRes.json().catch(() => null)) as
-        | { id?: string; error?: { message?: string } }
-        | null;
-      if (!cardRes.ok || !card?.id) {
-        return NextResponse.json(
-          { error: card?.error?.message ?? "カードの登録に失敗しました" },
-          { status: 402 },
-        );
-      }
-      await fetch(`${PAYJP_BASE}/customers/${cus}`, {
-        method: "POST",
-        headers: { Authorization: auth, "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ default_card: card.id }),
-      });
-      await admin
-        .from("payment_customers")
-        .update({ updated_at: new Date().toISOString() })
-        .eq("user_id", user.id);
-      return NextResponse.json({ ok: true });
-    }
-
-    // 新規 Customer 作成（token を既定カードとして登録）
-    const cusRes = await fetch(`${PAYJP_BASE}/customers`, {
-      method: "POST",
-      headers: { Authorization: auth, "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ card: token, description: `user:${user.id}` }),
-    });
-    const cus = (await cusRes.json().catch(() => null)) as
-      | { id?: string; error?: { message?: string } }
-      | null;
-    if (!cusRes.ok || !cus?.id) {
-      return NextResponse.json(
-        { error: cus?.error?.message ?? "カードの登録に失敗しました" },
-        { status: 402 },
-      );
-    }
-
-    const { error: upsertErr } = await admin
-      .from("payment_customers")
-      .upsert({ user_id: user.id, payjp_customer_id: cus.id, updated_at: new Date().toISOString() });
-    if (upsertErr) {
-      return NextResponse.json({ error: upsertErr.message }, { status: 500 });
-    }
-    return NextResponse.json({ ok: true });
-  } catch {
-    return NextResponse.json({ error: "通信エラーが発生しました" }, { status: 502 });
+  // 3) 決済会社に検証と登録を任せ、返ってきたIDだけを保存する。
+  const provider = getProvider();
+  const existing = await loadStoredCustomer(user.id);
+  const result = await provider.registerCard({
+    userId: user.id,
+    userEmail: user.email ?? null,
+    existing,
+    payload,
+  });
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: result.status });
   }
+
+  const saved = await saveRegisteredCard(user.id, result.value);
+  if (saved.error) {
+    return NextResponse.json({ error: saved.error }, { status: 500 });
+  }
+  return NextResponse.json({ ok: true });
 }

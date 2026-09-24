@@ -1,20 +1,71 @@
-import { createClient } from "@/lib/supabase/client";
-
 // 決済（PB-036）クライアント側ヘルパー。
-// payment_customers は RLS で本人の行のみ SELECT 可能。書き込みは API（service_role）経由。
+// payment_customers への書き込みは API（service_role）経由。カード登録済みかの判定も
+// 「どの決済会社のIDが入っていれば有効か」が環境変数で決まるため、サーバーに任せる。
 
-/** ログイン中ユーザーが支払いカードを登録済みかを返す。 */
+/** ログイン中ユーザーが、今の決済会社で課金できるカードを登録済みかを返す。 */
 export async function hasRegisteredCard(): Promise<boolean> {
-  const supabase = createClient();
-  const { data, error } = await supabase
-    .from("payment_customers")
-    .select("user_id")
-    .maybeSingle();
-  if (error) {
-    console.error("hasRegisteredCard failed:", error.message);
+  try {
+    const res = await fetch("/api/payments/status");
+    const data = (await res.json().catch(() => null)) as { cardReady?: boolean } | null;
+    if (!res.ok || !data) return false;
+    return data.cardReady === true;
+  } catch {
     return false;
   }
-  return !!data;
+}
+
+/** 登録済みカードの見え方。カード番号そのものは受け取らない。 */
+export type CardSummary = {
+  brand: string;
+  last4: string;
+  expMonth: number;
+  expYear: number;
+};
+
+/**
+ * マイページ「お支払い方法」の中身を読む（#53）。
+ * card が null なら未登録。pendingHandovers は受け渡し待ちの取引の件数で、
+ * 1件以上あるとカードを削除できない（削除すると受け渡しQRが出せなくなるため）。
+ */
+export async function fetchPaymentMethod(): Promise<{
+  card: CardSummary | null;
+  pendingHandovers: number;
+  error: string | null;
+}> {
+  try {
+    const res = await fetch("/api/payments/card");
+    const data = (await res.json().catch(() => null)) as
+      | { card?: CardSummary | null; pendingHandovers?: number; error?: string }
+      | null;
+    if (!res.ok || !data) {
+      return {
+        card: null,
+        pendingHandovers: 0,
+        error: data?.error ?? "カード情報を読み込めませんでした",
+      };
+    }
+    return {
+      card: data.card ?? null,
+      pendingHandovers: data.pendingHandovers ?? 0,
+      error: null,
+    };
+  } catch {
+    return { card: null, pendingHandovers: 0, error: "通信エラーが発生しました" };
+  }
+}
+
+/** 登録済みカードを削除する（#53）。受け渡し待ちの取引があるとサーバー側で断られる。 */
+export async function deleteRegisteredCard(): Promise<{ error: string | null }> {
+  try {
+    const res = await fetch("/api/payments/card", { method: "DELETE" });
+    const data = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
+    if (!res.ok || !data?.ok) {
+      return { error: data?.error ?? "カードを削除できませんでした" };
+    }
+    return { error: null };
+  } catch {
+    return { error: "通信エラーが発生しました" };
+  }
 }
 
 /** 受け渡しQR用のワンタイム nonce をサーバーから取得する（買い手）。 */
