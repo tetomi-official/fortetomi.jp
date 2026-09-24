@@ -169,6 +169,13 @@ export type Database = {
             foreignKeyName: "handover_reminders_reservation_id_fkey"
             columns: ["reservation_id"]
             isOneToOne: false
+            referencedRelation: "admin_reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "handover_reminders_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
             referencedRelation: "reservations"
             referencedColumns: ["id"]
           },
@@ -265,6 +272,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "message_reads_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "admin_reservations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "message_reads_reservation_id_fkey"
             columns: ["reservation_id"]
