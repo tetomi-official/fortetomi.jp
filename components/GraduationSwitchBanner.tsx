@@ -8,6 +8,7 @@ import HeaderBanner from "@/components/HeaderBanner";
 // 卒業が近い（4年 / 院生）かつログインIDがまだ大学メールのユーザーに、
 // 個人メールへの切替を促す常時バナー。切替を忘れたまま大学メールが失効すると
 // ログイン・パスワード再設定ができなくなる（ロックアウト）ため、事前に促す。
+// ※今はどこからも使っていない。出し続けると邪魔なので HeaderStack から一旦外した。
 export default function GraduationSwitchBanner() {
   const { user, ready } = useAuth();
   const pathname = usePathname();
