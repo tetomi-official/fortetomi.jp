@@ -26,6 +26,8 @@ export interface User {
   recovery_email_verified?: boolean;
   /** 在籍確認の有効期限（ISO文字列）。これを過ぎると出品・購入が停止する。 */
   enrollment_valid_until?: string | null;
+  /** 運営かどうか（#60）。運営は学生ではないので在籍確認の対象外。 */
+  is_admin?: boolean;
   university: string;
   faculty: string;
   grade: string;
@@ -62,11 +64,15 @@ export interface Listing {
   faculties?: string[];
 }
 
-/** 買い手が提示する受け渡し候補（日付＋時刻のセット）。機能④。 */
-export interface CandidateSlot {
+/**
+ * 買い手が提示する受け渡し候補（日付＋時刻のセット）。機能④。
+ * reservations.candidate_slots（jsonb）にそのまま入れるため interface ではなく type にしている
+ * （interface は生成型の Json に代入できない）。
+ */
+export type CandidateSlot = {
   date: string;
   time: string;
-}
+};
 
 export interface Reservation {
   id: string;
@@ -95,6 +101,13 @@ export interface Reservation {
   charge_id?: string;
   /** 決済完了時刻（ミリ秒）。未決済は undefined。 */
   paid_at?: number;
+  /**
+   * 課金が成立しなかったときの状態（PB-036 / Stripe S6）。成立時・未着手時は undefined。
+   *  - requires_action: カード会社が本人認証を要求。買い手の端末で完了させれば復旧できる。
+   *  - failed:          拒否された。買い手にQRを出し直してもらう。
+   *  - disputed:        チャージバック。運営対応。
+   */
+  payment_status?: "requires_action" | "failed" | "disputed";
 }
 
 /** 取引メッセージ（PB-041）。1 予約（reservation）= 1 スレッド。 */
@@ -105,3 +118,10 @@ export interface Message {
   body: string;
   created_at: number;
 }
+
+/**
+ * 受け渡しリマインドの回（#58）。DB の handover_reminders.kind と同じ値を使う。
+ *  - 2日前: 受け渡しの2日前の朝に出す
+ *  - 前日:   受け渡しの前日の夜に出す
+ */
+export type ReminderKind = "2日前" | "前日";

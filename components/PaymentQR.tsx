@@ -31,14 +31,18 @@ export default function PaymentQR({
     setNonce(res.nonce);
   }
 
+  // nonce は発行するたびにサーバー側の値が差し替わる（最後に発行したものだけが有効）。
+  // 開発モード（React の Strict Mode）ではこの処理が2回走るため、そのまま2回発行すると
+  // 画面に出したQRとサーバーの値が食い違い、読み取っても「QRが無効です」になることがある。
+  // 同じ取引については1回だけ発行する（ref は Strict Mode の2回の実行をまたいで残る）。
+  const requestedFor = useRef<string | null>(null);
   useEffect(() => {
-    let cancelled = false;
+    if (requestedFor.current === reservationId) return;
+    requestedFor.current = reservationId;
     requestPaymentNonce(reservationId).then((res) => {
-      if (!cancelled) apply(res);
+      // 待っている間に別の取引へ切り替わっていたら、古い結果は使わない
+      if (requestedFor.current === reservationId) apply(res);
     });
-    return () => {
-      cancelled = true;
-    };
     // onNeedCard はマウント時の参照で十分。reservationId 変化時のみ再発行する。
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reservationId]);

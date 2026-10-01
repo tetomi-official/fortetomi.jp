@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createHash, randomBytes } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { checkRateLimit, clientIp } from "@/lib/rate-limit";
+import { mailButton, mailLayout, mailLinkFallbackFooter, sendMail } from "@/lib/mail";
 
 // crypto を使うため Node ランタイムで動かす。
 export const runtime = "nodejs";
@@ -76,47 +77,19 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ ok: true });
 }
 
-// Resend API でメールを送信する（依存追加せず fetch で叩く）。
+// 送信そのものは lib/mail.ts に寄せてある（同じ処理が3ルートに複製されていたため）。
+// ここに残すのは、このメール固有の件名と本文だけ。
 async function sendRecoveryEmail(to: string, confirmUrl: string): Promise<boolean> {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    // 開発環境で未設定のときはサーバーログにリンクを出して握りつぶす。
-    console.warn("[recover] RESEND_API_KEY 未設定。復旧リンク:", confirmUrl);
-    return true;
-  }
-  const from = process.env.REVERIFY_MAIL_FROM || "TETOMI <no-reply@tetomi.jp>";
-  const html = `
-    <div style="font-family:sans-serif;line-height:1.8;color:#1f2937">
-      <h2 style="color:#1e293b">ログインメールの復旧</h2>
-      <p>大学メールでログインできなくなったアカウントの復旧リクエストを受け付けました。</p>
-      <p>下のボタンから ${TOKEN_TTL_MIN} 分以内に手続きを完了すると、ログイン用メールをこの（復旧用）アドレスに切り替え、パスワード再設定のご案内をお送りします。</p>
-      <p style="margin:28px 0">
-        <a href="${confirmUrl}" style="background:#1e293b;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold">
-          ログインメールを復旧する
-        </a>
-      </p>
-      <p style="font-size:12px;color:#6b7280">
-        このメールに心当たりがない場合は破棄してください。<br />
-        リンクが開けない場合はこちら：<br />${confirmUrl}
-      </p>
-    </div>`;
-
-  try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from,
-        to,
-        subject: "【TETOMI】ログインメールの復旧",
-        html,
-      }),
-    });
-    return res.ok;
-  } catch {
-    return false;
-  }
+  return sendMail({
+    to,
+    subject: "【TETOMI】ログインメールの復旧",
+    html: mailLayout(
+      "ログインメールの復旧",
+      `      <p>大学メールでログインできなくなったアカウントの復旧リクエストを受け付けました。</p>
+      <p>下のボタンから ${TOKEN_TTL_MIN} 分以内に手続きを完了すると、ログイン用メールをこの（復旧用）アドレスに切り替え、パスワード再設定のご案内をお送りします。</p>` + mailButton("ログインメールを復旧する", confirmUrl),
+      mailLinkFallbackFooter(confirmUrl),
+    ),
+    // RESEND_API_KEY が無い開発環境では、このリンクがログに出る。
+    devHint: confirmUrl,
+  });
 }

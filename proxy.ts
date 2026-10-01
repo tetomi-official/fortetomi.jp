@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_EXP_COOKIE, isSessionExpired } from "@/lib/supabase/session";
 import { blockedRoute } from "@/lib/prerelease";
+import { OPERATOR_HOME, isOperatorEmail, operatorMayVisit } from "@/lib/operator";
 
 // 各リクエストで Supabase のセッション Cookie を更新する（トークンの自動リフレッシュ）。
 // @supabase/ssr の推奨セットアップ。
@@ -41,6 +42,31 @@ export async function proxy(request: NextRequest) {
   if (user && isSessionExpired(request.cookies.get(SESSION_EXP_COOKIE)?.value)) {
     await supabase.auth.signOut({ scope: "local" });
     response.cookies.set(SESSION_EXP_COOKIE, "", { path: "/", maxAge: 0 });
+  }
+
+  // 運営の画面（#60）。ログインしていない人はここで止めてログイン画面へ送る。
+  // 「運営かどうか」は DB を見ないと分からないのでページ側で見る（notFound）。
+  // 最後の砦は RLS と view なので、ここを抜けられても取引は1件も読めない。
+  if (!user && request.nextUrl.pathname.startsWith("/admin")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.search = `?next=${encodeURIComponent(request.nextUrl.pathname)}`;
+    return NextResponse.redirect(url);
+  }
+
+  // 運営は取引一覧と自分のマイページだけを見る（#60）。
+  // 学生向けの画面は仕事に要らないので、開いたら取引一覧に戻す。
+  // ナビを消すだけだと URL の直打ちで入れてしまうため、ここで実際に戻している。
+  // 判定に DB は要らない。ログイン情報のメールアドレスだけで分かる。
+  if (
+    user?.email &&
+    isOperatorEmail(user.email) &&
+    !operatorMayVisit(request.nextUrl.pathname)
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = OPERATOR_HOME;
+    url.search = "";
+    return NextResponse.redirect(url);
   }
 
   // プレリリース段階解禁：現在のフェーズで許可されていないルートはサーバー側で弾く。

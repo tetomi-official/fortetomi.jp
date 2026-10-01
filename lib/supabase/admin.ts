@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/database.types";
 
 // Service Role を使う管理用クライアント（サーバー専用・RLS バイパス）。
 // 在籍再認証のトークン表 enrollment_reverifications の読み書きや、
@@ -12,7 +13,7 @@ export function createAdminClient() {
       "Supabase admin client requires NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY",
     );
   }
-  return createClient(url, serviceKey, {
+  return createClient<Database>(url, serviceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 }

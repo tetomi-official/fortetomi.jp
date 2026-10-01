@@ -17,6 +17,13 @@ interface ToastContextValue {
 
 const ToastContext = createContext<ToastContextValue | null>(null);
 
+const TOAST_BG: Record<ToastType, string> = {
+  "": "bg-navy",
+  success: "bg-ok-strong",
+  error: "bg-navy-mid",
+  warning: "bg-warn-strong",
+};
+
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [msg, setMsg] = useState("");
   const [type, setType] = useState<ToastType>("");
@@ -36,7 +43,18 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      <div className={`toast ${type} ${visible ? "" : "hidden"}`.trim()}>{msg}</div>
+      {/* 日本語の長い文言は折り返す（横一列に伸ばすと画面からはみ出して横スクロールになる）。
+          スマホでは下タブバーの上に出す（--bottom-nav-h は PC では 0）。
+          class の "toast" と "hidden" は E2E（waitToastGone）が見ている目印なので残すこと。 */}
+      <div
+        role="status"
+        aria-live="polite"
+        className={`toast fixed inset-x-4 bottom-[calc(var(--bottom-nav-h)+1rem)] z-[9999] mx-auto w-fit max-w-[calc(100%-2rem)] rounded-2xl px-6 py-3 text-center text-[13px] leading-relaxed font-bold tracking-[0.02em] text-white shadow-xl md:bottom-7 md:max-w-md ${
+          TOAST_BG[type]
+        } ${visible ? "animate-toast-in" : "hidden"}`}
+      >
+        {msg}
+      </div>
     </ToastContext.Provider>
   );
 }

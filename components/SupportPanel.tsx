@@ -7,13 +7,17 @@ import { answerQuestion, FAQS, SUPPORT_CONTACT, type Faq } from "@/lib/support";
 // 自己完結のFAQアシスタント（lib/support.ts）。チャット風に質問へ回答し、
 // 解決しない場合は有人窓口（メール）へ案内する。下部によくある質問一覧も常設。
 
+// メールの件名をあらかじめ入れる。運営の受信箱は特商法ページに載せている連絡先と
+// 同じで、サポート以外の連絡も混ざる。件名が無いと開くまで用件が分からない。
+const supportMailto = `mailto:${SUPPORT_CONTACT}?subject=${encodeURIComponent("【TETOMI】お問い合わせ")}`;
+
 type ChatItem =
   | { role: "user"; text: string }
   | { role: "bot"; text: string; related: Faq[] };
 
 const GREETING: ChatItem = {
   role: "bot",
-  text: "こんにちは！フォルテとみ運営サポートです。出品・購入・受け渡し・在籍確認など、お困りごとを入力してください。よくある質問は下にもまとめています。",
+  text: "こんにちは！TETOMI 運営サポートです。出品・購入・受け渡し・在籍確認など、お困りごとを入力してください。よくある質問は下にもまとめています。",
   related: [],
 };
 
@@ -108,7 +112,7 @@ export default function SupportPanel() {
           ))}
           <p className="support-contact">
             解決しない場合は{" "}
-            <a href={`mailto:${SUPPORT_CONTACT}`}>{SUPPORT_CONTACT}</a> までお問い合わせください。
+            <a href={supportMailto}>{SUPPORT_CONTACT}</a> までお問い合わせください。
           </p>
         </div>
       </div>

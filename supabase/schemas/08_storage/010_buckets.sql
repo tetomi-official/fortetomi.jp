@@ -1,0 +1,9 @@
+-- 画像の置き場（バケット）はここには書かない。
+--
+-- バケットは storage.buckets の「行」（データ）なので、宣言的スキーマには置けない
+-- （supabase db schema declarative sync が「データの文がある」として止まる）。
+-- 定義は migration にある：20260918040927_baseline.sql の末尾（listing-images、public = true）。
+-- バケットを足す・変えるときは、migration に insert / update を手で書くこと。
+--
+-- public = true：画像は公開URLで表示する。ただし一覧（ファイル名の列挙）は、
+-- 読み取りポリシーを置かないことで塞いでいる（020_object_policies.sql）。

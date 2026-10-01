@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { fetchListings, fetchListingsByFaculty } from "@/lib/listings";
 import { conditionLabel, yen, CONDITION_OPTIONS } from "@/lib/labels";
 import ListingCard from "@/components/ListingCard";
 import { useAuth } from "@/lib/auth";
 import type { Listing } from "@/lib/types";
+import { loginHref } from "@/lib/redirect";
 
 const PAGE_SIZE = 12;
 
@@ -19,12 +21,39 @@ const PRICE_RANGES = [
   { value: "5000-", label: "¥5,000〜" },
 ];
 
+// スマホの丸ボタン用の選択肢。ボタンには選んでいる値が出るので、
+// 未選択のときの文字は「すべての状態」ではなく項目名そのものにする。
+const COND_PILL = [
+  { value: "", label: "状態" },
+  ...CONDITION_OPTIONS.map((c) => ({ value: c, label: c })),
+];
+const PRICE_PILL = [{ value: "", label: "価格" }, ...PRICE_RANGES.slice(1)];
+const SORT_PILL = [
+  { value: "newest", label: "新着順" },
+  { value: "price_asc", label: "安い順" },
+  { value: "price_desc", label: "高い順" },
+];
+
 export default function ListingsPage() {
+  // useSearchParams を使うため Suspense の境界が要る（静的生成時の制約）。
+  return (
+    <Suspense fallback={null}>
+      <ListingsPageInner />
+    </Suspense>
+  );
+}
+
+function ListingsPageInner() {
   const { user, ready } = useAuth();
+  const searchParams = useSearchParams();
   const [listings, setListings] = useState<Listing[]>([]);
-  const [loading, setLoading] = useState(true);
+  // どの条件（学部・本人）で読み込み終えたか。今の条件と違えば「読み込み中」。
+  const listKey = user?.faculty ? `${user.faculty}:${user.id}` : "all";
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  const loading = !ready || loadedKey !== listKey;
   const all = useMemo(() => listings.filter((l) => l.status === "出品中"), [listings]);
-  const [query, setQuery] = useState("");
+  // トップの検索欄で打った言葉は `?q=` で渡ってくる。最初の絞り込みに入れる。
+  const [query, setQuery] = useState(() => searchParams.get("q") ?? "");
   const [cond, setCond] = useState("");
   const [price, setPrice] = useState("");
   const [sort, setSort] = useState("newest");
@@ -35,19 +64,18 @@ export default function ListingsPage() {
   useEffect(() => {
     if (!ready) return;
     let active = true;
-    setLoading(true);
     // ログイン時は自学部の「他の人」の出品のみ（自分の出品は除外＝マイページで確認）
     const req = user?.faculty ? fetchListingsByFaculty(user.faculty, user.id) : fetchListings();
     req.then((data) => {
       if (active) {
         setListings(data);
-        setLoading(false);
+        setLoadedKey(listKey);
       }
     });
     return () => {
       active = false;
     };
-  }, [ready, user?.faculty]);
+  }, [ready, user?.faculty, user?.id, listKey]);
 
   const filtered = useMemo(() => {
     let list = all.filter((item) => {
@@ -90,15 +118,10 @@ export default function ListingsPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const pageNumbers: (number | "...")[] = [];
-  for (let i = 1; i <= pages; i++) {
-    if (i === 1 || i === pages || Math.abs(i - current) <= 1) pageNumbers.push(i);
-    else if (i === 2 || i === pages - 1) pageNumbers.push("...");
-  }
-
   return (
     <>
-      <div className="page-header">
+      {/* 紺のページヘッダーは md 以上だけ。スマホはヘッダー直下の検索帯にする（案2）。 */}
+      <div className="page-header hidden md:block">
         <div className="page-header-inner">
           <div className="breadcrumb">
             <Link href="/">Home</Link>
@@ -138,7 +161,7 @@ export default function ListingsPage() {
                 }}
               >
                 <i className="fas fa-graduation-cap" /> ログインすると自学部の教科書に絞り込まれます{" "}
-                <Link href="/login" style={{ textDecoration: "underline", fontWeight: 600 }}>
+                <Link href={loginHref("/listings")} style={{ textDecoration: "underline", fontWeight: 600 }}>
                   ログイン
                 </Link>
               </p>
@@ -146,10 +169,74 @@ export default function ListingsPage() {
         </div>
       </div>
 
-      <main className="page-main" style={{ background: "var(--bg-gray)" }}>
-        <div className="container">
-          {/* SEARCH & FILTER */}
-          <div className="search-filter-bar">
+      <main className="page-main bg-bg-light pt-[var(--header-h)] pb-8 md:bg-bg-gray md:pt-[calc(var(--header-h)+32px)] md:pb-20">
+        {/* スマホの検索帯。検索ボタンは出さず、打てばその場で絞り込まれる（Enter で確定）。 */}
+        <form
+          role="search"
+          onSubmit={(e) => {
+            e.preventDefault();
+            setPage(1);
+          }}
+          className="border-b border-line-light bg-white px-4 py-3 md:hidden"
+        >
+          <label className="flex h-11 items-center gap-2 rounded-[10px] bg-bg-light px-3 text-ink-muted">
+            <span aria-hidden="true">
+              <i className="fas fa-search" />
+            </span>
+            <input
+              type="search"
+              aria-label="教科書を検索"
+              placeholder="タイトル・授業名で検索"
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setPage(1);
+              }}
+              className="min-w-0 flex-1 bg-transparent text-base text-navy outline-none"
+            />
+          </label>
+          {/* 絞り込み。はみ出す分は横スクロールで逃がす。 */}
+          <div className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4">
+            <FilterPill
+              label="状態"
+              value={cond}
+              options={COND_PILL}
+              onChange={(v) => {
+                setCond(v);
+                setPage(1);
+              }}
+            />
+            <FilterPill
+              label="価格"
+              value={price}
+              options={PRICE_PILL}
+              onChange={(v) => {
+                setPrice(v);
+                setPage(1);
+              }}
+            />
+            <FilterPill label="並び順" value={sort} options={SORT_PILL} onChange={setSort} />
+          </div>
+        </form>
+
+        {/* 紺ヘッダーを出さない代わりに、未ログインの人にだけ絞り込みの案内を残す */}
+        {ready && !user && (
+          <p className="border-b border-line-light bg-white px-4 py-3 text-[13px] text-ink-muted md:hidden">
+            ログインすると自学部の教科書に絞り込まれます{" "}
+            <Link href={loginHref("/listings")} className="font-bold whitespace-nowrap text-navy underline">
+              ログイン
+            </Link>
+          </p>
+        )}
+
+        <p className="px-4 py-3 text-[13px] text-ink-muted md:hidden">
+          教科書一覧 <strong className="font-extrabold text-navy">{total}</strong> 件
+        </p>
+
+        {/* md 未満は内枠を使わず全幅にする（行を画面いっぱいに並べるため） */}
+        <div className="md:container">
+          {/* SEARCH & FILTER（md 以上） */}
+          <div className="search-filter-bar hidden md:block">
             <div className="search-bar">
               <input
                 type="text"
@@ -206,8 +293,8 @@ export default function ListingsPage() {
             </div>
           </div>
 
-          {/* SORT BAR */}
-          <div className="sort-bar">
+          {/* SORT BAR（md 以上。スマホは上の件数の帯と、行ひとつの表示だけ） */}
+          <div className="sort-bar hidden md:flex">
             <p className="result-count">
               <strong>{total}</strong> 件
             </p>
@@ -246,7 +333,7 @@ export default function ListingsPage() {
               <p>条件を変えて検索してみてください。</p>
             </div>
           ) : view === "grid" ? (
-            <div className="listings-grid">
+            <div className="flex flex-col md:grid md:grid-cols-[repeat(auto-fill,minmax(240px,1fr))] md:gap-5">
               {pageItems.map((item) => (
                 <ListingCard key={item.id} item={item} />
               ))}
@@ -260,38 +347,186 @@ export default function ListingsPage() {
           )}
 
           {/* PAGINATION */}
-          {pages > 1 && (
-            <div className="pagination">
-              <button className="page-btn" disabled={current === 1} onClick={() => goPage(current - 1)}>
-                <i className="fas fa-chevron-left" />
-              </button>
-              {pageNumbers.map((n, i) =>
-                n === "..." ? (
-                  <span key={`e${i}`} style={{ color: "var(--text-muted)", padding: "0 4px" }}>
-                    …
-                  </span>
-                ) : (
-                  <button
-                    key={n}
-                    className={`page-btn ${n === current ? "active" : ""}`.trim()}
-                    onClick={() => goPage(n)}
-                  >
-                    {n}
-                  </button>
-                ),
-              )}
-              <button
-                className="page-btn"
-                disabled={current === pages}
-                onClick={() => goPage(current + 1)}
-              >
-                <i className="fas fa-chevron-right" />
-              </button>
-            </div>
-          )}
+          {pages > 1 && <Pagination current={current} pages={pages} onChange={goPage} />}
         </div>
       </main>
     </>
+  );
+}
+
+/**
+ * ページ送り。
+ *
+ * md 未満は案2（`docs/mockups/mobile/V2Footer.dc.html`）の丸ボタン。44px で、
+ * 現在のページは紺塗り、前後のページは山形のアイコンボタンにする。
+ * 幅 360px でも横にはみ出さないよう、スマホでは番号を「最初・現在・最後」だけに絞る
+ * （いちばん多いときで 44px×5 ＋ … ×2 ＋ 隙間 ＋ 左右の余白 = 324px）。
+ *
+ * md 以上は今までどおりの見た目（38px の角丸ボタン）。番号は前後1ページ＋最初と最後。
+ */
+function Pagination({
+  current,
+  pages,
+  onChange,
+}: {
+  current: number;
+  pages: number;
+  onChange: (n: number) => void;
+}) {
+  // md 以上に出す番号。前後1ページと、最初・最後。
+  const wide: (number | "...")[] = [];
+  for (let i = 1; i <= pages; i++) {
+    if (i === 1 || i === pages || Math.abs(i - current) <= 1) wide.push(i);
+    else if (i === 2 || i === pages - 1) wide.push("...");
+  }
+  // md 未満に出す番号。最初・現在・最後だけ。
+  const narrow: (number | "...")[] = [];
+  for (const n of [...new Set([1, current, pages])].sort((a, b) => a - b)) {
+    const prev = narrow[narrow.length - 1];
+    if (typeof prev === "number" && n - prev > 1) narrow.push("...");
+    narrow.push(n);
+  }
+
+  // 44px の丸。現在のページだけ紺で塗るので、文字色は下で足す
+  // （同じ性質を2つ書くと、どちらが勝つかがクラスの並び順では決まらない）。
+  const round =
+    "flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[15px] font-bold disabled:pointer-events-none disabled:opacity-35";
+
+  return (
+    <>
+      {/* md 未満（案2） */}
+      <nav aria-label="ページ送り" className="flex items-center justify-center gap-1 p-4 md:hidden">
+        <button
+          type="button"
+          aria-label="前のページ"
+          className={`${round} text-navy`}
+          disabled={current === 1}
+          onClick={() => onChange(current - 1)}
+        >
+          <i className="fas fa-chevron-left text-lg" aria-hidden="true" />
+        </button>
+        {narrow.map((n, i) =>
+          n === "..." ? (
+            <span key={`e${i}`} className="flex w-6 shrink-0 items-center justify-center text-ink-sub">
+              …
+            </span>
+          ) : (
+            <button
+              key={n}
+              type="button"
+              aria-label={`${n}ページ目`}
+              aria-current={n === current ? "page" : undefined}
+              className={`${round} ${n === current ? "bg-navy text-white" : "text-navy"}`}
+              onClick={() => onChange(n)}
+            >
+              {n}
+            </button>
+          ),
+        )}
+        <button
+          type="button"
+          aria-label="次のページ"
+          className={`${round} text-navy`}
+          disabled={current === pages}
+          onClick={() => onChange(current + 1)}
+        >
+          <i className="fas fa-chevron-right text-lg" aria-hidden="true" />
+        </button>
+      </nav>
+
+      {/* md 以上（今までどおり） */}
+      <nav
+        aria-label="ページ送り"
+        className="mt-9 hidden flex-wrap items-center justify-center gap-1.5 md:flex"
+      >
+        <button
+          type="button"
+          aria-label="前のページ"
+          className={`${PAGE_BTN} ${PAGE_BTN_OFF}`}
+          disabled={current === 1}
+          onClick={() => onChange(current - 1)}
+        >
+          <i className="fas fa-chevron-left" aria-hidden="true" />
+        </button>
+        {wide.map((n, i) =>
+          n === "..." ? (
+            <span key={`e${i}`} className="px-1 text-ink-muted">
+              …
+            </span>
+          ) : (
+            <button
+              key={n}
+              type="button"
+              aria-label={`${n}ページ目`}
+              aria-current={n === current ? "page" : undefined}
+              className={`${PAGE_BTN} ${
+                n === current ? "border-navy bg-navy text-white" : PAGE_BTN_OFF
+              }`}
+              onClick={() => onChange(n)}
+            >
+              {n}
+            </button>
+          ),
+        )}
+        <button
+          type="button"
+          aria-label="次のページ"
+          className={`${PAGE_BTN} ${PAGE_BTN_OFF}`}
+          disabled={current === pages}
+          onClick={() => onChange(current + 1)}
+        >
+          <i className="fas fa-chevron-right" aria-hidden="true" />
+        </button>
+      </nav>
+    </>
+  );
+}
+
+/** md 以上のページ送りのボタン（移行前の `.page-btn` と同じ見た目）。 */
+const PAGE_BTN =
+  "font-en flex h-[38px] min-w-[38px] items-center justify-center rounded-sm border-[1.5px] px-2 text-[13px] font-bold transition-colors disabled:pointer-events-none disabled:opacity-35";
+/** 現在のページ以外の色。同じ性質（背景・文字色）を2つ書くと勝ち負けが読めないので分けてある。 */
+const PAGE_BTN_OFF = "border-line bg-white text-ink-mid hover:border-navy hover:text-navy";
+
+/**
+ * スマホの絞り込みボタン（案2の丸ボタン）。
+ *
+ * 見えているのは丸ボタンだが、実体は透明にして重ねた <select>。こうすると
+ * 端末そのままの選択画面が出て、キーボード操作にも乗る。
+ * iOS は文字が 16px 未満の入力欄にふれると勝手に拡大するので、<select> 側だけ
+ * 16px にしてある（見えている文字は指定どおり 14px）。
+ */
+function FilterPill({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (v: string) => void;
+}) {
+  const selected = options.find((o) => o.value === value);
+  return (
+    <span className="relative inline-flex shrink-0">
+      <select
+        aria-label={label}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="peer absolute inset-0 h-full w-full text-base opacity-0"
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+      <span className="pointer-events-none flex h-11 items-center gap-1.5 rounded-full border border-line bg-white px-4 text-sm whitespace-nowrap text-navy peer-focus-visible:ring-2 peer-focus-visible:ring-navy">
+        {selected?.label ?? label}
+        <i className="fas fa-chevron-down text-[11px] text-ink-mid" aria-hidden="true" />
+      </span>
+    </span>
   );
 }
 

@@ -1,5 +1,5 @@
 // 在籍担保のため、登録を許可する大学メールドメイン。
-// ※サーバー側の最終防御は docs/supabase-setup.sql のトリガー。
+// ※サーバー側の最終防御は supabase/schemas/03_functions/100_enforce_email_domain.sql のトリガー。
 //   ここを変えたら SQL 側の許可ドメインも合わせて更新すること。
 export const ALLOWED_EMAIL_DOMAIN = "g.chuo-u.ac.jp";
 
@@ -71,13 +71,26 @@ export function upcomingHandoverDates(days = 7): HandoverDateOption[] {
 }
 
 /**
+ * 決済のタイミングの説明（PB-036）。
+ *
+ * 購入希望を出した時点では請求は発生せず、受け渡しの場で出品者がQRを読み取ったときに
+ * 初めて課金される。ここが一番誤解されやすい（「購入希望＝買った・請求された」と
+ * 思われる）ので、買い手が通る画面すべてで同じ文言を出す。定義は必ずここ1か所。
+ */
+export const PAYMENT_TIMING_NOTICE =
+  "この時点では請求されません。受け渡しの場で出品者がQRを読み取ったときに、登録したカードへ決済されます。";
+
+/**
  * サービス手数料率（PB-006）。教科書が売れた際に、出品者から教科書価格の10%をいただく。
  * 決済（PB-036）は買い手に満額を課金し、出品者の受取額はここから10%を差し引いた額になる。
  */
 export const PLATFORM_FEE_RATE = 0.1;
 
-/** 振込手数料（PB-046）。振込申請時に売上残高から差し引く。 */
-export const PAYOUT_FEE_YEN = 250;
+// 振込手数料（旧 PAYOUT_FEE_YEN = 250）は削除した（issue #54）。
+// 出品者から振込手数料を取る場面は存在しない。決済が成立した時点で代金は出品者本人の
+// Stripe 残高へ移り、銀行への入金も Stripe が自動で行う。Stripe の入金手数料
+// （0.25% + ¥250／回）は運営に請求されるもので、出品者の受取額からは引かれない。
+// 実測と判断の経緯は docs/decisions/stripe-payout-behavior.md。
 
 /** 販売価格から出品者の受取額（サービス手数料10%差引後）を計算する。端数は切り捨て。 */
 export function sellerNet(price: number): number {

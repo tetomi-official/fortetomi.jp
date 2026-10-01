@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/Toast";
 import { fetchListings, updateListingStatus, deleteListing } from "@/lib/listings";
@@ -13,15 +13,19 @@ import {
   proposeReschedule,
   selectCandidateSlot,
 } from "@/lib/reservations";
-import { reservationBadgeClass, yen, formatSlot } from "@/lib/labels";
-import { sellerNet, PLATFORM_FEE_RATE, PAYOUT_FEE_YEN } from "@/lib/constants";
+import { reservationBadgeClass, yen, formatSlot, formatYmd } from "@/lib/labels";
+import { sellerNet, PLATFORM_FEE_RATE } from "@/lib/constants";
 import { decodePaymentQR } from "@/lib/payments";
 import { canReserve, canChangeLoginEmail } from "@/lib/prerelease";
 import MessagesPanel from "@/components/MessagesPanel";
+import { ListRow, RowGroup, SectionLabel } from "@/components/ListRow";
 import SupportPanel from "@/components/SupportPanel";
+import PaymentMethodPanel from "@/components/PaymentMethodPanel";
 import BarcodeScanner from "@/components/BarcodeScanner";
 import { BarcodeFormat } from "@zxing/library";
-import type { Listing, Reservation, ReservationStatus } from "@/lib/types";
+import type { Listing, Reservation, ReservationStatus, User } from "@/lib/types";
+import { canTransition } from "@/lib/reservation-flow";
+import { loginHref } from "@/lib/redirect";
 
 type Tab =
   | "dashboard"
@@ -30,20 +34,108 @@ type Tab =
   | "receivedRes"
   | "messages"
   | "support"
+  | "payment"
   | "profile";
+const TABS: Tab[] = [
+  "dashboard",
+  "myListings",
+  "sentRes",
+  "receivedRes",
+  "messages",
+  "support",
+  "payment",
+  "profile",
+];
+
+/** ?tab= を受け取る。知らない値と未指定はダッシュボード。 */
+function tabFromQuery(value: string | null): Tab {
+  return TABS.includes(value as Tab) ? (value as Tab) : "dashboard";
+}
+
+/**
+ * 売上残高と入金予定（issue #54）。
+ *
+ * TETOMI は売上金を預かっていない。決済が成立した時点で出品者本人の Stripe 残高へ移り、
+ * 銀行への入金も Stripe が自動で行う。だからこの数字は自前で集計せず、必ず Stripe から取る。
+ * 経緯と実測は docs/decisions/stripe-payout-behavior.md。
+ */
+type ConnectBalance = {
+  connected: boolean;
+  available?: number;
+  pending?: number;
+  pendingAvailableOn?: string | null;
+  nextPayoutDate?: string | null;
+  nextPayoutAmount?: number | null;
+  scheduleLabel?: string | null;
+};
+
+type BalanceResult = { ok: true; balance: ConnectBalance } | { ok: false; error: string };
+
+// effect の中から直接 setState する関数を呼ぶと ESLint（react-hooks/set-state-in-effect）に
+// 引っかかるため、取得は純粋な関数として外に出し、.then() の中で setState する。
+async function fetchConnectBalance(): Promise<BalanceResult> {
+  try {
+    const res = await fetch("/api/payments/connect/balance");
+    const data = (await res.json().catch(() => null)) as
+      | (ConnectBalance & { error?: string })
+      | null;
+    if (!res.ok || !data || typeof data.connected !== "boolean") {
+      return { ok: false, error: data?.error ?? "残高を取得できませんでした" };
+    }
+    return { ok: true, balance: data };
+  } catch {
+    return { ok: false, error: "通信エラーが発生しました" };
+  }
+}
+
 const GRADES = ["1年", "2年", "3年", "4年", "院生"];
 
+// スマホは紺のページヘッダーを出さないので、上の余白はヘッダーの高さぶんだけにする。
+// 地の色も案2の #f4f5f6（md 以上は今までどおり）。
+const PAGE_MAIN =
+  "page-main bg-bg-light pt-[var(--header-h)] pb-8 md:bg-bg-gray md:pt-[calc(var(--header-h)+32px)] md:pb-20";
+
 export default function MyPage() {
+  // useSearchParams を使うため Suspense の境界が要る（静的生成時の制約）。
+  return (
+    <Suspense fallback={null}>
+      <MyPageInner />
+    </Suspense>
+  );
+}
+
+function MyPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, ready, updateProfile, changeLoginEmail, logout } = useAuth();
   const { showToast } = useToast();
-  // バナーからの ?tab=profile で初期タブをプロフィール編集に開く（初期値で解決）。
-  const [tab, setTab] = useState<Tab>(() =>
-    typeof window !== "undefined" &&
-    new URLSearchParams(window.location.search).get("tab") === "profile"
-      ? "profile"
-      : "dashboard",
-  );
+  // 開くタブは ?tab= で決まる。バナーからの ?tab=profile と、
+  // スマホの下タブバーからの ?tab=messages がここを通る。
+  const queryTab = searchParams.get("tab");
+  const [tab, setTab] = useState<Tab>(() => tabFromQuery(queryTab));
+
+  // 同じページの中で ?tab= だけが変わる遷移（スマホの下タブバー）では再マウントされない。
+  // URL が変わったことを描画中に見てタブを合わせる（effect でやると一度古いタブが
+  // 描かれてから差し替わるので、ちらつく）。
+  const [seenQueryTab, setSeenQueryTab] = useState(queryTab);
+  if (queryTab !== seenQueryTab) {
+    setSeenQueryTab(queryTab);
+    setTab(tabFromQuery(queryTab));
+  }
+
+  // スマホ（md 未満）では `/mypage`（?tab= なし）をメニュー画面にし、行を押すと
+  // `?tab=...` へ移る。中身を開いている間は上に「‹ マイページ」の戻る行を出す。
+  // 狭い画面にメニューと中身を積むと目当ての項目まで遠いため。md 以上は今までどおり
+  // サイドバーと中身を並べるので、この区別は使わない。
+  const showMenu = queryTab === null;
+
+  // 画面内でタブを切り替えたときは URL も書き換える。片方だけ変えると、
+  // 下タブバーから同じタブを選び直しても URL が変わらず反応しなくなる。
+  // 履歴を汚さないよう replace で、スクロール位置も動かさない。
+  const goTab = (key: Tab) => {
+    setTab(key);
+    router.replace(key === "dashboard" ? "/mypage" : `/mypage?tab=${key}`, { scroll: false });
+  };
 
   // メール切替確認からの戻り（?email_changed=1 / ?email_change=await）でトースト通知する。
   useEffect(() => {
@@ -85,6 +177,8 @@ export default function MyPage() {
   const [listingBusyId, setListingBusyId] = useState<string | null>(null);
   // PB-036：出品者が受け渡しQRを読み取るスキャナの開閉。
   const [scanning, setScanning] = useState(false);
+  // 受け渡し課金でカード会社が買い手の本人確認を求めた予約。消えないパネルを出す。
+  const [authWaitId, setAuthWaitId] = useState<string | null>(null);
 
   useEffect(() => {
     // 未ログイン時はログインゲートを早期 return するため、ここでの初期化は不要。
@@ -98,6 +192,22 @@ export default function MyPage() {
       if (!active) return;
       setSent(s);
       setReceived(r);
+    });
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
+  // 売上残高は Stripe から取る（issue #54）。受取口座が未登録なら connected:false が返る。
+  const [balance, setBalance] = useState<ConnectBalance | null>(null);
+  const [balanceError, setBalanceError] = useState<string | null>(null);
+  useEffect(() => {
+    if (!user || !canReserve) return;
+    let active = true;
+    fetchConnectBalance().then((result) => {
+      if (!active) return;
+      if (result.ok) setBalance(result.balance);
+      else setBalanceError(result.error);
     });
     return () => {
       active = false;
@@ -163,8 +273,17 @@ export default function MyPage() {
       const data = (await res.json().catch(() => null)) as {
         chargeId?: string;
         error?: string;
+        requiresAction?: boolean;
       } | null;
       if (!res.ok || !data?.chargeId) {
+        if (data?.requiresAction) {
+          // カード会社が買い手の本人確認を求めた。買い手は目の前にいるので、
+          // 買い手の端末で確認してもらえばその場で完了する。
+          // トーストだと消えてしまい「何をすればいいか」が伝わらないため、
+          // 消えないパネルとして出す。
+          setAuthWaitId(decoded.reservationId);
+          return;
+        }
         showToast(data?.error ?? "決済に失敗しました", "error");
         return;
       }
@@ -174,6 +293,7 @@ export default function MyPage() {
     } finally {
       setResBusyId(null);
     }
+    setAuthWaitId(null);
     showToast("決済が完了しました。取引完了です。", "success");
     // 完了・売り切れを反映するため再取得。
     if (user) {
@@ -183,6 +303,43 @@ export default function MyPage() {
       ]);
       setSent(s);
       setReceived(rc);
+    }
+  };
+
+  // 買い手が端末で本人確認を終えたかを確認する。確定の記録はサーバー側が
+  // Stripe から取り直して行う（クライアントの申告は信用しない）。
+  const refreshAuthWait = async () => {
+    if (!authWaitId) return;
+    try {
+      const res = await fetch("/api/payments/stripe/confirm-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reservationId: authWaitId }),
+      });
+      const data = (await res.json().catch(() => null)) as {
+        paid?: boolean;
+        error?: string;
+      } | null;
+      if (!res.ok) {
+        showToast(data?.error ?? "状態を確認できませんでした", "error");
+        return;
+      }
+      if (!data?.paid) {
+        showToast("まだ本人確認が完了していません。買い手の画面をご確認ください。", "");
+        return;
+      }
+      setAuthWaitId(null);
+      showToast("決済が完了しました。取引完了です。", "success");
+      if (user) {
+        const [s, rc] = await Promise.all([
+          fetchSentReservations(user.id),
+          fetchReceivedReservations(user.id),
+        ]);
+        setSent(s);
+        setReceived(rc);
+      }
+    } catch {
+      showToast("通信エラーが発生しました", "error");
     }
   };
 
@@ -197,6 +354,26 @@ export default function MyPage() {
     }
     setSent((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
     showToast(okMsg, status === "キャンセル" ? "" : "success");
+  };
+
+  /**
+   * 受け渡し前の取りやめ（A-5）。承認済みの取引は日時まで決まっているので、
+   * 相手に影響が出る。誤操作で消えないよう一度確認を挟む（removeListing と同じ作法）。
+   */
+  const cancelConfirmed = async (r: Reservation, side: "buyer" | "seller") => {
+    const あいて = side === "buyer" ? r.seller_name : r.buyer_name;
+    if (
+      !window.confirm(
+        `「${r.listing_title}」の受け渡しを取りやめます。よろしいですか？\n` +
+          `${あいて}さんとの約束をキャンセルすることになります。`,
+      )
+    )
+      return;
+    if (side === "buyer") {
+      await changeSentResStatus(r.id, "キャンセル", "受け渡しを取りやめました");
+    } else {
+      await changeResStatus(r.id, "キャンセル", "受け渡しを取りやめました");
+    }
   };
 
   // 機能④：出品者が買い手の候補から選んだ index（予約 id → index）。
@@ -278,13 +455,13 @@ export default function MyPage() {
   const [recoverySubmitting, setRecoverySubmitting] = useState(false);
   const [verifySending, setVerifySending] = useState(false);
 
-  if (!ready) return <main className="page-main" style={{ background: "var(--bg-gray)" }} />;
+  if (!ready) return <main className={PAGE_MAIN} />;
 
   if (!user) {
     return (
       <>
         <MyHeader sub="— ログインしてください —" />
-        <main className="page-main" style={{ background: "var(--bg-gray)" }}>
+        <main className={PAGE_MAIN}>
           <div className="container">
             <div className="panel-card">
               <div className="panel-body" style={{ textAlign: "center", padding: "56px 32px" }}>
@@ -295,7 +472,7 @@ export default function MyPage() {
                 <p style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 24 }}>
                   マイページを利用するにはログインしてください。
                 </p>
-                <Link href="/login" className="btn-navy">
+                <Link href={loginHref("/mypage")} className="btn-navy">
                   <i className="fas fa-sign-in-alt" /> ログイン / 登録
                 </Link>
               </div>
@@ -314,18 +491,18 @@ export default function MyPage() {
   const sentPending = sent.filter((r) => r.status === "申請中").length;
   const recvPending = received.filter((r) => r.status === "申請中").length;
 
-  // PB-045：売上残高。決済済み（paid_at あり）の受け取り予約から、手数料10%差引後の受取額を集計する。
-  // 振込（PB-046）は未実装のため、ここでは「引き出し可能な残高＝これまでの受取額の総計」として表示する。
+  // TETOMI 側の取引実績。ここは「これまでいくら売れたか」であって残高ではない
+  // （残高と入金予定は Stripe から取る。issue #54）。
   const paidSales = received.filter((r) => r.paid_at);
   const grossSales = paidSales.reduce((s, r) => s + r.price, 0);
-  const netBalance = paidSales.reduce((s, r) => s + sellerNet(r.price), 0);
-  const feeTotal = grossSales - netBalance;
+  const netSales = paidSales.reduce((s, r) => s + sellerNet(r.price), 0);
+  const feeTotal = grossSales - netSales;
 
   const saveProfile = (e: React.FormEvent) => {
     e.preventDefault();
     updateProfile(profile);
     showToast("プロフィールを更新しました", "success");
-    setTab("dashboard");
+    goTab("dashboard");
   };
 
   // ログイン用メールを変更する（新アドレス宛に確認メールが飛び、開くと切替が確定する）。
@@ -397,11 +574,31 @@ export default function MyPage() {
     return (
       <>
         <MyHeader sub={`${user.name}さんのページ`} />
-        <main className="page-main" style={{ background: "var(--bg-gray)" }}>
+        <main className={PAGE_MAIN}>
+          {/* スマホ：プロフィールの行と準備中の案内、ログアウトだけ（案2） */}
+          <div className="md:hidden">
+            <MobileProfile user={user} editable={false} />
+            <div className="mt-6 border-y border-line-light bg-white px-4 py-6">
+              <h3 className="text-base font-extrabold text-navy">マイページは準備中です</h3>
+              <p className="mt-2 text-sm leading-relaxed text-ink-sub">
+                出品・購入希望・メッセージなどの各機能は順次公開予定です。今しばらくお待ちください。
+              </p>
+            </div>
+            <RowGroup className="mt-6">
+              <ListRow
+                icon="fa-sign-out-alt"
+                label="ログアウト"
+                tone="danger"
+                chevron={false}
+                onClick={() => setLogoutConfirm(true)}
+              />
+            </RowGroup>
+          </div>
+
           <div className="container">
             <div className="mypage-layout">
               {/* SIDEBAR：プロフィール概要とログアウトのみ */}
-              <aside className="mypage-sidebar">
+              <aside className="mypage-sidebar hidden md:block">
                 <div className="sidebar-profile">
                   <div className="sidebar-avatar">{(user.name || "?").charAt(0)}</div>
                   <div className="sidebar-name">{user.name}</div>
@@ -419,7 +616,7 @@ export default function MyPage() {
               </aside>
 
               {/* MAIN PANEL：準備中の案内 */}
-              <div>
+              <div className="hidden md:block">
                 <div className="panel-card">
                   <div className="panel-body" style={{ textAlign: "center", padding: "56px 32px" }}>
                     <div style={{ fontSize: "3rem", marginBottom: 16 }}>🚧</div>
@@ -471,7 +668,7 @@ export default function MyPage() {
   const navItem = (key: Tab, icon: string, label: string, badge?: number) => (
     <div
       className={`sidebar-nav-item ${tab === key ? "active" : ""}`.trim()}
-      onClick={() => setTab(key)}
+      onClick={() => goTab(key)}
     >
       <i className={`fas ${icon}`} /> {label}
       {badge ? <span className="pending-dot">{badge}</span> : null}
@@ -481,11 +678,66 @@ export default function MyPage() {
   return (
     <>
       <MyHeader sub={`${user.name}さんのページ`} />
-      <main className="page-main" style={{ background: "var(--bg-gray)" }}>
-        <div className="container">
+      <main className={PAGE_MAIN}>
+        {/* スマホ（md 未満）：?tab= が無いときはメニュー画面（案2・全幅の行） */}
+        {showMenu && (
+          <div className="md:hidden">
+            <MobileProfile user={user} />
+            <SectionLabel>取引</SectionLabel>
+            <RowGroup>
+              <ListRow icon="fa-chart-bar" label="ダッシュボード" href="/mypage?tab=dashboard" />
+              <ListRow
+                icon="fa-book"
+                label="出品中の教科書"
+                href="/mypage?tab=myListings"
+                badge={stats.active}
+              />
+              <ListRow
+                icon="fa-paper-plane"
+                label="送った購入希望"
+                href="/mypage?tab=sentRes"
+                badge={sentPending}
+              />
+              <ListRow
+                icon="fa-inbox"
+                label="受け取った購入希望"
+                href="/mypage?tab=receivedRes"
+                badge={recvPending}
+              />
+            </RowGroup>
+            <SectionLabel>サポート</SectionLabel>
+            <RowGroup>
+              <ListRow icon="fa-comments" label="メッセージ" href="/mypage?tab=messages" />
+              <ListRow icon="fa-headset" label="運営サポート" href="/mypage?tab=support" />
+            </RowGroup>
+            <SectionLabel>設定</SectionLabel>
+            <RowGroup>
+              <ListRow icon="fa-credit-card" label="お支払い方法" href="/mypage?tab=payment" />
+              <ListRow icon="fa-user-cog" label="プロフィール編集" href="/mypage?tab=profile" />
+            </RowGroup>
+            <RowGroup className="mt-6">
+              <ListRow
+                icon="fa-sign-out-alt"
+                label="ログアウト"
+                tone="danger"
+                chevron={false}
+                onClick={() => setLogoutConfirm(true)}
+              />
+            </RowGroup>
+          </div>
+        )}
+
+        {/* スマホ：中身を開いている間はメニューへ戻る行を出す */}
+        {!showMenu && (
+          <RowGroup className="mb-4 md:hidden">
+            <ListRow icon="fa-chevron-left" label="マイページ" href="/mypage" chevron={false} />
+          </RowGroup>
+        )}
+
+        <div className={`container ${showMenu ? "hidden md:block" : ""}`.trim()}>
           <div className="mypage-layout">
-            {/* SIDEBAR */}
-            <aside className="mypage-sidebar">
+            {/* SIDEBAR（md 以上。スマホは上のメニュー画面が代わりを務める） */}
+            <aside className="mypage-sidebar hidden md:block">
               <div className="sidebar-profile">
                 <div className="sidebar-avatar">{(user.name || "?").charAt(0)}</div>
                 <div className="sidebar-name">{user.name}</div>
@@ -502,6 +754,7 @@ export default function MyPage() {
                 {navItem("receivedRes", "fa-inbox", "受け取った購入希望", recvPending)}
                 {navItem("messages", "fa-comments", "メッセージ")}
                 {navItem("support", "fa-headset", "運営サポート")}
+                {navItem("payment", "fa-credit-card", "お支払い方法")}
                 {navItem("profile", "fa-user-cog", "プロフィール編集")}
                 <div className="sidebar-nav-item danger" onClick={() => setLogoutConfirm(true)}>
                   <i className="fas fa-sign-out-alt" /> ログアウト
@@ -536,7 +789,12 @@ export default function MyPage() {
                       </div>
                     </div>
 
-                    {/* PB-045：売上残高。決済済みの受取額（手数料10%差引後）を表示する。 */}
+                    {/* 売上残高と入金予定（issue #54）。
+                        TETOMI は売上金を預かっていない。決済が成立した時点で出品者本人の
+                        Stripe 残高へ移り、銀行への入金も Stripe が自動で行う。だからここは
+                        自前の集計ではなく Stripe の実データを出す。
+                        「振込申請」ボタンと「振込手数料 ¥250／回」は存在しない機能だったので消した。
+                        経緯と実測は docs/decisions/stripe-payout-behavior.md。 */}
                     <div
                       style={{
                         marginTop: 20,
@@ -548,41 +806,80 @@ export default function MyPage() {
                     >
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <div style={{ fontSize: 12, opacity: 0.85, display: "flex", alignItems: "center", gap: 6 }}>
-                          <i className="fas fa-wallet" /> 売上残高（受取見込み）
+                          <i className="fas fa-wallet" /> 売上金
                         </div>
                         <div style={{ fontSize: 11, opacity: 0.7 }}>取引 {paidSales.length} 件</div>
                       </div>
-                      <div style={{ fontSize: 30, fontWeight: 800, marginTop: 6, letterSpacing: "0.02em" }}>
-                        {yen(netBalance)}
-                      </div>
-                      <div style={{ display: "flex", gap: 16, marginTop: 10, fontSize: 12, opacity: 0.85 }}>
-                        <span>売上総額 {yen(grossSales)}</span>
-                        <span>
-                          サービス手数料（{Math.round(PLATFORM_FEE_RATE * 100)}%） −{yen(feeTotal)}
-                        </span>
-                      </div>
+
+                      {balance === null ? (
+                        <div style={{ fontSize: 13, opacity: 0.8, marginTop: 10 }}>
+                          {balanceError ?? "読み込み中…"}
+                        </div>
+                      ) : !balance.connected ? (
+                        <>
+                          <div style={{ fontSize: 13, opacity: 0.9, marginTop: 10, lineHeight: 1.7 }}>
+                            受取口座を登録すると、売れた代金がご自身の銀行口座へ自動で振り込まれます。
+                          </div>
+                          <Link
+                            href="/sell/connect"
+                            className="btn-xs"
+                            style={{ background: "rgba(255,255,255,0.16)", color: "#fff", marginTop: 12 }}
+                          >
+                            <i className="fas fa-university" /> 受取口座を登録する
+                          </Link>
+                        </>
+                      ) : (
+                        <>
+                          <div style={{ fontSize: 30, fontWeight: 800, marginTop: 6, letterSpacing: "0.02em" }}>
+                            {yen((balance.available ?? 0) + (balance.pending ?? 0))}
+                          </div>
+                          <div style={{ fontSize: 11, opacity: 0.75, marginTop: 2 }}>
+                            まだ銀行口座へ届いていない分
+                          </div>
+
+                          <div style={{ marginTop: 12, fontSize: 12, opacity: 0.9, lineHeight: 1.9 }}>
+                            {(balance.pending ?? 0) > 0 && (
+                              <div>
+                                このうち {yen(balance.pending ?? 0)} は準備中
+                                {balance.pendingAvailableOn
+                                  ? `（${formatYmd(balance.pendingAvailableOn)}に振込の対象になります）`
+                                  : "（受け渡しから4営業日で振込の対象になります）"}
+                              </div>
+                            )}
+                            {balance.nextPayoutDate ? (
+                              <div>
+                                次の入金：{formatYmd(balance.nextPayoutDate)}
+                                {balance.nextPayoutAmount != null && ` ・ ${yen(balance.nextPayoutAmount)}`}
+                              </div>
+                            ) : balance.scheduleLabel ? (
+                              <div>入金：{balance.scheduleLabel}に自動で振り込まれます</div>
+                            ) : null}
+                          </div>
+                        </>
+                      )}
+
                       <div
                         style={{
                           marginTop: 14,
                           paddingTop: 12,
                           borderTop: "1px solid rgba(255,255,255,0.18)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          gap: 12,
+                          fontSize: 11,
+                          opacity: 0.8,
+                          lineHeight: 1.8,
                         }}
                       >
-                        <span style={{ fontSize: 11, opacity: 0.8 }}>
-                          振込申請は準備中です（振込手数料 {yen(PAYOUT_FEE_YEN)}／回）
-                        </span>
-                        <button
-                          type="button"
-                          disabled
-                          className="btn-xs"
-                          style={{ background: "rgba(255,255,255,0.16)", color: "#fff", cursor: "not-allowed", opacity: 0.7 }}
-                        >
-                          <i className="fas fa-university" /> 振込申請
-                        </button>
+                        <div>
+                          TETOMIでの取引 {yen(grossSales)} ／ サービス手数料（
+                          {Math.round(PLATFORM_FEE_RATE * 100)}%） −{yen(feeTotal)} ／ 受取 {yen(netSales)}
+                        </div>
+                        {balance?.connected && (
+                          <Link
+                            href="/sell/connect"
+                            style={{ color: "#fff", textDecoration: "underline", opacity: 0.9 }}
+                          >
+                            入金の履歴・銀行口座の変更
+                          </Link>
+                        )}
                       </div>
                     </div>
 
@@ -791,9 +1088,21 @@ export default function MyPage() {
                               </span>
                             ) : (
                               r.status === "承認済み" && (
-                                <Link href={`/checkout/${r.id}`} className="btn-xs btn-xs-navy">
-                                  <i className="fas fa-qrcode" /> 受け取り・支払いへ
-                                </Link>
+                                <>
+                                  <Link href={`/checkout/${r.id}`} className="btn-xs btn-xs-navy">
+                                    <i className="fas fa-qrcode" /> 受け取り・支払いへ
+                                  </Link>
+                                  {/* A-5：受け渡し前の取りやめ。行けなくなったときの逃げ道。 */}
+                                  {canTransition(r.status, "キャンセル", "buyer") && (
+                                    <button
+                                      className="btn-xs btn-xs-danger"
+                                      disabled={resBusyId === r.id}
+                                      onClick={() => cancelConfirmed(r, "buyer")}
+                                    >
+                                      <i className="fas fa-times" /> 受け渡しを取りやめる
+                                    </button>
+                                  )}
+                                </>
                               )
                             )}
                           </div>
@@ -811,6 +1120,26 @@ export default function MyPage() {
                     <h3>受け取った購入希望</h3>
                   </div>
                   <div className="panel-body">
+                    {authWaitId && (
+                      <div
+                        className="form-card"
+                        style={{ borderColor: "#f59e0b", background: "#fffbeb", marginBottom: 16 }}
+                      >
+                        <h2>買い手の本人確認を待っています</h2>
+                        <p className="form-hint">
+                          カード会社が買い手の本人確認を求めています。買い手の端末の
+                          支払い画面に確認ボタンが出ているので、その場で完了してもらってください。
+                          完了すると決済が確定します。
+                        </p>
+                        <button
+                          className="btn-outline btn-full"
+                          style={{ marginTop: 12 }}
+                          onClick={() => void refreshAuthWait()}
+                        >
+                          状態を確認する
+                        </button>
+                      </div>
+                    )}
                     {received.length === 0 ? (
                       <EmptyBlock icon={<span style={{ fontSize: "4rem" }}>📬</span>} title="受け取った購入希望はありません">
                         <p>出品中の教科書に購入希望が届くとここに表示されます。</p>
@@ -936,15 +1265,27 @@ export default function MyPage() {
                                   </button>
                                 </>
                               )}
-                              {r.status === "承認済み" && (
-                                <button
-                                  className="btn-xs btn-xs-green"
-                                  disabled={resBusyId === r.id}
-                                  onClick={() => setScanning(true)}
-                                >
-                                  <i className="fas fa-qrcode" />{" "}
-                                  {resBusyId === r.id ? "決済中…" : "QRを読み取って決済"}
-                                </button>
+                              {r.status === "承認済み" && !r.paid_at && (
+                                <>
+                                  <button
+                                    className="btn-xs btn-xs-green"
+                                    disabled={resBusyId === r.id}
+                                    onClick={() => setScanning(true)}
+                                  >
+                                    <i className="fas fa-qrcode" />{" "}
+                                    {resBusyId === r.id ? "決済中…" : "QRを読み取って決済"}
+                                  </button>
+                                  {/* A-5：本が別で売れた等で受け渡せなくなったときの逃げ道。 */}
+                                  {canTransition(r.status, "キャンセル", "seller") && (
+                                    <button
+                                      className="btn-xs btn-xs-danger"
+                                      disabled={resBusyId === r.id}
+                                      onClick={() => cancelConfirmed(r, "seller")}
+                                    >
+                                      <i className="fas fa-times" /> 受け渡しを取りやめる
+                                    </button>
+                                  )}
+                                </>
                               )}
                             </div>
                           </div>
@@ -1010,11 +1351,17 @@ export default function MyPage() {
                   threads={[...received, ...sent]
                     .filter((r) => r.status !== "キャンセル")
                     .sort((a, b) => b.created_at - a.created_at)}
+                  // 新着メールのリンク（?tab=messages&thread=…）から開いたとき、
+                  // そのやり取りをすぐ表示する（#59）。
+                  initialThreadId={searchParams.get("thread")}
                 />
               )}
 
               {/* 運営サポート（PB-042） */}
               {tab === "support" && <SupportPanel />}
+
+              {/* お支払い方法（#53）：カードの登録・変更・削除 */}
+              {tab === "payment" && <PaymentMethodPanel />}
 
               {/* PROFILE */}
               {tab === "profile" && (
@@ -1052,7 +1399,7 @@ export default function MyPage() {
                         <button type="submit" className="btn-navy">
                           <i className="fas fa-save" /> 保存する
                         </button>
-                        <button type="button" onClick={() => setTab("dashboard")} className="btn-outline">
+                        <button type="button" onClick={() => goTab("dashboard")} className="btn-outline">
                           キャンセル
                         </button>
                       </div>
@@ -1210,6 +1557,8 @@ export default function MyPage() {
           transform={(t) => t}
           title="買い手のQRを読み取る"
           hint="買い手が表示している受け渡しQRを枠内に映してください。読み取ると決済が実行されます。"
+          cameraFallback="retry"
+          frameShape="square"
           onDetected={captureByQR}
           onClose={() => setScanning(false)}
         />
@@ -1218,9 +1567,44 @@ export default function MyPage() {
   );
 }
 
+/**
+ * スマホのメニュー最上部に置くプロフィールの行（案2）。
+ * サイドバーの紺のプロフィールとは別物で、md 未満でしか出さない。
+ */
+function MobileProfile({ user, editable = true }: { user: User; editable?: boolean }) {
+  return (
+    <div className="flex items-center gap-[14px] border-b border-line-light bg-white px-4 py-5">
+      <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-navy/8 text-[22px] font-bold text-navy">
+        {(user.name || "?").charAt(0)}
+      </span>
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="truncate text-lg font-black text-navy">{user.name}</span>
+        <span className="flex items-center gap-2 text-[13px] text-ink-sub">
+          <span className="truncate">{`${user.faculty} ${user.grade}`.trim()}</span>
+          <span className="flex shrink-0 items-center gap-[3px] font-bold text-navy">
+            <i className="fas fa-star text-[11px]" aria-hidden="true" />
+            {user.rating}
+          </span>
+        </span>
+      </div>
+      {/* phase 0（閲覧のみ）はプロフィール編集を開けないので、行き先の無い「編集」は出さない。 */}
+      {editable && (
+        <Link
+          href="/mypage?tab=profile"
+          className="flex min-h-11 shrink-0 items-center gap-1 text-[13px] font-bold text-navy"
+        >
+          編集
+          <i className="fas fa-chevron-right text-[11px]" aria-hidden="true" />
+        </Link>
+      )}
+    </div>
+  );
+}
+
 function MyHeader({ sub }: { sub: string }) {
   return (
-    <div className="page-header">
+    // 紺のページヘッダーは md 以上だけ。スマホはヘッダー直下からプロフィールの行にする（案2）。
+    <div className="page-header hidden md:block">
       <div className="page-header-inner">
         <div className="breadcrumb">
           <Link href="/">Home</Link>

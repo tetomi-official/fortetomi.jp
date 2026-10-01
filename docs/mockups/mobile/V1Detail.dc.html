@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>案1 商品詳細</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&amp;family=Raleway:wght@700;800;900&amp;display=swap">
+<style>
+body{margin:0;font-family:'Noto Sans JP',sans-serif;color:#14314A;background:#ffffff}
+a{color:#14314A}a:hover{color:#0d2035}
+button,input,select{font-family:inherit}
+button{cursor:pointer}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #ffffff; display: flex; flex-direction: column;">
+<header style="height: 56px; flex-shrink: 0; background: #14314A; padding: 0 4px 0 16px; display: flex; align-items: center; justify-content: space-between;">
+<a href="#" style="display: flex; flex-direction: column; text-decoration: none; color: #ffffff;"><span style="font-family: Raleway, sans-serif; font-size: 20px; font-weight: 900; letter-spacing: 0.12em; line-height: 1.1;">TETOMI</span><span style="font-size: 10px; color: rgba(255,255,255,0.75); line-height: 1.4;">手から手へ、教科書とつながりを</span></a>
+<button type="button" aria-label="メニュー" style="width: 48px; height: 48px; border: none; background: transparent; color: #ffffff; display: flex; align-items: center; justify-content: center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></button>
+</header>
+<div style="height: 280px; flex-shrink: 0; background: #dfe4e8; display: flex; align-items: center; justify-content: center; color: #5f7688; font-size: 13px;">[商品画像]</div>
+<main style="padding: 20px 16px 120px; display: flex; flex-direction: column; gap: 24px;">
+<div style="display: flex; flex-direction: column; gap: 6px;"><span style="display: flex; gap: 8px;"><span style="padding: 2px 8px; border-radius: 999px; background: #eef2f5; color: #14314A; font-size: 12px; font-weight: 700; white-space: nowrap;">出品中</span><span style="padding: 2px 8px; border-radius: 999px; background: #fffbeb; color: #92400e; font-size: 12px; font-weight: 700; white-space: nowrap;">書き込み少し</span></span><h1 style="margin: 0; font-size: 22px; font-weight: 900; line-height: 1.35; color: #14314A;">線形代数入門 第3版</h1><p style="margin: 0; font-size: 13px; color: #5f7688;">線形代数学</p></div>
+<section style="display: flex; flex-direction: column; gap: 12px;"><h2 style="margin: 0; font-size: 17px; font-weight: 900; color: #14314A;">商品情報</h2><div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 16px; row-gap: 16px;"><div style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 12px; color: #5f7688;">状態</span><span style="font-size: 15px; font-weight: 700; color: #14314A;">書き込み少し</span></div><div style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 12px; color: #5f7688;">受け渡し場所</span><span style="font-size: 15px; font-weight: 700; color: #14314A;">Forest Gateway 3F</span></div><div style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 12px; color: #5f7688;">出品日</span><span style="font-size: 15px; font-weight: 700; color: #14314A;">2026/8/2</span></div><div style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 12px; color: #5f7688;">出版年</span><span style="font-size: 15px; font-weight: 700; color: #14314A;">2022</span></div><div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 12px; color: #5f7688;">ISBN</span><span style="font-size: 15px; font-weight: 700; color: #14314A;">978-4-1234-5678-9</span></div></div></section>
+<section style="display: flex; flex-direction: column; gap: 8px;"><h2 style="margin: 0; font-size: 17px; font-weight: 900; color: #14314A;">出品者のコメント</h2><p style="margin: 0; font-size: 14px; line-height: 1.8; color: #2b3440;">書き込みは第2章に少しだけあります。</p></section>
+</main>
+<div style="position: absolute; left: 0; bottom: 0; width: 390px; box-sizing: border-box; padding: 12px 16px 24px; background: #ffffff; border-top: 1px solid #e8eaec; display: flex; align-items: center; gap: 12px;">
+<div style="display: flex; flex-direction: column; flex-shrink: 0;"><span style="font-family: Raleway, sans-serif; font-size: 22px; font-weight: 900; color: #14314A; line-height: 1.1;">¥1,200</span><span style="font-size: 12px; color: #5f7688;">税込・送料ゼロ</span></div>
+<button type="button" style="flex-grow: 1; height: 52px; border: none; border-radius: 10px; background: #14314A; color: #ffffff; font-size: 16px; font-weight: 700;">購入希望を送る</button>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
