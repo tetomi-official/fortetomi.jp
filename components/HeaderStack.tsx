@@ -4,11 +4,12 @@ import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import ReverifyBanner from "@/components/ReverifyBanner";
-import GraduationSwitchBanner from "@/components/GraduationSwitchBanner";
 import RecoveryEmailVerifyBanner from "@/components/RecoveryEmailVerifyBanner";
 import { AUTH_PATHS } from "@/components/main-nav";
 
-// Navbar と各バナー（在籍再認証 / 卒業メール切替）を 1 つの固定ヘッダーにまとめる。
+// Navbar と各バナー（在籍再認証 / 予備メールの確認）を 1 つの固定ヘッダーにまとめる。
+// 卒業メール切替のバナー（GraduationSwitchBanner）は、対象の人には閉じられずに
+// 全画面で出続けて邪魔だったので一旦外した。部品は残してあるので、戻すときは下に1行足す。
 // バナーは表示条件・テキスト折り返しで高さが変わるため、スタックの実高さを測って
 // CSS 変数 --header-h に反映する。本文（.page-main / .hero-section 等）はこの変数
 // 分だけ下げてあるので、バナーが表示されても固定 Navbar の背後に潜り込まない。
@@ -53,7 +54,6 @@ export default function HeaderStack() {
     >
       <Navbar />
       <ReverifyBanner />
-      <GraduationSwitchBanner />
       <RecoveryEmailVerifyBanner />
     </div>
   );
