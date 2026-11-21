@@ -2,7 +2,7 @@
 // TETOMI: 中央大学シラバスDBのスクレイピング（PB-056）
 //
 //   node scripts/scrape-syllabus.mjs [options]
-//   npm run scrape:syllabus -- --from 1090 --to 1096 --dry-run
+//   pnpm scrape:syllabus --from 1090 --to 1096 --dry-run
 //
 // 詳細ページ /syllabus/detail/?id=N を数値ID巡回で取得し、Supabase の
 //   public.syllabus_courses   … 1科目1行（id を自然キーに upsert）

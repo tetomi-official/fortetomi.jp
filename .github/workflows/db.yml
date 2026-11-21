@@ -38,23 +38,26 @@ jobs:
       # ソースを取ってくる。
       - uses: actions/checkout@v4
 
-      # Node 20 を用意し、npm のダウンロードをキャッシュして速くする。
+      # pnpm を用意する。版は package.json の packageManager に書いたものが使われる。
+      - uses: pnpm/action-setup@v6
+
+      # Node 20 を用意し、pnpm のダウンロードをキャッシュして速くする。
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
+          cache: pnpm
 
-      # package-lock.json どおりに入れる（Supabase CLI もここで入る）。
+      # pnpm-lock.yaml どおりに入れる（Supabase CLI もここで入る）。
       - name: 依存パッケージを入れる
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       # コードの書き方の検査。エラーがあれば落とす（警告は通す）。
       - name: lint
-        run: npm run lint
+        run: pnpm lint
 
       # 型の検査。DB から生成した型とのずれや、存在しない列名などを見つける。
       - name: 型チェック
-        run: npx tsc --noEmit -p .
+        run: pnpm exec tsc --noEmit -p .
 
       # 手元と同じ Supabase を起動し、migration と seed を当てる。
       # テストに要らない画面やログ収集などは起動しないで時間を縮める：
@@ -65,27 +68,27 @@ jobs:
       # storage.objects にポリシーを張るため、また型の生成が postgres-meta を使うため。
       # gotrue（auth のテーブルを作る）や realtime なども、要らないと言い切れないので動かす。
       - name: Supabase を起動する
-        run: npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,mailpit
+        run: pnpm exec supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,mailpit
 
       # 権限（RLS）などの pgTAP テストを流す。
       - name: DB のテスト（pgTAP）
-        run: npx supabase test db
+        run: pnpm exec supabase test db
 
       # DB の形と lib/database.types.ts がずれていないか確かめる。
       # migration を変えたのに型を作り直し忘れていると、ここで落ちる。
       - name: 型の生成漏れを確かめる
         run: |
-          npx supabase gen types typescript --local > lib/database.types.ts
+          pnpm exec supabase gen types typescript --local > lib/database.types.ts
           if ! git diff --exit-code lib/database.types.ts; then
-            echo "::error file=lib/database.types.ts::DB の形と型ファイルがずれています。手元で npm run db:types を実行し、lib/database.types.ts をコミットしてください。"
+            echo "::error file=lib/database.types.ts::DB の形と型ファイルがずれています。手元で pnpm db:types を実行し、lib/database.types.ts をコミットしてください。"
             exit 1
           fi
 
       # 計算やルールの単体テスト（vitest）。
       - name: 単体テスト（vitest）
-        run: npm test
+        run: pnpm test
 
       # 後片付け。失敗しても最後まで実行する。
       - name: Supabase を止める
         if: always()
-        run: npx supabase stop --no-backup
+        run: pnpm exec supabase stop --no-backup

@@ -20,14 +20,14 @@ DB（Supabase）の中身は、すべて `supabase/` の中のファイルで管
 本番に一切触らずに、全機能を手元で試せる。Docker が動いていること。
 
 ```bash
-npm run db:start    # 手元の Supabase を起動（初回は時間がかかる）
-npm run db:reset    # migrations を最初から当て直し、seed.sql を入れる
-npm run dev:local   # 手元の Supabase につないで next dev を起動
+pnpm db:start    # 手元の Supabase を起動（初回は時間がかかる）
+pnpm db:reset    # migrations を最初から当て直し、seed.sql を入れる
+pnpm dev:local   # 手元の Supabase につないで next dev を起動
 ```
 
 - `dev:local` は `.env.local` を書き換えない。接続先（URL・キー）だけを手元のものに差し替えて起動する。
-- 普段の `npm run dev` は `.env.local` のとおり**本番の Supabase** につながるので注意。
-- 手元のデータを最初の状態に戻したいときは `npm run db:reset`。
+- 普段の `pnpm dev` は `.env.local` のとおり**本番の Supabase** につながるので注意。
+- 手元のデータを最初の状態に戻したいときは `pnpm db:reset`。
 
 ---
 
@@ -38,7 +38,7 @@ npm run dev:local   # 手元の Supabase につないで next dev を起動
    新しいフォルダを作ったら `config.toml` の `schema_paths` にも足す。
 2. **migration を作る。**
    ```bash
-   npm run db:sync -- <変更の名前>     # 例: npm run db:sync -- add_listing_memo
+   pnpm db:sync <変更の名前>     # 例: pnpm db:sync add_listing_memo
    ```
    中身は `supabase db schema declarative sync --no-apply --name <変更の名前>`。
    「migrations を全部当てた姿」と「schemas に書いた姿」を比べて、差を
@@ -52,18 +52,18 @@ npm run dev:local   # 手元の Supabase につないで next dev を起動
    足りない文・順番がおかしい文は手で直す。
 4. **手元で当て直して、テストを通す。**
    ```bash
-   npm run db:reset
-   npm run db:test
+   pnpm db:reset
+   pnpm db:test
    ```
 5. **型を作り直す。**
    ```bash
-   npm run db:types
+   pnpm db:types
    ```
 6. **コミットする**（schemas・migration・型・テストをまとめて）。
 7. **本番に当てる。** まず何が当たるかだけを確認し、問題なければ本番に当てる。
    ```bash
-   npx supabase db push --dry-run --db-url "<本番の接続文字列>"
-   npx supabase db push --db-url "<本番の接続文字列>"
+   pnpm exec supabase db push --dry-run --db-url "<本番の接続文字列>"
+   pnpm exec supabase db push --db-url "<本番の接続文字列>"
    ```
    接続文字列はダッシュボードの「Connect」から取る。**パスワードが入っているので、チャットや git に書かないこと。**
 
@@ -107,7 +107,7 @@ listings の「見てよい行」を決めるポリシーがこの関数を呼�
 
 ## 5. なぜ `--linked` ではなく `--db-url` を使うのか
 
-`npx supabase link` してから `--linked` で当てるのが普通だが、本番プロジェクトでは
+`pnpm exec supabase link` してから `--linked` で当てるのが普通だが、本番プロジェクトでは
 CLI が使う一時的なロール `cli_login_postgres` を作るところで権限エラーになる
 （そのロールは存在しない。Supabase 側の問題）。
 
