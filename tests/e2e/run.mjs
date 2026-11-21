@@ -1,14 +1,14 @@
 // ===================================================
 // 自動E2Eの実行係。
 //
-//   npm run test:e2e              全部のシナリオを順に通す
-//   npm run test:e2e -- T13       指定したシナリオだけ
-//   npm run test:e2e -- --headed  ブラウザを見えるように開く
-//   npm run test:e2e -- --keep    作ったテストデータを消さない
-//   npm run test:e2e -- T12c T13c 断られるカードの確認（全体の実行には含めない。下の注意）
+//   pnpm test:e2e              全部のシナリオを順に通す
+//   pnpm test:e2e T13       指定したシナリオだけ
+//   pnpm test:e2e --headed  ブラウザを見えるように開く
+//   pnpm test:e2e --keep    作ったテストデータを消さない
+//   pnpm test:e2e T12c T13c 断られるカードの確認（全体の実行には含めない。下の注意）
 //
 // 前提:
-//   - 開発サーバーが動いていること（npm run dev）
+//   - 開発サーバーが動いていること（pnpm dev）
 //   - .env.development.local で NEXT_PUBLIC_RELEASE_PHASE=3 にしてあること
 //   - 決済まで通すなら stripe listen を動かしておくこと
 //
@@ -64,7 +64,7 @@ async function 事前確認() {
     const res = await fetch(BASE_URL + "/listings", { signal: AbortSignal.timeout(15000) });
     if (!res.ok) 困りごと.push(`開発サーバーが ${res.status} を返しました: ${BASE_URL}`);
   } catch {
-    困りごと.push(`開発サーバーに繋がりません: ${BASE_URL}（別のターミナルで npm run dev）`);
+    困りごと.push(`開発サーバーに繋がりません: ${BASE_URL}（別のターミナルで pnpm dev）`);
   }
 
   // 解禁フェーズはサーバーのビルドに焼き込まれるので、実際に配信されたページで見る。

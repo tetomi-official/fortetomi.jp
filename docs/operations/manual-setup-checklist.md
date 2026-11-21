@@ -30,7 +30,7 @@
 - 本番公開時は本番キー（`pk_live_ / sk_live_`）＋ PAY.jp 本番申請（PB-049）が別途必要。
 
 ### A-3. 疎通テスト（A-1・A-2 完了後） ☐
-1. `npm run dev` で起動。
+1. `pnpm dev` で起動。
 2. 買い手アカウントで購入希望を送る → 出品者アカウントで「この日時で確定」（→ 承認済み）。
 3. 買い手：マイページの承認済み予約 → 「受け取り・支払いへ」→ カード名義・メール入力 → カード登録（テストカード `4242 4242 4242 4242` / 任意の未来の有効期限 / 任意CVC）→ **3Dセキュア認証画面が表示され完了** → QR表示。
 4. 出品者：マイページの承認済み予約 → 「QRを読み取って決済」→ 買い手のQRをスキャン。
@@ -75,7 +75,7 @@
 - メールテンプレ確認（Confirm signup / Confirm email change を `{{ .SiteURL }}/auth/confirm?...` 形式、Secure email change は OFF 推奨）。
 
 ### B-3. 再認証メール用の環境変数
-- ローカル `.env.local`：`RESEND_API_KEY` / `REVERIFY_MAIL_FROM=TETOMI <no-reply@tetomi.jp>` 設定済み ✅。疎通確認済み（`npm run test:resend`）✅。
+- ローカル `.env.local`：`RESEND_API_KEY` / `REVERIFY_MAIL_FROM=TETOMI <no-reply@tetomi.jp>` 設定済み ✅。疎通確認済み（`pnpm test:resend`）✅。
 - ☐ **本番（Vercel）の環境変数**に `RESEND_API_KEY` / `REVERIFY_MAIL_FROM=TETOMI <no-reply@tetomi.jp>` / `NEXT_PUBLIC_SITE_URL=https://tetomi.jp` を設定。
 
 ---
@@ -113,12 +113,12 @@
 
 ### E-2. スクレイピング実行（E-1 完了後） ☐
 - 動作確認（DB書込みなし・ネットワークのみ）：
-  `npm run scrape:syllabus -- --from 1090 --to 1096 --dry-run`
+  `pnpm scrape:syllabus --from 1090 --to 1096 --dry-run`
   → 簿記論(id=1092) が `9784502345012` として抽出されればOK。
-- 小範囲を実書込み：`npm run scrape:syllabus -- --from 1090 --to 1096`
+- 小範囲を実書込み：`pnpm scrape:syllabus --from 1090 --to 1096`
   → Supabase で `syllabus_courses` / `syllabus_textbooks` に行が入ることを確認。
 - 全件取得（実測の最大IDは ~14,700。逐次・404スキップ・再開可）：
-  `npm run scrape:syllabus`（数百件ごとに進捗ログ。途中で止めても `--from` で続行可）。
+  `pnpm scrape:syllabus`（数百件ごとに進捗ログ。途中で止めても `--from` で続行可）。
 - `.env.local` に `NEXT_PUBLIC_SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` が必要（既存で設定済み）。
 - 注意：礼儀のため既定 `--delay 300`（ms）。短縮するとサイトに負荷。年1回程度の運用想定（年度切替時に再実行）。
 
@@ -139,7 +139,7 @@
   `faculties` 列を参照してエラーになる。**コード配備とセットで適用すること**。
 
 ### F-2. 動作確認（F-1 ＋ E-2 完了後） ☐
-1. `npm run dev` → ある学部の出品者で、複数学部で使われる ISBN（例 `978-4-502-34501-2`）を入力/スキャン
+1. `pnpm dev` → ある学部の出品者で、複数学部で使われる ISBN（例 `978-4-502-34501-2`）を入力/スキャン
    → 出品フォームに「対象学部」チェックボックスと使われる授業が出る → 2学部選んで出品。
 2. 別学部（選んだ学部の1つ）のアカウントで `/listings` → その出品が並ぶ（学部横断）。選ばなかった学部では出ない。
 3. 出品詳細ページ → 「この教科書が使われる授業」（学部グループ＋シラバスリンク）が表示。
@@ -272,7 +272,7 @@
 - 本番に適用済み（2026-09-18 に DB の管理を `supabase/` へ移した時点で本番に入っていることを確認済み。今後の DB 変更は [`docs/operations/db-workflow.md`](./db-workflow.md) の手順で行う）。
 - 効いているかの確認：
   ```bash
-  npm run test:e2e -- T11 T26 T27
+  pnpm test:e2e T11 T26 T27
   ```
   3件とも緑になれば効いている。
 - ℹ️ 遷移表は `lib/reservation-flow.ts` にも同じものがある。**変えるときは両方**。

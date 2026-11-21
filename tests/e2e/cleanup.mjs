@@ -1,8 +1,8 @@
 // ===================================================
 // テストが作ったデータの後片付け。
 //
-//   npm run test:e2e:cleanup            何を消すか表示するだけ
-//   npm run test:e2e:cleanup -- --yes   実際に消す
+//   pnpm test:e2e:cleanup            何を消すか表示するだけ
+//   pnpm test:e2e:cleanup --yes   実際に消す
 //
 // 目印は出品タイトルの先頭の [E2E]。テストはこの印を必ず付ける。
 //
