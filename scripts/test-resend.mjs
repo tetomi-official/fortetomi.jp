@@ -2,7 +2,7 @@
 // Resend 単体でメールが送れる（到達する）かを確認するための最小スクリプト。
 //
 // 使い方:
-//   npm run test:resend -- you@example.com
+//   pnpm test:resend you@example.com
 // もしくは直接:
 //   node --env-file=.env.local scripts/test-resend.mjs you@example.com
 //
@@ -12,7 +12,7 @@
 
 const to = process.argv[2];
 if (!to) {
-  console.error("宛先を指定してください: npm run test:resend -- you@example.com");
+  console.error("宛先を指定してください: pnpm test:resend you@example.com");
   process.exit(1);
 }
 

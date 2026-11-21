@@ -88,7 +88,7 @@ Supabase → **Authentication** → **Emails** → **SMTP Settings** で Custom 
 
 1. **Resend 単体の疎通** ✅（2026-07-12 実施、Gmail 到達確認済み）:
    ```
-   npm run test:resend -- <自分が受信できるアドレス>
+   pnpm test:resend <自分が受信できるアドレス>
    ```
    → `no-reply@tetomi.jp` からテストメールが届けば、ドメイン認証と API キーは OK。
 2. **登録確認メール（SMTP 経由）** ☐: 手順5完了後、実際に新規登録を1件通し、大学メール確認の1通が **Resend から**届き、`/auth/confirm(type=signup)` → 在籍有効化 → 大学メールでログインまで通ること（方針C：登録は確認1回で完結）。

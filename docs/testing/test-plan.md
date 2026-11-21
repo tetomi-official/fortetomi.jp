@@ -26,12 +26,12 @@ MAIL_DRY_RUN=1
 
 DB が最新でないと T11 / T26 / T27 が落ちる（ステータスの歯止めはDB側のトリガーで効いているため）。
 本番は `supabase/migrations/` がすべて当たっていればよい。手元の DB で試すなら
-`npm run db:reset` で最新になる。手順は [`docs/operations/db-workflow.md`](../operations/db-workflow.md)。
+`pnpm db:reset` で最新になる。手順は [`docs/operations/db-workflow.md`](../operations/db-workflow.md)。
 
 ### 1-3. 開発サーバー
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 ### 1-4. 使うアカウント
@@ -65,7 +65,7 @@ npm run dev
 
 - 自動テストが作るものは、出品タイトルが必ず **`[E2E]`** で始まる
 - 手で試すときも、**タイトルの先頭に `[E2E]` を付ける**（後始末の目印になる）
-- 後始末は `npm run test:e2e:cleanup`（何を消すか表示するだけ）→ `-- --yes` で実行
+- 後始末は `pnpm test:e2e:cleanup`（何を消すか表示するだけ）→ `-- --yes` で実行
 
 **決済まで進んだデータは自動では消さない。** Stripe 側に記録が残るため、DBだけ消すと
 突き合わせができなくなる。返金して片付ける:
@@ -80,16 +80,16 @@ node --env-file=.env.local scripts/stripe-refund.mjs <予約ID>
 ## 2. 自動テストの動かし方
 
 ```bash
-npm test          # 計算とルールの確認（速い。画面は使わない）
-npm run test:e2e  # 画面を通した確認（10分ほどかかる）
+pnpm test          # 計算とルールの確認（速い。画面は使わない）
+pnpm test:e2e  # 画面を通した確認（10分ほどかかる）
 ```
 
 E2E の便利なオプション:
 
 ```bash
-npm run test:e2e -- T13        # 指定したケースだけ
-npm run test:e2e -- --headed   # ブラウザを見えるように開く（動きを目で追いたいとき）
-npm run test:e2e -- --keep     # 作ったデータを消さずに残す（あとでDBを覗きたいとき）
+pnpm test:e2e T13        # 指定したケースだけ
+pnpm test:e2e --headed   # ブラウザを見えるように開く（動きを目で追いたいとき）
+pnpm test:e2e --keep     # 作ったデータを消さずに残す（あとでDBを覗きたいとき）
 ```
 
 ### 結果の読み方
@@ -125,7 +125,7 @@ npm run test:e2e -- --keep     # 作ったデータを消さずに残す（あ�
 
 ## 4. テストケース一覧
 
-★＝自動E2E（`npm run test:e2e`） / ☆＝手動 / ●＝単体テスト（`npm test`）
+★＝自動E2E（`pnpm test:e2e`） / ☆＝手動 / ●＝単体テスト（`pnpm test`）
 
 | # | ケース | 種別 | 期待結果 | 今の状態 |
 |---|---|---|---|---|
@@ -223,7 +223,7 @@ npm run test:e2e -- --keep     # 作ったデータを消さずに残す（あ�
    ```
 
 2. 開発サーバーを再起動する
-3. `npm run test:e2e` を流す
+3. `pnpm test:e2e` を流す
 
 これだけで、出品者役と買い手役の操作をテストが勝手にやってくれて、
 **5種類のメールが全部あなたの受信箱に届く**。件名の頭に `[→sato@…]` の形で
@@ -248,7 +248,7 @@ npm run test:e2e -- --keep     # 作ったデータを消さずに残す（あ�
 - [ ] 取りやめたとき、相手に届く
 - [ ] 決済が終わったとき、**買い手と出品者の両方に**届く
 - [ ] 出品者宛のメールの「販売価格 − 手数料 = お受け取り額」が Stripe の記録と一致する
-- [ ] 迷惑メールに入らない（`npm run test:resend -- 自分のアドレス` で到達性を確認できる）
+- [ ] 迷惑メールに入らない（`pnpm test:resend 自分のアドレス` で到達性を確認できる）
 - [ ] スマホのメールアプリで読んだときに崩れない
 
 ### M-4. 出品者の入金先の登録（Stripe Connect）

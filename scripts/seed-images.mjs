@@ -1,7 +1,7 @@
 // ===================================================
 // TETOMI: 出品ダミー画像の生成 & Storage 投入（開発・デモ用）
 //
-//   node scripts/seed-images.mjs        (= npm run seed:images)
+//   node scripts/seed-images.mjs        (= pnpm seed:images)
 //
 // 各 listing にコード生成した「書影風 SVG」を Storage(listing-images) へ
 // アップロードし、公開URLを listings.image_urls に書き戻す。
@@ -156,7 +156,7 @@ async function main() {
     .order("created_at", { ascending: true });
   if (error) throw new Error(`fetch listings: ${error.message}`);
   if (!listings?.length) {
-    console.log("[seed-images] listings が空です。先に supabase/seed.sql を投入してください（手元なら npm run db:reset）。");
+    console.log("[seed-images] listings が空です。先に supabase/seed.sql を投入してください（手元なら pnpm db:reset）。");
     return;
   }
 
