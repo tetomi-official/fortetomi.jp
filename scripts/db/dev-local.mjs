@@ -4,7 +4,7 @@
 // Next.js は、すでにある環境変数を .env ファイルで上書きしないため、これで手元に向く。
 // 決済（Stripe テストキー）やメール設定は .env.local / .env.development.local のまま。
 //
-// 使い方: pnpm dev:local            （追加の引数は next dev に渡る。例: -- -p 3100）
+// 使い方: pnpm dev:local            （追加の引数は next dev に渡る。例: -p 3100）
 import { execFileSync, spawn } from "node:child_process";
 
 let status;
